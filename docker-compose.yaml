@@ -1,0 +1,54 @@
+version: "3.9"
+services:
+  webapp:
+    build: ./WebService
+    restart: always
+    environment:
+      DB_URL: mongoservice
+      DB_PORT: 27017
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    ports:
+      - "8080:8080"
+
+  reservationservice:
+    build: ./ReservationService
+    restart: always
+    environment:
+      DB_URL: mongoservice
+      DB_PORT: 27017
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    ports:
+      - "5555:5555"
+
+  userservice:
+    build: ./UserService
+    restart: always
+    environment:
+      DB_URL: mongoservice
+      DB_PORT: 27017
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    ports:
+      - "5556:5556"
+
+  adminservice:
+    build: ./AdminService
+    restart: always
+    environment:
+      DB_URL: mongoservice
+      DB_PORT: 27017
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    ports:
+      - "5557:5557"
+
+  mongoservice:
+    image: mongo:6.0-jammy
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27017:27017"
