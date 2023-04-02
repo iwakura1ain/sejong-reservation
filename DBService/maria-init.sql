@@ -1,9 +1,9 @@
 -- drop tables
-DROP TABLE ReservationTime;
-DROP TABLE Reservation;
-DROP TABLE User;
-DROP TABLE Timeslot;
-DROP TABLE Room;
+DROP TABLE IF EXISTS ReservationTime;
+DROP TABLE IF EXISTS Reservation;
+DROP TABLE IF EXISTS User;
+DROP TABLE IF EXISTS Timeslot;
+DROP TABLE IF EXISTS Room;
 
 -- create tables
 CREATE TABLE Room (
@@ -87,35 +87,40 @@ INSERT INTO User (username, password, email, isAdmin) VALUES ('hgildong','hgildo
 INSERT INTO User (username, password, email, isAdmin) VALUES ('admin','admin','admin@sejong.ac.kr',true);
 
 -- initialize timeslots
-INSERT Timeslot(timeslot) VALUES (1);
-INSERT Timeslot(timeslot) VALUES (2);
-INSERT Timeslot(timeslot) VALUES (3);
-INSERT Timeslot(timeslot) VALUES (4);
-INSERT Timeslot(timeslot) VALUES (5);
-INSERT Timeslot(timeslot) VALUES (6);
-INSERT Timeslot(timeslot) VALUES (7);
-INSERT Timeslot(timeslot) VALUES (8);
-INSERT Timeslot(timeslot) VALUES (9);
-INSERT Timeslot(timeslot) VALUES (10);
-INSERT Timeslot(timeslot) VALUES (11);
-INSERT Timeslot(timeslot) VALUES (12);
--- ...
-
--- FOR ii IN 1..48 
--- DO
--- 	INSERT INTO Timeslot (timeslot) VALUES (ii);
--- END FOR;
-
--- SET @i = 1;
--- WHILE (@i <= 48) DO
---   INSERT INTO Timeslot (timeslot) VALUES (@i);
---   SET @i = @i + 1;
--- END WHILE;
-
+FOR t IN 1..48 
+DO
+	INSERT Timeslot (timeslot) VALUES (t);
+END FOR;
 
 -- 새로운 예약의 topic, room, date, creator 정보 입력
 INSERT INTO Reservation (reservationTopic, reservationRoom, reservationDate, reservationType, creator, members)
 VALUES ('회의실 예약 시스템 API 설계 회의',1,DATE("2023-04-07"),1,(SELECT id FROM User WHERE User.username = "user1"),'["user1","user2"]');
 -- 새로운 예약의 time 정보 입력
-INSERT INTO ReservationTime (reservation, timeslot) VALUES ((SELECT id FROM Reservation WHERE Reservation.reservationTopic="회의실 예약 시스템 API 설계 회의"),10); # 예약 id랑 타임슬롯id 
-INSERT INTO ReservationTime (reservation, timeslot) VALUES (1,11); # 예약 id랑 타임슬롯id 
+FOR t IN 10..12
+DO
+	# 예약 id랑 타임슬롯id 
+	INSERT ReservationTime (reservation, timeslot) 
+	VALUES ((SELECT id FROM Reservation WHERE Reservation.reservationTopic="회의실 예약 시스템 API 설계 회의"),t); 
+END FOR;
+
+
+-- 새로운 예약의 topic, room, date, creator 정보 입력
+INSERT INTO Reservation (reservationTopic, reservationRoom, reservationDate, reservationType, creator, members)
+VALUES ('컴퓨터공학과 교수 회의',1,DATE("2023-04-08"),1,(SELECT id FROM User WHERE User.username = "admin"),'["admin","user2"]');
+-- 새로운 예약의 time 정보 입력
+FOR t IN 17..20
+DO
+	# 예약 id랑 타임슬롯id 
+	INSERT ReservationTime (reservation, timeslot) 
+	VALUES ((SELECT id FROM Reservation WHERE Reservation.reservationTopic="컴퓨터공학과 교수 회의"),t); 
+END FOR;
+-- Timeslot에 room 추가?
+FOR t IN 17..20
+DO
+	INSERT Timeslot (room)
+	VALUES ((SELECT reservationRoom FROM Reservation WHERE Reservation.reservationTopic="컴퓨터공학과 교수 회의")); 
+END FOR;
+
+
+
+
