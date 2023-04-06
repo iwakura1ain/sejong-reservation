@@ -1,0 +1,24 @@
+* 개발방법
+vue-project를 로컬에서 개발한다.
+dist 폴더는 .gitignore에 추가해도 됨.
+
+* 컨테이너 빌드 방법
+Dockerfile이 들어있는 폴더에서 컨테이너를 빌드한다.
+- "-t"로 이름을 지정
+- "."으로 현재 폴더 지정
+
+#+NAME: 로컬에서 실행 
+#+BEGIN_SRC bash
+  docker build -t web-service .
+#+END_SRC
+
+* 컨테이너 실행 방법
+#+NAME: 로컬에서 실행 
+#+BEGIN_SRC bash
+  docker run -p 80:80 web-service
+#+END_SRC
+
+실행 후 127.0.0.1:80/index.html 접속하면 VUE APP 이라 뜸 
+
+* 해야할것
+- 테스트 작성 후 dockerfile 추가 
