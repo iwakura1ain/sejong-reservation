@@ -1,0 +1,41 @@
+* 유저 서비스
+초기 버전이니 양해 바람.
+- Mariadb에 DBService에서 사용하는 User 스키마가 아니라 username, password만 있는 단순 스키마 사용
+- JWT 토큰 사용해서 인증
+- 토큰 유효기간 초과와 로그아웃은 아직 구현 X -> 라이브레리에서 지원하니 나중에 추가하겠습
+
+* 실행 방법
+
+** DBService 실행 
+#+begin_src bash
+  cd sejong-reservation
+  docker compose start dbservice
+#+end_src
+
+** UserService 도커로 빌드 후 실행 (현재 버전문제 때문에 안됨)
+#+begin_src bash
+  cd UserService
+  docker build -t user-service .
+  docker run -p 5000:5000 user-service
+#+end_src
+
+그후 127.0.0.1:5000 접속해서 api 문서 확인하기
+
+** UserService 로컬로 실행
+#+begin_src bash
+  cd UserService/UserAPI
+  pip3 install -r requirements.txt
+  python3 app.py
+#+end_src
+
+그후 127.0.0.1:5000 접속해서 api 문서 확인하기
+
+** UserService 테스팅
+메인 페이지 있는 api endpoint에 포스트맨으로 리퀘스트 날리기 
+
+
+
+
+
+
+

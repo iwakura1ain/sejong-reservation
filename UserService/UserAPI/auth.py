@@ -1,14 +1,10 @@
 # import jwt
 # from jwt.exceptions import DecodeError
 
-from flask import (
-    flash, g, request, session, url_for
-)
-
+from flask import g, request
 from flask_restx import Resource, fields, Namespace, Api
-
 from flask_jwt_extended import (
-    create_access_token, get_jwt_identity, jwt_required, verify_jwt_in_request, JWTManager
+    create_access_token, get_jwt_identity, jwt_required, verify_jwt_in_request
 )
 
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -17,17 +13,19 @@ from db import get_db, get_cur
 
 
 
+# namespace for "/auth"
 auth = Namespace(
     name="auth",
     description="사용자 인증을 위한 API",
 )
 
-
-user_fields = auth.model('User', {  # Model 객체 생성
+# required fields in request body?
+user_fields = auth.model('User', { 
     'username': fields.String(description='a User Name', required=True, example="justkode"),
     'password': fields.String(description='Password', required=True, example="password")
 })
 
+# required fields in request body?
 jwt_fields = auth.model('JWT', {
     'Authorization': fields.String(description='Authorization which you must inclued in header', required=True, example="eyJ0e~~~~~~~~~")
 })
@@ -39,19 +37,25 @@ class AuthRegister(Resource):
     @auth.doc(responses={200: 'Success'})
     @auth.doc(responses={500: 'Register Failed'})
     def post(self):
-        username = request.json['username']
-        password = request.json['password']
-        print(f"received {username}|{password}")
+        """
+        Endpoint for registering new users.
+        ---
+        request body:
+        - username: new username
+        - password: new password (currently has no length checks etc)
+        """
+        username = request.json.get('username')
+        password = request.json.get('password')
 
         db = get_db()
         cur = get_cur()
 
-        try:
+        try:  # check if user exists in db
             cur.execute(
                 "SELECT * FROM User WHERE username=?",
                 (username,),
             )
-            if cur.fetchone() is not None:
+            if cur.fetchone() is not None:  # when user exists
                 return {
                     "message": "User Exists"
                 }, 200
@@ -61,7 +65,7 @@ class AuthRegister(Resource):
                 "error": e
             }, 500
 
-        try:
+        try:  # add user into db
             cur.execute(
                 "INSERT INTO User (username, password) VALUES (?, ?)",
                 (username, generate_password_hash(password)),
@@ -72,9 +76,10 @@ class AuthRegister(Resource):
                 "error": e
             }, 500
 
-        return {
-            #'Authorization': jwt.encode({'username': username}, "secret", algorithm="HS256")  # str으로 반환하여 return
-            "Authorization": create_access_token(identity={'username': username})
+        return {  # return jwt token
+            "Authorization": "Bearer " + create_access_token(
+                identity={'username': username}
+            )
         }, 200
 
 
@@ -85,14 +90,20 @@ class AuthLogin(Resource):
     @auth.doc(responses={404: 'User Not Found'})
     @auth.doc(responses={500: 'Auth Failed'})
     def post(self):
-        username = request.json['username']
-        password = request.json['password']
-        print(f"received {username}|{password}")
+        """
+        Endpoint for loging in users
+        ---
+        req body:
+        - username: existing username
+        - password: plaintext password
+        """
+        username = request.json.get('username')
+        password = request.json.get('password')
 
         db = get_db()
         cur = get_cur()
         
-        try:
+        try:  # check if user exists in db
             cur.execute(
                 "SELECT * FROM User WHERE username=?",
                 (username,),
@@ -103,33 +114,28 @@ class AuthLogin(Resource):
                 return {
                     "message": "User Not Found"
                 }, 404
-
+            
         except Exception as e:
             return {
                 "message": "Register Failed",
                 "error": e
             }, 500
 
-        try:
-            if check_password_hash(user[2], password):  # 비밀번호 일치 확인
+        try:  # check password hash
+            if not check_password_hash(user[2], password):  # 비밀번호 일치 확인        
                 return {
-                    #'Authorization': jwt.encode({'username': username}, "secret", algorithm="HS256") # str으로 반환하여 return
-                    "Authorization": create_access_token(identity={'username': username})
-                }, 200
-                
-            return {
-                "message": "Auth Failed"
-            }, 500
-
-            # session.clear()
-            # session['user_id'] = user[0]
-            # print(f"user {username} logged in")  
+                    "message": "Auth Failed"
+                }, 500
 
         except Exception as e:
             return {
                 "message": "Register Failed",
                 "error": e
             }, 500
+
+        return {
+            "Authorization": "Bearer " + create_access_token(identity={'username': username})
+        }, 200
 
 
 @auth.route('/get')
@@ -137,174 +143,17 @@ class AuthGet(Resource):
     @auth.doc(responses={200: 'Success'})
     @auth.doc(responses={404: 'Login Failed'})
     def get(self):
-        #try:
-        if jwt_data := verify_jwt_in_request() is not None:
-            print(jwt_data)
+        """
+        Endpoint for checking if user token is valid.
+        ---
+        req header
+        - Authentication: Bearer [JWT Token]
+        """
+        if jwt_data := verify_jwt_in_request():
             return jwt_data, 200
         
         return {"message": "unauthenticated"}, 200
         
-
-        # except DecodeError:
-        #     return {"message": "unauthenticated"}, 200
-
-        # header = request.headers.get('Authorization')  # Authorization 헤더로 담음
-        # if header is None:
-        #     return {"message": "Please Login"}, 404
-
-        # try:
-        #     data = jwt.decode(header, "secret", algorithms="HS256")
-        #     return data, 200
-    
-        # except DecodeError:
-        #     return {"message": "unauthenticated"}, 200
-
-
-# @AUTH.route('/logout')
-# def logout():
-#     def get(self):
-#         session.clear()
-#         return redirect(url_for('index'))
-
-
-# #@Auth.before_app_request
-# def load_logged_in_user():
-#     user_id = session.get('user_id')
-
-#     if user_id is None:
-#         g.user = None
-#     else:
-#         db = get_db()
-#         cur = get_cur()
-#         cur.execute(
-#             'SELECT * FROM User WHERE id = ?', (user_id,)
-#         )
-#         g.user = cur.fetchone()
-
-
-# def login_required(view):
-#     @functools.wraps(view)
-#     def wrapped_view(**kwargs):
-#         if g.user is None:
-#             return redirect(url_for('auth.login'))
-
-#         return view(**kwargs)
-
-#     return wrapped_view
-
-
-    
-# ==================================================
-
-# import functools
-# from flask import (
-#     Blueprint, flash, g, redirect, render_template, request, session, url_for
-# )
-# from werkzeug.security import check_password_hash, generate_password_hash
-
-# from flaskr.db import *
-
-
-# bp = Blueprint('auth', __name__, url_prefix='/auth')
-
-
-# @bp.route('/register', methods=('GET', 'POST'))
-# def register():
-#     if request.method == 'POST':
-#         username = request.form['username']
-#         password = request.form['password']
-
-#         print(f"got from frontend: {username} | {password}")
-
-#         db = get_db()
-#         cur = get_cur()
-#         error = None
-
-#         if not username:
-#             error = 'Username is required.'
-#         elif not password:
-#             error = 'Password is required.'
-
-#         if error is None:
-#             try:
-#                 cur.execute(
-#                     "INSERT INTO User (username, password) VALUES (?, ?)",
-#                     (username, generate_password_hash(password)),
-#                 )
-#                 #db.commit()
-#             except Exception as e:
-#                 error = e
-#             else:
-#                 return redirect(url_for("auth.login"))
-
-#         flash(error)
-
-#     return render_template('register.html')
-
-
-# @bp.route('/login', methods=('GET', 'POST'))
-# def login():
-#     if request.method == 'POST':
-#         username = request.form['username']
-#         password = request.form['password']
-
-#         print(f"username|password: {username}|{password}")
-
-#         db = get_db()
-#         cur = get_cur()
-
-#         error = None
-#         cur.execute(
-#             "SELECT * FROM User WHERE username = ?", (username,)
-#         )
-#         user = cur.fetchone()
-
-
-#         if user is None:
-#             error = 'Incorrect username.'
-#         elif not check_password_hash(user[2], password):
-#             error = 'Incorrect password.'
-
-#         if error is None:
-#             session.clear()
-#             session['user_id'] = user[0]
-#             return redirect(url_for('index'))
-
-#         flash(error)
-#         print(f"user {username} logged in")   
-
-#     return render_template('login.html')
-
-
-# @bp.before_app_request
-# def load_logged_in_user():
-#     user_id = session.get('user_id')
-
-#     if user_id is None:
-#         g.user = None
-#     else:
-#         cur = get_cur()
-#         cur.execute(
-#             'SELECT * FROM User WHERE id = ?', (user_id,)
-#         )
-#         g.user = cur.fetchone()
-
-
-# @bp.route('/logout')
-# def logout():
-#     session.clear()
-#     return redirect(url_for('index'))
-
-
-# def login_required(view):
-#     @functools.wraps(view)
-#     def wrapped_view(**kwargs):
-#         if g.user is None:
-#             return redirect(url_for('auth.login'))
-
-#         return view(**kwargs)
-
-#     return wrapped_view
 
 
 
