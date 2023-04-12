@@ -2,7 +2,8 @@ from flask import Flask
 from flask_restx import Resource, Api, Namespace
 from flask_jwt_extended import JWTManager
 
-#from auth import AUTH
+
+from auth import auth
 import os
 import db
 
@@ -44,10 +45,10 @@ def create_app(test_config=None):
     return app
 
 
-APP = create_app()
+app = create_app()
 
-API = Api(
-    APP,
+api = Api(
+    app,
     version='0.1',
     title="API auth test",
     description="API auth test",
@@ -56,13 +57,16 @@ API = Api(
     license="GPL3"
 )
 
-AUTH = Namespace(
-    name="Auth",
-    description="사용자 인증을 위한 API",
-)
+api.add_namespace(auth, '/auth')
+
+jwt = JWTManager(app)
+
+
 
 if __name__ == "__main__":
-    APP.run(debug=True, host='0.0.0.0', port=5000)
+    print(app.url_map)
+    app.run(debug=True, host='0.0.0.0', port=5000)
+    
 
 
 

@@ -13,29 +13,31 @@ from flask_jwt_extended import (
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import API, AUTH, APP
 from db import get_db, get_cur
 
 
-API.add_namespace(AUTH, '/auth')
-JWT = JWTManager(APP)
+
+auth = Namespace(
+    name="auth",
+    description="사용자 인증을 위한 API",
+)
 
 
-user_fields = AUTH.model('User', {  # Model 객체 생성
+user_fields = auth.model('User', {  # Model 객체 생성
     'username': fields.String(description='a User Name', required=True, example="justkode"),
     'password': fields.String(description='Password', required=True, example="password")
 })
 
-jwt_fields = AUTH.model('JWT', {
+jwt_fields = auth.model('JWT', {
     'Authorization': fields.String(description='Authorization which you must inclued in header', required=True, example="eyJ0e~~~~~~~~~")
 })
 
 
-@AUTH.route('/register')
+@auth.route('/register')
 class AuthRegister(Resource):
-    @AUTH.expect(user_fields)
-    @AUTH.doc(responses={200: 'Success'})
-    @AUTH.doc(responses={500: 'Register Failed'})
+    @auth.expect(user_fields)
+    @auth.doc(responses={200: 'Success'})
+    @auth.doc(responses={500: 'Register Failed'})
     def post(self):
         username = request.json['username']
         password = request.json['password']
@@ -76,12 +78,12 @@ class AuthRegister(Resource):
         }, 200
 
 
-@AUTH.route('/login')
+@auth.route('/login')
 class AuthLogin(Resource):
-    @AUTH.expect(user_fields)
-    @AUTH.doc(responses={200: 'Success'})
-    @AUTH.doc(responses={404: 'User Not Found'})
-    @AUTH.doc(responses={500: 'Auth Failed'})
+    @auth.expect(user_fields)
+    @auth.doc(responses={200: 'Success'})
+    @auth.doc(responses={404: 'User Not Found'})
+    @auth.doc(responses={500: 'Auth Failed'})
     def post(self):
         username = request.json['username']
         password = request.json['password']
@@ -130,10 +132,10 @@ class AuthLogin(Resource):
             }, 500
 
 
-@AUTH.route('/get')
+@auth.route('/get')
 class AuthGet(Resource):
-    @AUTH.doc(responses={200: 'Success'})
-    @AUTH.doc(responses={404: 'Login Failed'})
+    @auth.doc(responses={200: 'Success'})
+    @auth.doc(responses={404: 'Login Failed'})
     def get(self):
         #try:
         if jwt_data := verify_jwt_in_request() is not None:
