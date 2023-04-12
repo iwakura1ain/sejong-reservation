@@ -3,5 +3,5 @@ ExampleService/ExampleAPI/.venv/
 *.pyc
 WebService/WebApp/node_modules/
 UserService/UserAPI/.venv/
-
+UserService/UserAPI/__pycache__/
 
