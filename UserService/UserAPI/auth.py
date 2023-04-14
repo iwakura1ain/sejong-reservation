@@ -10,6 +10,7 @@ from flask_jwt_extended import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import get_db, get_cur
+from service import Service
 
 
 
@@ -30,9 +31,22 @@ jwt_fields = auth.model('JWT', {
     'Authorization': fields.String(description='Authorization which you must inclued in header', required=True, example="eyJ0e~~~~~~~~~")
 })
 
+db_config = {
+    'host': '127.0.0.1',
+    'port': 3306,
+    'user': 'testusr2',
+    'password': '1234',
+    'database': 'exampledb2',
+    'autocommit': True
+}
+
 
 @auth.route('/register')
-class AuthRegister(Resource):
+class AuthRegister(Service, Resource):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, db_config=db_config)
+        Resource.__init__(self, *args, **kwargs)
+        
     @auth.expect(user_fields)
     @auth.doc(responses={200: 'Success'})
     @auth.doc(responses={500: 'Register Failed'})
@@ -44,50 +58,38 @@ class AuthRegister(Resource):
         - username: new username
         - password: new password (currently has no length checks etc)
         """
+
         username = request.json.get('username')
         password = request.json.get('password')
 
-        db = get_db()
-        cur = get_cur()
-
-        try:  # check if user exists in db
-            cur.execute(
-                "SELECT * FROM User WHERE username=?",
-                (username,),
-            )
-            if cur.fetchone() is not None:  # when user exists
+        try:
+            sql, args = "SELECT * FROM User WHERE username=?", (username,)
+            if len(self.query_db(sql, args=args, retval=True)) != 0:
                 return {
                     "message": "User Exists"
                 }, 200
+
+            sql, args = "INSERT INTO User (username, password) VALUES (?, ?)", (username, generate_password_hash(password),)
+            if self.query_db(sql, args=args):
+                return {  # return jwt token
+                    "Authorization": "Bearer " + create_access_token(identity={'username': username})
+                }, 200
+            
         except Exception as e:
             return {
                 "message": "Register Failed",
-                "error": e
             }, 500
-
-        try:  # add user into db
-            cur.execute(
-                "INSERT INTO User (username, password) VALUES (?, ?)",
-                (username, generate_password_hash(password)),
-            )
-        except Exception as e:
-            return {
-                "message": "Register Failed",
-                "error": e
-            }, 500
-
-        return {  # return jwt token
-            "Authorization": "Bearer " + create_access_token(
-                identity={'username': username}
-            )
-        }, 200
 
 
 @auth.route('/login')
-class AuthLogin(Resource):
+class AuthLogin(Service, Resource):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, db_config=db_config)
+        Resource.__init__(self, *args, **kwargs)
+        
     @auth.expect(user_fields)
     @auth.doc(responses={200: 'Success'})
-    @auth.doc(responses={404: 'User Not Found'})
+    @auth.doc(responses={200: 'User Not Found'})
     @auth.doc(responses={500: 'Auth Failed'})
     def post(self):
         """
@@ -100,46 +102,37 @@ class AuthLogin(Resource):
         username = request.json.get('username')
         password = request.json.get('password')
 
-        db = get_db()
-        cur = get_cur()
-        
-        try:  # check if user exists in db
-            cur.execute(
-                "SELECT * FROM User WHERE username=?",
-                (username,),
-            )
-    
-            user = cur.fetchone()
-            if user is None:
+        try:
+            sql, args = "SELECT * FROM User WHERE username=?", (username,)
+            retval = self.query_db(sql, args=args, retval=True)
+            if len(retval) == 0:
                 return {
                     "message": "User Not Found"
-                }, 404
-            
-        except Exception as e:
-            return {
-                "message": "Register Failed",
-                "error": e
-            }, 500
+                }, 200
 
-        try:  # check password hash
+            user = retval[0]
             if not check_password_hash(user[2], password):  # 비밀번호 일치 확인        
                 return {
-                    "message": "Auth Failed"
-                }, 500
+                    "message": "Wrong Password"
+                }, 200
 
-        except Exception as e:
             return {
-                "message": "Register Failed",
-                "error": e
+                "Authorization": "Bearer " + create_access_token(identity={'username': username})
+            }, 200
+        
+        except Exception as e:
+            print(e)
+            return {
+                "message": "Login Failed",
             }, 500
-
-        return {
-            "Authorization": "Bearer " + create_access_token(identity={'username': username})
-        }, 200
 
 
 @auth.route('/get')
-class AuthGet(Resource):
+class AuthGet(Service, Resource):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, db_config=db_config)
+        Resource.__init__(self, *args, **kwargs)
+        
     @auth.doc(responses={200: 'Success'})
     @auth.doc(responses={404: 'Login Failed'})
     def get(self):
