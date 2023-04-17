@@ -12,7 +12,7 @@
   docker compose start dbservice
 #+end_src
 
-** UserService 도커로 빌드 후 실행 (현재 버전문제 때문에 안됨)
+** UserService 도커로 빌드 후 실행 
 #+begin_src bash
   cd UserService
   docker build -t user-service .
