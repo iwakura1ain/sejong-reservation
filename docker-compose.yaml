@@ -1,55 +1,48 @@
 version: "3.9"
 services:
-  webapp:
-    build: ./WebService
-    restart: always
-    ports:
-      - "8080:8080"
-
   reservationservice:
+    container_name: reservation-service
     build: ./ReservationService
-    restart: always
-    environment:
-      DB_URL: dbservice
-      DB_NAME: exampledb
-      DB_PORT: 3306
-      DB_USERNAME: testusr
-      DB_PASSWORD: 1234
+    restart: on-failure # always
     ports:
       - "5555:5555"
+    volumes:
+      - ./ReservationService:/usr/src/app
+    depends_on:
+      - dbservice
 
-  userservice:
-    build: ./UserService
-    restart: always
-    environment:
-      DB_URL: dbservice
-      DB_NAME: exampledb
-      DB_PORT: 3306
-      DB_USERNAME: testusr
-      DB_PASSWORD: 1234
-    ports:
-      - "5556:5556"
-
-  adminservice:
-    build: ./AdminService
-    restart: always
-    environment:
-      DB_URL: dbservice
-      DB_NAME: exampledb
-      DB_PORT: 3306
-      DB_USERNAME: testusr
-      DB_PASSWORD: 1234
-    ports:
-      - "5557:5557"
+# userservice:
+#   build: ./UserService
+#   restart: always
+#   environment:
+#     DB_URL: dbservice
+#     DB_NAME: exampledb
+#     DB_PORT: 3306
+#     DB_USERNAME: testusr
+#     DB_PASSWORD: 1234
+# 
+#   ports:
+#     - "5556:5556"
 
   dbservice:
+    container_name: db-service
     image: mariadb:11.0-rc-jammy
-    restart: always
+    restart: on-failure # always
     env_file:
       ./DBService/maria-env
     environment:
       TZ: Asia/Seoul
     volumes:
       - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
+#   ports:
+#     - "3306:3306"
+
+  adminer:
+    container_name: adminerservice
+    image: adminer:latest
+    restart: on-failure #always
+    depends_on:
+      - dbservice
     ports:
-      - "3306:3306"
+      - "9999:8080"
+    
