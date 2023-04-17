@@ -1,3 +1,6 @@
+* 프론트엔드 프로그램에 대한 설명
+vue-project 폴더 안 README 참고
+
 * 개발방법
 vue-project를 로컬에서 개발한다.
 dist 폴더는 .gitignore에 추가해도 됨.

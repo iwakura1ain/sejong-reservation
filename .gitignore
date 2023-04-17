@@ -1,2 +1,4 @@
-WebService/vue-project/.vscode/
-WebService/vue-project/dist/
+ExampleService/ExampleAPI/.venv/
+**/__pycache__/
+*.pyc
+WebService/WebApp/node_modules/

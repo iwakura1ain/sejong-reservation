@@ -1,0 +1,11 @@
+
+// @import "./reset.scss";
+
+$sejong-red : #C3002F;
+$sejong-grey : #51626F;
+$bg-grey : #F6F6F6;
+
+$header-height : 64px;
+$footer-height : 32px;
+$routerview-minheight : calc( calc(100vh - ($header-height)) - $footer-height);
+
