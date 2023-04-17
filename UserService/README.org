@@ -41,11 +41,11 @@
       def query_db(self, query, args=(), retval=False) # 등록된 디비 sql문으로 조회 
       def query_api(self, api_name, request_method, request_params=None, headers=None, body=None) # 등록된 api 조회
 #+end_src
-*** METHOD: __init__()
+** METHOD: __init__()
 
 서비스 클래스 초기화 할때 db 정보와 api 정보 등록
 
-**** PARAMS
+*** PARAMS
 /키워드=값/ 으로 전달
 - db_config = {
     'host': '127.0.0.1',
@@ -60,7 +60,7 @@
     'api_name1': {'url': 'example.com:9999/api/api1'},
     'api_name2': {'url': 'example.com:9999/api/api2'}
   }
-**** EXAMPLE: Flask RestX에서 사용방법
+*** EXAMPLE: Flask RestX에서 사용방법
 #+begin_src python
   @auth.route('/register') # flask_restx의 api 엔드포인트 
   class AuthRegister(Service, Resource):
@@ -69,16 +69,16 @@
           Resource.__init__(self, *args, **kwargs) # flask_restx의 __init__ 메서드 호출
 
 #+end_src
-*** METHOD: query_db()
+** METHOD: query_db()
 
 등록된 디비 sql문으로 조회
 
-**** PARAMS
+*** PARAMS
 - query: String | 디비에 보낼 sql문, 변수는 "?"로 표기
 - args: Tuple | 위에 query에서 사용한 변수들의 Tuple
 - retval: Bool | sql문에서 리턴값이 있는 SELECT문 등은 True, INSERT문 등은 False (꼭 확인해야함 안그럼 에러남)
 
-**** RETURN
+*** RETURN
 - retval=True
   Tuple 형식으로 db에서 조회된 값이 전부 리턴됨
   :값이 있는 경우:
@@ -99,7 +99,7 @@
   :sql이 실행 실패한 경우:
   False
   
-**** EXAMPLE
+*** EXAMPLE
 #+begin_src python
   try:  # 항상 try문으로 db 조회 시작 
       sql, args = "SELECT * FROM 테이블 WHERE x=?", ("?에 들어갈 변수",)  # 조회할 query 만들기 
@@ -114,21 +114,21 @@
       return ERROR
 #+end_src
 
-*** METHOD: query_api()
+** METHOD: query_api()
 
 등록된 api 조회, 아직 테스팅은 안했으나 아마 될듯 
 
-**** PARAMS
+*** PARAMS
 - api_name: String | 맨 처음 __init__메서드에서 등록한 api의 이름
 - request_method: "get", "post", "put", "delete" 중 하나 | 사용할 http 메서드
 - request_params: Dict | url에 넣을 변수들
 - headers: Dict | 헤더에 넣을 값
 - body: Dict | 바디에 넣을 값
 
-**** RETURN
+*** RETURN
 api에서 리턴받은 값을 Dict 형태로 반환 
 
-**** EXAMPLE
+*** EXAMPLE
 #+begin_src python
   try:
       retval = self.query_api(self, "api_name1", "get", headers="Authentication: Bearer JWT")  # api 조회 
