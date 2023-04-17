@@ -27,11 +27,11 @@ CREATE TABLE User (
 
 CREATE TABLE Timeslot (
 	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	   timeslot INT NOT NULL,
-	   room INT,
+	   slot INT NOT NULL,
+	   reservedRoomId INT, -- 다른 테이블 room이랑 겹쳐서 안되는듯? 그래서 다른 이름으로 바꿈
 
 	   CONSTRAINT Timeslot_Room
-	   FOREIGN KEY (room) REFERENCES Room(id)	   
+	   FOREIGN KEY (reservedRoomId) REFERENCES Room(id)	   
 ) DEFAULT CHARSET=utf8;
 
 CREATE TABLE Reservation (

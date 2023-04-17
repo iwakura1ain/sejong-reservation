@@ -2,13 +2,19 @@ from fastapi import FastAPI, APIRouter
 from fastapi import Response, HTTPException
 from fastapi.responses import JSONResponse
 
+import orm
 
 app = FastAPI()
 
 @app.get("/")
 def hello():
-    return {"hello from Reservation":o.get_session()}
-    #return :hello from Reservation"
+    return "hello from Reservation"
+
+@app.get("/orm")
+def hello_orm():
+    myorm = orm.sampleORM()
+    # sqlalchemy objects are NOT compatible with JSONResponse
+    return str(myorm.tables['User']) 
 
 reservation = APIRouter(prefix="/reservation")
 

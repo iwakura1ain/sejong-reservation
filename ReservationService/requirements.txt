@@ -1,3 +1,8 @@
+requests
+flask
 uvicorn
 fastapi
+mysql-connector-python
+pymysql
 sqlalchemy
+

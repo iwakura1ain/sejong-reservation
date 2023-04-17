@@ -5,62 +5,50 @@ from sqlalchemy import Table
 from sqlalchemy import select
 from sqlalchemy import URL
 from sqlalchemy.ext.automap import automap_base
+from sqlalchemy import inspect
 
 import pymysql
 
-class DB(): 
+class sampleORM():
+    """ 
+    sqlalchemy testing. 
+    not final. 
+    """
+
     def __init__(self):
-        self.db = pymysql.connect(
-                host='db-service',
-                port=3306,
-                user='testusr',
-                password='1234',
-                database='exampledb',
+        self.Base = automap_base()
+        self.engine = self.init_engine()
+        self.table_names = inspect(self.engine).get_table_names()
+        self.tables = self.create_tables()
+
+    def init_engine(self):
+        url_object = URL.create(
+            #"mariadb+pymysql",
+            "mysql+mysqlconnector",
+            username = "testusr",password = "1234",
+            host = "db-service",
+            database = "exampledb",
+            port = 3306,
         )
-
-    def get_cur(self):
-        return self.db.cursor()
-
-    def close_db(self):
-        self.db.close()
-
-# db = DB()
-# print(db)
-# cur = get_cur()
-# cur.query("select * from reservation")
-# resp = cur.fetchall()
-# print(resp)
-
-Base = automap_base()
-def get_session():
-    # full_url = f"mysql+mysqlconnector://{user}:{pw}@{docker_name}:{port}/{databasename}?charset=utf8mb4"
-    url_object = URL.create(
-        #"mariadb+pymysql",
-        "mysql+mysqlconnector",
-        username = "testusr",password = "1234",
-        host = "db-service",
-        database = "exampledb",
-        port = 3306,
-    )
-    #Base.metadata.create_all(bind=engine)
-    #return sessionmaker(bind=engine)
-
-    engine = create_engine(url_object,echo=True)
-    Base.prepare(engine)
-    return create_session(bind=engine)
-
-
-def get_tables():
-    session = get_session()
-    print(session)
-
-    """
-    for table in [User,Room]:
-        print(table)
-        print([c for c in table.columns])
-        exec = select(table) # == exec = table.select()
-        for x in session.execute(exec):
-            print(x)
-    """
-
-
+        _engine = create_engine(url_object,echo=True)
+        self.Base.prepare(_engine)
+        return _engine
+    
+    def create_tables(self):
+        _tables = {}
+        for name in self.table_names:
+            t = Table(name, MetaData(), 
+                autoload_with=self.engine)
+            _tables[name] = {}
+            #_tables[name]["table"] = t
+            _tables[name]["schema"] = t.schema
+            _tables[name]["description"] = t.description
+            _tables[name]["columns"] = t.columns.values()
+            _tables[name]["indexes"] = t.indexes
+            _tables[name]["key"] = t.key
+            _tables[name]["primary_key"] = t.primary_key
+            _tables[name]["foreign_keys"] = t.foreign_keys
+            _tables[name]["foreign_key_constraints"] = t.foreign_key_constraints
+            _tables[name]["foreign_keys"] = t.foreign_keys
+            _tables[name]["info"] = t.info
+        return _tables
