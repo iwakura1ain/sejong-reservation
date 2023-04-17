@@ -2,15 +2,17 @@ from fastapi import FastAPI, APIRouter
 from fastapi import Response, HTTPException
 from fastapi.responses import JSONResponse
 
+
 app = FastAPI()
 
 @app.get("/")
 def hello():
-    return "hello from Reservation"
+    return {"hello from Reservation":o.get_session()}
+    #return :hello from Reservation"
 
 reservation = APIRouter(prefix="/reservation")
 
-@reservation.get("/")
+@reservation.get("")
 def get_reservation():
     reservations = []
 
@@ -33,5 +35,14 @@ def get_reservation():
         content={"result":True,"message":"",
         "reservations":reservations},
         status_code=200)
+
+
+    
+
+
+
+
+
+
 
 app.include_router(reservation)
