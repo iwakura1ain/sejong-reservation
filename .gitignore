@@ -2,3 +2,5 @@ ExampleService/ExampleAPI/.venv/
 **/__pycache__/
 *.pyc
 WebService/WebApp/node_modules/
+
+
