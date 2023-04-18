@@ -34,6 +34,7 @@ services:
       TZ: Asia/Seoul
     volumes:
       - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
+      - ./DBService/data:/var/lib/mysql
 #   ports:
 #     - "3306:3306"
 

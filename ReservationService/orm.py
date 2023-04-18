@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import create_session
+from sqlalchemy.orm import create_session, Session
 from sqlalchemy import MetaData
 from sqlalchemy import Table
 from sqlalchemy import select
@@ -7,7 +7,7 @@ from sqlalchemy import URL
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy import inspect
 
-import pymysql
+from fastapi import APIRouter, Depends
 
 class sampleORM():
     """ 
@@ -39,16 +39,31 @@ class sampleORM():
         for name in self.table_names:
             t = Table(name, MetaData(), 
                 autoload_with=self.engine)
-            _tables[name] = {}
-            #_tables[name]["table"] = t
-            _tables[name]["schema"] = t.schema
-            _tables[name]["description"] = t.description
-            _tables[name]["columns"] = t.columns.values()
-            _tables[name]["indexes"] = t.indexes
-            _tables[name]["key"] = t.key
-            _tables[name]["primary_key"] = t.primary_key
-            _tables[name]["foreign_keys"] = t.foreign_keys
-            _tables[name]["foreign_key_constraints"] = t.foreign_key_constraints
-            _tables[name]["foreign_keys"] = t.foreign_keys
-            _tables[name]["info"] = t.info
+            _tables[name] = t
         return _tables
+
+router = APIRouter(prefix="/ormtest")
+
+def get_orm():
+    "returns new sampleORM object"
+    yield sampleORM()
+
+@router.get("/info")
+def get_all_tables(myorm=Depends(get_orm)):
+    """
+    get info for all tables in database
+    """
+    # sqlalchemy objects are NOT compatible with JSONResponse
+    # return str(myorm.tables['User']) 
+    # return [{k:str(v.columns.values())} for k,v in myorm.tables.items()]
+    return [
+        {k: {
+            "type": str(type(v)),
+            "columns": [str(c) for c in v.columns.values()],
+            "indexes": [str(c) for c in v.columns.values()],
+            "key": str(v.key),
+            "primary_key": str(v.primary_key),
+            "foreign_keys": [str(c) for c in v.foreign_keys],
+            "foreign_key_constraints": [str(c) for c in v.foreign_key_constraints],
+            "indexes":str(v.indexes),
+        }} for k, v in myorm.tables.items()]
