@@ -1,11 +1,30 @@
+// fonts
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+* {
+  font-family: 'Nanum Myeongjo', serif;
+}
 
-// @import "./reset.scss";
-
+// colors
 $sejong-red : #C3002F;
-$sejong-grey : #51626F;
-$bg-grey : #F6F6F6;
+$sejong-red-30 : #C3002F20;
+$sejong-red-50 : #C3002F50;
+$sejong-red-80 : #C3002F80;
+$almost-sejong-red : #bd6076;
+$light-sejong-red : #f0d6dc;
 
+$sejong-grey : #51626F;
+
+$bg-grey : #F6F6F650;
+
+$white-30 : rgba(255,255,255,0.3);
+$white-50 : rgba(255,255,255,0.5);
+$white-80 : rgba(255,255,255,0.8);
+
+
+// size
 $header-height : 64px;
 $footer-height : 32px;
 $routerview-minheight : calc( calc(100vh - ($header-height)) - $footer-height);
 
+$button-margin : 4px;
+$button-padding : 8px;
