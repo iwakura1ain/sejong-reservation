@@ -1,7 +1,8 @@
 // fonts
+// @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@100;200;300;400;500;600;700;800;900');
 @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
 * {
-  font-family: 'Nanum Myeongjo', serif;
+  font-family: /*'Gothic A1',*/ 'Nanum Myeongjo', serif;
 }
 
 // colors
@@ -25,6 +26,7 @@ $white-80 : rgba(255,255,255,0.8);
 $header-height : 64px;
 $footer-height : 32px;
 $routerview-minheight : calc( calc(100vh - ($header-height)) - $footer-height);
+$routerview-padding : 32px;
 
 $button-margin : 4px;
 $button-padding : 8px;
