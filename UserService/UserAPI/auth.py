@@ -9,8 +9,10 @@ from flask_jwt_extended import (
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import get_db, get_cur
+#from db import get_db, get_cur
 from service import Service
+
+from sqlalchemy import select, insert
 
 
 
@@ -36,15 +38,23 @@ db_config = {
     'port': 3306,
     'user': 'testusr2',
     'password': '1234',
-    'database': 'exampledb2',
+    'database': 'test1',
     'autocommit': True
+}
+
+model_config = {
+    "username": "testusr2",
+    "password": "1234",
+    "host": "127.0.0.1",
+    "database": "test1",
+    "port": 3306,
 }
 
 
 @auth.route('/register')
 class AuthRegister(Service, Resource):
     def __init__(self, *args, **kwargs):
-        Service.__init__(self, db_config=db_config)
+        Service.__init__(self, model_config=model_config)
         Resource.__init__(self, *args, **kwargs)
         
     @auth.expect(user_fields)
@@ -62,25 +72,64 @@ class AuthRegister(Service, Resource):
         username = request.json.get('username')
         password = request.json.get('password')
 
-        try:
-            sql, args = "SELECT * FROM User WHERE username=?", (username,)
-            if len(self.query_db(sql, args=args, retval=True)) != 0:
+
+        # using only sql
+        # try:
+        #     sql, args = "SELECT * FROM User WHERE username=?", (username,)
+        #     if len(self.query_db(sql, args=args, retval=True)) != 0:
+        #         return {
+        #             "message": "User Exists"
+        #         }, 200
+
+        #     sql, args = "INSERT INTO User (username, password) VALUES (?, ?)", (username, generate_password_hash(password),)
+        #     if self.query_db(sql, args=args):
+        #         return {  # return jwt token
+        #             "Authorization": "Bearer " + create_access_token(identity={'username': username})
+        #         }, 200
+            
+        # except Exception as e:
+        #     return {
+        #         "message": "Register Failed",
+        #     }, 500
+
+
+        # using orm model
+        #try:
+        with self.query_model("User") as (conn, User):
+            res = conn.execute(select(User).where(User.username == username)).all()
+            # print("dir", dir(res[0]))
+            # print(res, res[0].__dict__)
+            # print("dict", [str(row.__dict__) for row in res])
+
+            for r in res:
+                print(r)
+                print(dir(r))
+                print(r._mapping)
+                
+
+            if len(res) != 0:
                 return {
                     "message": "User Exists"
                 }, 200
 
-            sql, args = "INSERT INTO User (username, password) VALUES (?, ?)", (username, generate_password_hash(password),)
-            if self.query_db(sql, args=args):
-                return {  # return jwt token
-                    "Authorization": "Bearer " + create_access_token(identity={'username': username})
-                }, 200
-            
-        except Exception as e:
+            conn.execute(
+                insert(User), {
+                    "username": username,
+                    "password": generate_password_hash(password),
+                }
+            )
+
             return {
-                "message": "Register Failed",
-            }, 500
+                "Authorization": "Bearer " + create_access_token(identity={'username': username})
+            }, 200
 
+        # except Exception as e:
+        #     print(e)
+        #     return {
+        #         "message": "Register Failed",
+        #     }, 500
 
+                
 @auth.route('/login')
 class AuthLogin(Service, Resource):
     def __init__(self, *args, **kwargs):
@@ -102,24 +151,50 @@ class AuthLogin(Service, Resource):
         username = request.json.get('username')
         password = request.json.get('password')
 
-        try:
-            sql, args = "SELECT * FROM User WHERE username=?", (username,)
-            retval = self.query_db(sql, args=args, retval=True)
-            if len(retval) == 0:
-                return {
-                    "message": "User Not Found"
-                }, 200
+        # using only sql
+        # try:
+        #     sql, args = "SELECT * FROM User WHERE username=?", (username,)
+        #     retval = self.query_db(sql, args=args, retval=True)
+        #     if len(retval) == 0:
+        #         return {
+        #             "message": "User Not Found"
+        #         }, 200
 
-            user = retval[0]
-            if not check_password_hash(user[2], password):  # 비밀번호 일치 확인        
-                return {
-                    "message": "Wrong Password"
-                }, 200
+        #     user = retval[0]
+        #     if not check_password_hash(user[2], password):  # 비밀번호 일치 확인        
+        #         return {
+        #             "message": "Wrong Password"
+        #         }, 200
 
-            return {
-                "Authorization": "Bearer " + create_access_token(identity={'username': username})
-            }, 200
+        #     return {
+        #         "Authorization": "Bearer " + create_access_token(identity={'username': username})
+        #     }, 200
         
+        # except Exception as e:
+        #     print(e)
+        #     return {
+        #         "message": "Login Failed",
+        #     }, 500
+
+
+        # using orm model 
+        try:
+            with self.query_model("User") as (conn, User):
+                res = conn.execute(select(User).where(User.username == "username")).all()
+                if len(res) == 0:
+                    return {
+                        "message": "User Not Found"
+                    }, 200
+
+                if not check_password_hash(res[0].password, password):
+                    return {
+                        "message": "Wrong Password"
+                    }, 200
+
+                return {
+                    "Authorization": "Bearer " + create_access_token(identity={'username': username})
+                }, 200
+
         except Exception as e:
             print(e)
             return {
