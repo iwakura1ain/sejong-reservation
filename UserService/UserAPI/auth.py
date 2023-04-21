@@ -94,40 +94,31 @@ class AuthRegister(Service, Resource):
 
 
         # using orm model
-        #try:
-        with self.query_model("User") as (conn, User):
-            res = conn.execute(select(User).where(User.username == username)).all()
-            # print("dir", dir(res[0]))
-            # print(res, res[0].__dict__)
-            # print("dict", [str(row.__dict__) for row in res])
+        try:
+            with self.query_model("User") as (conn, User):
+                res = conn.execute(select(User).where(User.username == username)).all()
 
-            for r in res:
-                print(r)
-                print(dir(r))
-                print(r._mapping)
-                
+                if len(res) != 0:
+                    return {
+                        "message": "User Exists"
+                    }, 200
 
-            if len(res) != 0:
+                conn.execute(
+                    insert(User), {
+                        "username": username,
+                        "password": generate_password_hash(password),
+                    }
+                )
+
                 return {
-                    "message": "User Exists"
+                    "Authorization": "Bearer " + create_access_token(identity={'username': username})
                 }, 200
 
-            conn.execute(
-                insert(User), {
-                    "username": username,
-                    "password": generate_password_hash(password),
-                }
-            )
-
+        except Exception as e:
+            print(e)
             return {
-                "Authorization": "Bearer " + create_access_token(identity={'username': username})
-            }, 200
-
-        # except Exception as e:
-        #     print(e)
-        #     return {
-        #         "message": "Register Failed",
-        #     }, 500
+                "message": "Register Failed",
+            }, 500
 
                 
 @auth.route('/login')
