@@ -96,8 +96,8 @@ class AuthRegister(Service, Resource):
         # using orm model
         try:
             with self.query_model("User") as (conn, User):
-                res = conn.execute(select(User).where(User.username == username)).all()
-
+                res = conn.execute(select(User).where(User.username == username)).mappings().all()
+            
                 if len(res) != 0:
                     return {
                         "message": "User Exists"
@@ -171,7 +171,7 @@ class AuthLogin(Service, Resource):
         # using orm model 
         try:
             with self.query_model("User") as (conn, User):
-                res = conn.execute(select(User).where(User.username == "username")).all()
+                res = conn.execute(select(User).where(User.username == "username")).mappings().all()
                 if len(res) == 0:
                     return {
                         "message": "User Not Found"
