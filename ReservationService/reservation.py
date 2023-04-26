@@ -37,16 +37,7 @@ router = APIRouter(
             )
 def get_reservation(# id: int|None = None,
     # TODO:filter by y,ym,ymd,md
-    y: int | None = None, m: int | None = None, d: int | None = None,
     ):
-    """
-    - GET /reservation
-    - GET /reservation?y=2023
-    - GET /reservation?y=2023&m=4
-    - (아래 두개는 같은 결과를 리턴함)
-        - GET /reservation?y=2023&m=4&d=2
-        - GET /reservation?m=4&d=2 
-    """
     try:
         with service.query_model("Reservation") as (conn, Reservation):
             stmt = select(Reservation)
@@ -68,7 +59,7 @@ def get_reservation(# id: int|None = None,
 
         # if no rows to return
         if not rows:
-            return Response({"message":"No content"}, status.HTTP_204_NO_CONTENT)
+            return Response({"message":"Wrong ID"}, status.HTTP_200_OK)
         # else return rows
         return rows
 
@@ -96,7 +87,9 @@ def get_reservation_by_id(id:int=None):
             r = requests.get( 
                 f"http://localhost:5555/room/{row.roomID}").json()
             row.roomInfo = _Room(**r)
-            return row
+            return row.dict(exclude_unset=True)
+    except IndexError as e:
+        return JSONResponse({"message": "No Content"}, status.HTTP_200_OK)
     except Exception as e:
         return JSONResponse({"message": str(e)}, status.HTTP_200_OK)
 

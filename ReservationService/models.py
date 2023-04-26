@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 from datetime import datetime, date
 
 
@@ -48,11 +49,11 @@ class _Room(BaseModel):
 
 
 class _Reservation(BaseModel):
-    _id: int = Field(int, title="예약 ID")
+    id: Optional[int] = Field(None, title="예약 ID")
     # alias="reservationId")
-    _created: datetime = Field(datetime, title="만들어진 시간",
+    _created: Optional[datetime] = Field(datetime, title="만들어진 시간",
                                alias="createdAt")
-    _updated: datetime = Field(datetime, title="마지막 변경 시간",
+    _updated: Optional[datetime] = Field(datetime, title="마지막 변경 시간",
                                alias="updatedAt")
     reservationTopic: str = Field(..., title="회의 내용",
                                   alias="reservationTopic")
@@ -64,9 +65,11 @@ class _Reservation(BaseModel):
     creatorID: int = Field(None, title="예약한 회의실 ID",
                            alias="creator")
     # members: None = None
-    roomUsed: bool | None = None
-    roomInfo: _Room = Field(None, title="회의실 정보")
-    creatorInfo: _User = Field(None, title="예약자 정보")
+    roomUsed: Optional[bool] | None = None
+    roomInfo: Optional[_Room] = Field(None, title="회의실 정보")
+    creatorInfo: Optional[_User] = Field(None, title="예약자 정보")
 
     class Config:
         orm_mode = True
+
+        schema_exclude = ["id"]

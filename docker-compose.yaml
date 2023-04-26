@@ -1,3 +1,4 @@
+# TODO: change restart to "always" in production
 version: "3.9"
 services:
   reservationservice:
@@ -25,7 +26,7 @@ services:
 #     - "5556:5556"
 
   dbservice:
-    container_name: db-service
+    container_name: dbservice
     image: mariadb:11.0-rc-jammy
     restart: on-failure # always
     env_file:
@@ -35,15 +36,17 @@ services:
     volumes:
       - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
       - ./DBService/data:/var/lib/mysql
-#   ports:
-#     - "3306:3306"
 
-  adminer:
-    container_name: adminerservice
+  dbmanager:
+    container_name: dbmanager
+
     image: adminer:latest
+    ports: 
+      - "9999:8080"
+#   image: dbeaver/cloudbeaver:latest
+#   ports:
+#    - "9999:8978"
+
     restart: on-failure #always
     depends_on:
       - dbservice
-    ports:
-      - "9999:8080"
-    
