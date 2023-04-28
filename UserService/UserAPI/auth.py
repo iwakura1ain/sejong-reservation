@@ -10,10 +10,10 @@ from flask_jwt_extended import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 #from db import get_db, get_cur
-from service import Service
+from service import Service, validator
+
 
 from sqlalchemy import select, insert
-
 
 
 # namespace for "/auth"
@@ -124,7 +124,7 @@ class AuthRegister(Service, Resource):
 @auth.route('/login')
 class AuthLogin(Service, Resource):
     def __init__(self, *args, **kwargs):
-        Service.__init__(self, db_config=db_config)
+        Service.__init__(self, model_config=model_config)
         Resource.__init__(self, *args, **kwargs)
         
     @auth.expect(user_fields)
@@ -171,6 +171,9 @@ class AuthLogin(Service, Resource):
         # using orm model 
         try:
             with self.query_model("User") as (conn, User):
+                parsed = User.validate(data=request.json)
+                print(f"{request.json} \n\n {parsed}")
+                
                 res = conn.execute(select(User).where(User.username == "username")).mappings().all()
                 if len(res) == 0:
                     return {
