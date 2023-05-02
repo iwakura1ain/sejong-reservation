@@ -71,9 +71,8 @@ class ConferenceRoom(Resource, Service):
                         "message": "Room Not Found"
                     }, 200
                 
-                return {
-                    res,
-                    "message": f'Room {roomName} Found'
+                return res, {
+                    "message": f"Room {roomName} Found"
                 }, 200
                 
         except Exception as e:
