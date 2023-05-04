@@ -100,7 +100,7 @@ class Service:
         # model_config = {
         #     username="testusr",
         #     password="1234",
-        #     host="db-service",
+        #     host="dbservice",
         #     database="exampledb",
         #     port=3306,
         # }

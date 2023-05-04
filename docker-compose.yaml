@@ -35,15 +35,12 @@ services:
     volumes:
       - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
       - ./DBService/data:/var/lib/mysql
-#   ports:
-#     - "3306:3306"
+    ports:
+      - "3306:3306"
 
   adminer:
     container_name: adminerservice
     image: adminer:latest
     restart: on-failure #always
-    depends_on:
-      - dbservice
     ports:
       - "9999:8080"
-    
