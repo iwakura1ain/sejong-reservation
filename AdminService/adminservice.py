@@ -41,12 +41,12 @@ class ConferenceRoom(Resource, Service):
                 # if validated data is already in table, 
                 # send message 'data already exists'
                 for room in res:
-                    if verified_json_body['roomName'] in room['roomName']:
-                        if verified_json_body['roomAddress1'] in room['roomAddress1']:
-                            if verified_json_body['roomAddress2'] in room['roomAddress2']:
-                                return{
-                                    "message": f"Room {verified_json_body['roomName']} already exists." 
-                                }, 200
+                    if (verified_json_body['roomName'] in room['roomName'] and 
+                    verified_json_body['roomAddress1'] in room['roomAddress1'] and 
+                    verified_json_body['roomAddress2'] in room['roomAddress2']):
+                        return{
+                            "message": f"Room {verified_json_body['roomName']} already exists." 
+                        }, 200
                 
                 # insert verified body data to Room table
                 conn.execute( 
@@ -79,12 +79,10 @@ class ConferenceRoom(Resource, Service):
             with self.query_model("Room") as (conn, Room):
                 # get all json data from Room table as list with dicts
                 rooms = conn.execute(select(Room)).mappings().all()
-
+            
                 # serialize each room data in Room table
-                serialized_rooms = []
-                for room in rooms:
-                    serialized_room = utils.serialization(room, exclude=exclude)
-                    serialized_rooms.append(serialized_room)
+                serialized_rooms = [utils.serialization(room, exclude=exclude) 
+                                    for room in rooms]
 
                 # if there's no such room
                 if len(serialized_rooms) == 0:
@@ -172,7 +170,7 @@ class ConferenceRoomById(Resource, Service):
             }, 500
         
     # UPDATE Room
-    def put(self, id):
+    def patch(self, id):
         # request body data, need to be validated
         req = request.json
         try:
@@ -180,13 +178,24 @@ class ConferenceRoomById(Resource, Service):
                 # validate request body data
                 # SELECT room by id and parse it into dict
                 verified_json_body = Room.validate(req)
-                res = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+                res = conn.execute(select(Room)).mappings()
+                roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
 
                 # if there's no such room by given id
-                if res is None:
+                if roomById is None:
                     return {
                         "message": f"Room id:{id} not found"
                     }, 400
+                
+                # if updated room data already exists in the table
+                for room in res:
+                    if (verified_json_body['roomName'] in room['roomName'] and 
+                        verified_json_body['roomAddress1'] in room['roomAddress1'] and 
+                        verified_json_body['roomAddress2'] in room['roomAddress2']):
+                        return{
+                            "message": f"Room {verified_json_body['roomName']} already exists." 
+                        }, 200
+
                 
                 # UPDATE room
                 conn.execute(
