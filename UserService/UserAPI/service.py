@@ -214,7 +214,14 @@ class Service:
             raise e
 
         
-    def query_api(self, api_name, request_method, request_params=None, headers=None, body=None):
+    def query_api(
+            self,
+            api_name,
+            request_method,
+            request_params=None,
+            headers=None,
+            body=None
+    ):
         """
         method used for api queries
         ---
