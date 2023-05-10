@@ -31,13 +31,8 @@ router = APIRouter(
 )
 
 
-@router.get("",
-            description="예약 조회",
-            status_code=status.HTTP_200_OK,
-            )
-def get_reservation(# id: int|None = None,
-    # TODO:filter by y,ym,ymd,md
-    ):
+@router.get("", description="예약 조회")
+def get_reservation():
     try:
         with service.query_model("Reservation") as (conn, Reservation):
             stmt = select(Reservation)
@@ -67,8 +62,7 @@ def get_reservation(# id: int|None = None,
         return JSONResponse({"message": str(e)}, status.HTTP_200_OK)
 
 
-@router.get("/{id}",
-            description="예약 조회 by id")
+@router.get("/{id}", description="예약 조회 by id")
 def get_reservation_by_id(id:int=None):
     """
     - GET /reservation/15
@@ -94,10 +88,7 @@ def get_reservation_by_id(id:int=None):
         return JSONResponse({"message": str(e)}, status.HTTP_200_OK)
 
 
-@router.post("",
-             description="예약 추가",
-            #  status_code=status.HTTP_201_CREATED,
-             )
+@router.post("", description="예약 추가")
 def create_reservation(reservation: _Reservation):
     """
     - POST /reservation
@@ -115,8 +106,7 @@ def create_reservation(reservation: _Reservation):
         return JSONResponse({"message": str(e)})
 
 
-@router.patch("/{id}",
-              description="예약 변경")
+@router.patch("/{id}", description="예약 변경")
 def update_reservation_by_id(id: int, reservation: _Reservation):
     """
     - PATCH /reservation/15 -d {...}
@@ -153,8 +143,7 @@ def update_reservation_by_id(id: int, reservation: _Reservation):
         return JSONResponse({"message": str(e)}, 200)
 
 
-@router.delete("/{id}",
-               description="예약 삭제")
+@router.delete("/{id}", description="예약 삭제")
 def delete_reservation(id: int):
     """
     - DELETE /reservation/10
