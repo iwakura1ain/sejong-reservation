@@ -16,3 +16,9 @@ ORM = {
     "database": "test1",
     "port": 3306,
 }
+
+
+# IMPORTANT!!!
+# TODO: change to db
+TOKEN_BLOCKLIST = set()
+

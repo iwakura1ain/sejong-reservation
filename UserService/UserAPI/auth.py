@@ -19,10 +19,8 @@ from service import Service
 from utils import retrieve_jwt, serialize, protected
 from config import ORM
 
-from app import add_token_to_blocklist
-
 # namespace for "/auth"
-auth = Namespace(
+AUTH = Namespace(
     name="auth",
     description="사용자 인증을 위한 API",
 )
@@ -43,7 +41,7 @@ exclude = ["password", "createdAt", "updatedAt"]
 
 
 
-@auth.route('/register')
+@AUTH.route('/register')
 class Register(Service, Resource):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=ORM)
@@ -101,7 +99,7 @@ class Register(Service, Resource):
             }, 500
 
 
-@auth.route('/login')
+@AUTH.route('/login')
 class Login(Service, Resource):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=ORM)
@@ -147,7 +145,7 @@ class Login(Service, Resource):
                     identity=identity,
                     fresh=True
                 )
-                refresh_token = create_refresh_toke(
+                refresh_token = create_refresh_token(
                     identity=identity
                 )
                 
@@ -165,12 +163,20 @@ class Login(Service, Resource):
                 "msg": "Login Failed"
             }, 500
 
-
-@auth.route('/logout')
+@AUTH.route('/logout')
 class Logout(Service, Resource):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=ORM)
         Resource.__init__(self, *args, **kwargs)
+
+    @staticmethod
+    def add_token_to_blocklist(jti):
+        from config import TOKEN_BLOCKLIST
+
+        if jti not in TOKEN_BLOCKLIST:
+            TOKEN_BLOCKLIST.add(jti)
+            return True
+        return False
 
     @jwt_required(verify_type=False)
     def delete(self):
@@ -178,15 +184,17 @@ class Logout(Service, Resource):
         Logout User.
         """
         jti = get_jwt()["jti"]
-        add_token_to_blocklist(jti)
-
+        if self.add_token_to_blocklist(jti):
+            return {
+                "status": True,
+                "msg": "token revoked"
+            }
         return {
             "status": True,
-            "msg": "token revoked"
+            "msg": "already revoked"
         }
-        
-        
-@auth.route("/jwt-status")
+
+@AUTH.route("/jwt-status")
 class JWTStatus(Service, Resource):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=ORM)
@@ -221,7 +229,7 @@ class JWTStatus(Service, Resource):
             }, 500
 
 
-@auth.route("/jwt-refresh")
+@AUTH.route("/jwt-refresh")
 class JWTRefresh(Service, Resource):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=ORM)

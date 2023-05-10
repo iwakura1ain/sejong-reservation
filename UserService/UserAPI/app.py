@@ -1,12 +1,17 @@
 from flask import Flask
 from flask_restx import Resource, Api, Namespace
-from flask_jwt_extended import JWTManager
 
-from auth import auth
-from users import users
+# from auth import auth
+# from users import users
 
 import os
 from datetime import timedelta
+
+from flask_jwt_extended import JWTManager
+
+import auth
+import users
+
 
 
 def create_app(test_config=None):
@@ -32,35 +37,28 @@ def create_app(test_config=None):
     # connect test db and init
     #db.init_app(app)
 
-    return app
+    api = Api(app)
+    
 
+    return app, api
 
-app = create_app()
+APP, API = create_app()
+JWT = JWTManager(APP)
 
-api = Api(app)
-api.add_namespace(auth, '/auth')  # add endpoints from auth.py
-api.add_namespace(users, '/users')  # add endpoints from users.py
-
-jwt = JWTManager(app)
-
-
-# IMPORTANT!!!
-# TODO: change to db
-TOKEN_BLOCKLIST = []
-
-# Callback function to check if a JWT exists in the database blocklist
-@jwt.token_in_blocklist_loader
+@JWT.token_in_blocklist_loader # Callback function to check if a JWT exists in the database blocklist
 def check_if_token_revoked(jwt_header, jwt_payload):
-    global TOKEN_BLOCKLIST
+    """
+    Will run for every request and check if token is revoked
+    """
+    from config import TOKEN_BLOCKLIST
     jti = jwt_payload["jti"]
     
+    print(f"checking if token in blocklist: {TOKEN_BLOCKLIST}")
+
     return True if jti in TOKEN_BLOCKLIST else False
 
-def add_token_to_blocklist(jti):
-    global TOKEN_BLOCKLIST
-    TOKEN_BLOCKLIST.append(jti)
 
-
-
-if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":    
+    API.add_namespace(auth.AUTH, '/auth')  # add endpoints from auth.py
+    API.add_namespace(users.USERS, '/users')  # add endpoints from users.py
+    APP.run(debug=True, host='0.0.0.0', port=5000)

@@ -19,14 +19,14 @@ from config import ORM
 
 
 # namespace for "/auth"
-users = Namespace(
+USERS = Namespace(
     name="users",
     description="사용자 CRUD 위한 API",
 )
 
 exclude = ["password", "createdAt", "updatedAt"]
 
-@users.route("")
+@USERS.route("")
 class UserList(Service, Resource):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=ORM)
@@ -57,7 +57,7 @@ class UserList(Service, Resource):
             }, 500
 
 
-@users.route("/<id>")
+@USERS.route("/<id>")
 class UserDetail(Service, Resource):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=ORM)
