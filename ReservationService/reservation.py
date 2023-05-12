@@ -1,157 +1,139 @@
-from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse, Response
-from fastapi.encoders import jsonable_encoder
-from pydantic import ValidationError
+from flask import request
+from flask_restx import Resource, Namespace
 
-from sqlalchemy import select, insert, update, delete
+from sqlalchemy import select, insert, update, delete, desc
 
-from service import Service
-from models import _Reservation, _User, _Room
 from config import db_config, model_config
-import requests
+from service import Service
 
-# include = {"reservationDate", "reservationTopic", "roomID", "creatorID"}
-exclude = {"creatorInfo","roomInfo"}
-
-# TODO: look for better alternatives than fastapi.Depends
-service = None
+import json
 
 
-def get_service():
-    global service
-    service = Service(model_config=model_config)
-    yield
-    service = None
+def serialize(row):
+    return json.loads(json.dumps(dict(row), default=str))
 
-
-router = APIRouter(
-    prefix="/reservation",
-    dependencies=[Depends(get_service)],
-    tags=["reservation"],
+ns = Namespace(
+    name="reservation",
+    description="예약 서비스 API",
+    prefix="/reservation"
 )
 
 
-@router.get("", description="예약 조회")
-def get_reservation():
-    try:
-        with service.query_model("Reservation") as (conn, Reservation):
-            stmt = select(Reservation)
-            rows = conn.execute(stmt).all()
-            rows = [_Reservation.from_orm(row) for row in rows]
-        print(rows)
+@ns.route("")
+class ReservationList(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, model_config=model_config)
+        Resource.__init__(self, *args, **kwargs)
 
-        # if no rows to return
-        if not rows:
-            return Response({"message":"No content"}, status_code=status.HTTP_204_NO_CONTENT)
+    def get(self):
+        """
+        Get a list of reservations
+        - GET /reseration: 전체 예약 조회
+        """
 
-        for row in rows:
-            # get roomInfo for each reservation
-            # TODO: replace with service.query_api
-            r = requests.get( 
-                f"http://localhost:5555/room/{row.roomID}").json()
-            row.roomInfo = _Room(**r)
-            # TODO: get creatorInfo for each reservation
+        # TODO: parse request.args
+        # TODO: check user type info
 
-        # if no rows to return
-        if not rows:
-            return Response({"message":"Wrong ID"}, status.HTTP_200_OK)
-        # else return rows
-        return rows
+        try:
+            with self.query_model("Reservation") as (conn, Reservation):
+                stmt = select(Reservation)
+                rows = conn.execute(stmt).mappings().fetchall()
+                rows = [serialize(row) for row in rows]
+            return {"status": True, "reservations": (rows)}, 200
+        except Exception as e:
+            return {"error": str(e)}, 400
 
-    except Exception as e:
-        return JSONResponse({"message": str(e)}, status.HTTP_200_OK)
+    def post(self):
+        """
+        Make a new reservation
+        - POST /reservation: New reservation with data
+        """
 
+        try:
+            with self.query_model("Reservation") as (conn, Reservation):
+                # insert new reservation
+                new_reservation = request.json
+                conn.execute(insert(Reservation), new_reservation)
 
-@router.get("/{id}", description="예약 조회 by id")
-def get_reservation_by_id(id:int=None):
-    """
-    - GET /reservation/15
-    """
-    try:
-        with service.query_model("Reservation") as (conn, Reservation):
-            # if no id, return 204 no content
-            if not id:
-                return Response({"message":"No Contnet"},status.HTTP_204_NO_CONTENT)
-            # if id has value, select only for that id
-            stmt = select(Reservation).where(Reservation.id == id)
-            rows = conn.execute(stmt).all()
-            row = _Reservation.from_orm(rows[0])
-            # get roomInfo,creatorInfo for each reservation
-            # TODO: replace with service.query_api
-            r = requests.get( 
-                f"http://localhost:5555/room/{row.roomID}").json()
-            row.roomInfo = _Room(**r)
-            return row.dict(exclude_unset=True)
-    except IndexError as e:
-        return JSONResponse({"message": "No Content"}, status.HTTP_200_OK)
-    except Exception as e:
-        return JSONResponse({"message": str(e)}, status.HTTP_200_OK)
+                # select new reservation
+                stmt = (select(Reservation)
+                    .where(new_reservation["reservationTopic"] == Reservation.reservationTopic
+                        and new_reservation["reservationDate"] == Reservation.reservationDate
+                        and new_reservation["reservationType"] == Reservation.reservationType
+                        and new_reservation["reservationRoom"] == Reservation.reservationRoom
+                        and new_reservation["creator"] == Reservation.creator)
+                    .order_by(desc(Reservation.createdAt)) # ORDER BY createdAt desc
+                )
+                rows = conn.execute(stmt).mappings().fetchall()
+                # if duplicates with same contents exist, 
+                # use the first one and delete the rest
+                # TODO
+                row = serialize(rows[0])
+            return {"status": True, "reservation": row}, 200
+        except Exception as e:
+            return {"error": str(e)}, 400
 
 
-@router.post("", description="예약 추가")
-def create_reservation(reservation: _Reservation):
-    """
-    - POST /reservation
-    """
-    try:
-        # TODO: fix unconsumed column names
-        with service.query_model("Reservation") as (conn, Reservation):
-            stmt = (insert(Reservation)
-                    .values(reservation.dict()))
-            res = conn.execute(stmt).all()
-            # if res returns no rows, then return 201 with reservation
-            # return JSONResponse({"message":"created"})
+@ns.route("/<int:id>", endpoint="aaaaa")
+class ReservationByID(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, model_config=model_config)
+        Resource.__init__(self, *args, **kwargs)
 
-    except Exception as e:
-        return JSONResponse({"message": str(e)})
+    def get(self, id: int):
+        """
+        Read a reservation by reservation ID
+        - GET /reservation/1:
+            - id==1인 예약을 조회
+        """
 
+        try:
+            with self.query_model("Reservation") as (conn, Reservation):
+                stmt = select(Reservation).where(Reservation.id==id)
+                row = conn.execute(stmt).mappings().fetchone()
+                row = serialize(row)
+            return row, 200
+        except Exception as e:
+            return {"status": False, "error": str(e)}, 400
 
-@router.patch("/{id}", description="예약 변경")
-def update_reservation_by_id(id: int, reservation: _Reservation):
-    """
-    - PATCH /reservation/15 -d {...}
-    """
-    # TODO: finish implementing patch update 
-    # docs: https://fastapi.tiangolo.com/tutorial/body-updates/#body-updates
-    try:
-        with service.query_model("Reservation") as (conn, Reservation):
-            stmt = select(Reservation).where(Reservation.id == id)
-            res = conn.execute(stmt).all()
-            original_reservation = _Reservation.from_orm(res[0])
-            assert type(original_reservation) == _Reservation
-            print(original_reservation.id, original_reservation)
+    def patch(self, id: int):
+        """
+        Update a reservation
+        - PATCH /reservation/1: id==1인 예약을 변경
+        """
 
-            update_data = reservation.dict(exclude_unset=True)
-            assert type(update_data) == dict
-            print(update_data)
-            updated_model = original_reservation.copy(update=update_data)
-            assert type(updated_model) == _Reservation
-            print(updated_model._id)
+        try:
+            with self.query_model("Reservation") as (conn, Reservation):
+                # data to update
+                update_data = request.json
+                # TODO: data validation
 
-            stmt = (update(Reservation)
-                    .where(Reservation.id == updated_model._id)
-                    .values(jsonable_encoder(updated_model, exclude=exclude)))
-            res = conn.execute(stmt)
+                # update reservation
+                stmt = (update(Reservation)
+                    .where(Reservation.id == id)
+                    .values(update_data))
+                conn.execute(stmt)
+                
+                # select updated reservation
+                stmt = select(Reservation).where(Reservation.id == id)
+                row = conn.execute(stmt).mappings().fetchone()
+                row = serialize(row)
+                return {"status": True, "reservation": row}, 200
+        except Exception as e:
+            return {"status": False, "error": str(e)}, 400
 
-            # if res returns no rows, then return 200 with reservation
-            if not res.returns_rows:
-                return JSONResponse(
-                    {"result": str((res,updated_model))}, 200)
-    except ValidationError as e:
-        return JSONResponse({"message": "모든 정보가 제대로 주어졌는지 확인"}, 200)
-    except Exception as e:
-        return JSONResponse({"message": str(e)}, 200)
+    def delete(self, id: int):
+        """
+        Delete a reservation
+        - DELETE /reservation/1: id==1인 예약을 삭제
+        """
+        try:
+            with self.query_model("Reservation") as (conn, Reservation):
+                # delete reservation
+                stmt = delete(Reservation).where(Reservation.id == id)
+                conn.execute(stmt)
+                return {"status": True, "msg": "deleted"}, 200
 
-
-@router.delete("/{id}", description="예약 삭제")
-def delete_reservation(id: int):
-    """
-    - DELETE /reservation/10
-    """
-    try:
-        with service.query_model("Reservation") as (conn, Reservation):
-            stmt = delete(Reservation).where(Reservation.id == id)
-            res = conn.execute(stmt)
-            return JSONResponse({"result": str(res)}, 200)
-    except Exception as e:
-        return JSONResponse({"message": str(e)}, 200)
+        # TODO: reservation with this ID does not exist
+        except Exception as e:
+            return {"status": False, "error": str(e)}, 400

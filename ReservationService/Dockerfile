@@ -15,8 +15,6 @@ RUN ./mariadb_repo_setup --mariadb-server-version="mariadb-10.6"
 
 RUN apt install libmariadb3 libmariadb-dev --yes
 
-
-
 # upgrade pip to prevent warning
 RUN pip install --upgrade pip
 # install requirements.txt
@@ -24,4 +22,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn","app:app","--host","0.0.0.0","--port","5555","--reload"]
+CMD ["flask","run","--debug","--reload","--host","0.0.0.0","--port","5555"]
