@@ -172,7 +172,7 @@ class Logout(Service, Resource):
     @staticmethod
     def add_token_to_blocklist(jti):
         from config import TOKEN_BLOCKLIST
-
+        
         if jti not in TOKEN_BLOCKLIST:
             TOKEN_BLOCKLIST.add(jti)
             return True
