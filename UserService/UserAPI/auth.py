@@ -83,7 +83,7 @@ class Register(Service, Resource):
 
                 # return new user
                 res = conn.execute(
-                    select(User).where(User.username == req["id"])
+                    select(User).where(User.id == req["id"])
                 ).mappings().fetchone()
 
                 return {
@@ -123,7 +123,7 @@ class Login(Service, Resource):
 
                 # get user
                 res = conn.execute(
-                    select(User).where(User.username == req["id"])
+                    select(User).where(User.id == req["id"])
                 ).mappings().fetchone()
 
                 # check if user exists
