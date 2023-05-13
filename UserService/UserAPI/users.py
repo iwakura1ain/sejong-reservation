@@ -24,7 +24,7 @@ USERS = Namespace(
     description="사용자 CRUD 위한 API",
 )
 
-exclude = ["password", "createdAt", "updatedAt"]
+exclude = ["password"]
 
 @USERS.route("")
 class UserList(Service, Resource):

@@ -36,8 +36,8 @@ AUTH = Namespace(
 #     'Authorization': fields.String(description='Authorization which you must inclued in header', required=True, example="eyJ0e~~~~~~~~~")
 # })
 
-include = ["id", "userType", "isAdmin", "isBanned"]
-exclude = ["password", "createdAt", "updatedAt"]
+include = ["id", "name", "type", "no_show"]
+exclude = ["password"]
 
 
 
@@ -63,7 +63,7 @@ class Register(Service, Resource):
 
                 # check if user exists
                 res = conn.execute(
-                    select(User).where(User.username == req["username"])
+                    select(User).where(User.id == req["id"])
                 ).mappings().all()
 
                 if len(res) != 0:
@@ -72,17 +72,18 @@ class Register(Service, Resource):
                         "msg": "User Exists"
                     }, 200
 
+                req["password"] = generate_password_hash(req["password"])
+                
                 # create new user
                 conn.execute(
                     insert(User), {
-                        "username": req["username"],
-                        "password": generate_password_hash(req["password"]),
+                        **req
                     }
                 )
 
                 # return new user
                 res = conn.execute(
-                    select(User).where(User.username == req["username"])
+                    select(User).where(User.username == req["id"])
                 ).mappings().fetchone()
 
                 return {
@@ -122,7 +123,7 @@ class Login(Service, Resource):
 
                 # get user
                 res = conn.execute(
-                    select(User).where(User.username == req["username"])
+                    select(User).where(User.username == req["id"])
                 ).mappings().fetchone()
 
                 # check if user exists
