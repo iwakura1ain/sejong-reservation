@@ -30,7 +30,7 @@ CREATE TABLE Reservation (
 	   reservation_date DATE NOT NULL,
 	   start_date DATE NOT NULL,
 	   end_date DATE NOT NULL,
-	   room INT NOT NULL,
+	   which_room INT NOT NULL,
 	   CONSTRAINT reservation_to_room
 	   FOREIGN KEY (room) REFERENCES Room(id),
 	   creator INT NOT NULL,
