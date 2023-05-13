@@ -39,6 +39,8 @@ CREATE TABLE Reservation (
 	   members JSON NOT NULL DEFAULT '[]',
 	   room_used BOOLEAN NOT NULL DEFAULT 0
 ) DEFAULT CHARSET=utf8;
+CREATE USER 'development'@localhost IDENTIFIED BY '1234';
+GRANT ALL PRIVILEGES ON *.* TO 'development'@localhost IDENTIFIED BY '1234';
 -- -- Room sample values
 -- INSERT INTO Room (roomName, roomAddress1, roomAddress2, maxUsers) values ('센835','대양AI센터','835호',10);
 -- INSERT INTO Room (roomName, roomAddress1, roomAddress2, maxUsers) values ('센836','대양AI센터','836호',10);
