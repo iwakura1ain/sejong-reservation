@@ -12,10 +12,10 @@ admin = namespace.Namespace(
 
 # model configuration for orm model
 model_config = {
-    "username": "testusr",
+    "username": "development",
     "password": "1234",
     "host": "127.0.0.1",
-    "database": "exampledb",
+    "database": "sejong",
     "port": 3306,
 }
 
@@ -41,21 +41,21 @@ class ConferenceRoom(Resource, Service):
                 # if validated data is already in table, 
                 # send message 'data already exists'
                 for room in res:
-                    if (verified_json_body['roomName'] in room['roomName'] and 
-                    verified_json_body['roomAddress1'] in room['roomAddress1'] and 
-                    verified_json_body['roomAddress2'] in room['roomAddress2']):
+                    if (verified_json_body['room_name'] in room['room_name'] and 
+                    verified_json_body['room_address1'] in room['room_address1'] and 
+                    verified_json_body['room_address2'] in room['room_address2']):
                         return{
-                            "message": f"Room {verified_json_body['roomName']} already exists." 
+                            "message": f"Room {verified_json_body['room_name']} already exists." 
                         }, 200
                 
                 # insert verified body data to Room table
                 conn.execute( 
                     insert(Room), {
-                        "roomName": verified_json_body['roomName'],
-                        "roomAddress1": verified_json_body['roomAddress1'],
-                        "roomAddress2": verified_json_body['roomAddress2'],
-                        "maxUsers": verified_json_body['maxUsers'],
-                        "isUsable": verified_json_body['isUsable'],
+                        "room_name": verified_json_body['room_name'],
+                        "room_address1": verified_json_body['room_address1'],
+                        "room_address2": verified_json_body['room_address2'],
+                        "max_users": verified_json_body['max_users'],
+                        "is_usable": verified_json_body['is_usable'],
                     }
                 )
 
@@ -65,7 +65,7 @@ class ConferenceRoom(Resource, Service):
                 }, 200
         
         # error
-        except Exception as e:
+        except OSError as e: # 모든 exception을 e로 받겠다, 그런데 지금 어디서 error가 나는지 모른다, 모든 exception을 받는게 아니라 특정한걸 받아보자
             print(e)
             return {
                 "message": "Room Create Failed"
@@ -126,10 +126,10 @@ class ConferenceRoomById(Resource, Service):
                 # GET room with given id
                 return {
                     "id": res.id,
-                    "roomName": res.roomName,
-                    "roomAdderss1": res.roomAddress1,
-                    "roomAddress2": res.roomAddress2,
-                    "maxUsers": res.maxUsers,
+                    "room_name": res.room_name,
+                    "roomAdderss1": res.room_address1,
+                    "room_address2": res.room_address2,
+                    "max_user's": res.max_users,
                 }, 200
 
         # error      
@@ -189,22 +189,23 @@ class ConferenceRoomById(Resource, Service):
                 
                 # if updated room data already exists in the table
                 for room in res:
-                    if (verified_json_body['roomName'] in room['roomName'] and 
-                        verified_json_body['roomAddress1'] in room['roomAddress1'] and 
-                        verified_json_body['roomAddress2'] in room['roomAddress2']):
+                    if (verified_json_body['room_name'] in room['room_name'] and 
+                        verified_json_body['room_address1'] in room['room_address1'] and 
+                        verified_json_body['room_address2'] in room['room_address2']):
                         return{
-                            "message": f"Room {verified_json_body['roomName']} already exists." 
+                            "message": f"Room {verified_json_body['room_name']} already exists." 
                         }, 200
 
                 
                 # UPDATE room
                 conn.execute(
                     update(Room).where(Room.id == id),{
-                        "roomName": verified_json_body['roomName'],
-                        "roomAddress1": verified_json_body['roomAddress1'],
-                        "roomAddress2": verified_json_body['roomAddress2'],
-                        "maxUsers": verified_json_body['maxUsers'],
-                        "isUsable": verified_json_body['isUsable'],
+                        # "room_name": verified_json_body['room_name'],
+                        # "room_address1": verified_json_body['room_address1'],
+                        # "room_address2": verified_json_body['room_address2'],
+                        # "max_users": verified_json_body['max_users'],
+                        # "is_usable": verified_json_body['is_usable'],
+                        **verified_json_body 
                     }
                 )
 
