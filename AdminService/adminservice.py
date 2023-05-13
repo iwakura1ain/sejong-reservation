@@ -24,7 +24,7 @@ api_config = {
 }
 
 # keys to be excluded when serializing data to GET all rooms
-exclude = ['createdAt', 'updatedAt']
+exclude = ['created_at', 'updated_at']
 
 @admin.route('/rooms')
 class ConferenceRoom(Resource, Service):
@@ -36,10 +36,11 @@ class ConferenceRoom(Resource, Service):
     def post(self):
         # request body data, need to be validated
         req = request.json
+
+        # check user if has authorization.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-    
         if(user_status['status'] 
            and user_status['User']['type'] != 2):
             return {
@@ -90,14 +91,14 @@ class ConferenceRoom(Resource, Service):
     @admin.doc(responses={200: 'Success'})
     @admin.doc(responses={404: 'Fail'})
     def get(self): 
+        # check if user is logged in.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-    
         if(user_status['status']):
             return {
                 "status": False,
-                "message": "No authorization"
+                "message": "Not logged in"
             }, 200
         
         try:
@@ -135,8 +136,18 @@ class ConferenceRoomById(Resource, Service):
         Service.__init__(self, model_config=model_config)
         Resource.__init__(self, *args, **kwargs)
     
-    # GET room by id
+    # GET room by id    
     def get(self, id):
+        # check if user is logged in.
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+        if(user_status['status']):
+            return {
+                "status": False,
+                "message": "Not logged in"
+            }, 200
+        
         try:
             with self.query_model("Room") as (conn, Room):
                 # SELECT room by id and parse it into dict
@@ -166,6 +177,17 @@ class ConferenceRoomById(Resource, Service):
         
     # DELETE room by id
     def delete(self, id):
+        # check user if has authorization.
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+        if(user_status['status'] 
+           and user_status['User']['type'] != 2):
+            return {
+                "status": False,
+                "message": "No authorization"
+            }, 200
+        
         try:
             with self.query_model("Room") as (conn, Room):
                 # SELECT room by id and parse it into dict
@@ -198,6 +220,18 @@ class ConferenceRoomById(Resource, Service):
     def patch(self, id):
         # request body data, need to be validated
         req = request.json
+        
+        # check user if has authorization.
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+        if(user_status['status'] 
+           and user_status['User']['type'] != 2):
+            return {
+                "status": False,
+                "message": "No authorization"
+            }, 200
+        
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate request body data
