@@ -12,7 +12,7 @@ SQL = {
 ORM = {
     "username": "development",
     "password": "1234",
-    "host": "127.0.0.1",
+    "host": "sejong-reservation-dbservice-1",
     "database": "sejong",
     "port": 3306,
 }
