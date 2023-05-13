@@ -95,7 +95,7 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(user_status['status']):
+        if not user_status['status']:
             return {
                 "status": False,
                 "message": "Not logged in"
@@ -133,7 +133,7 @@ class ConferenceRoom(Resource, Service):
 @admin.route('/rooms/<int:id>')
 class ConferenceRoomById(Resource, Service):
     def __init__(self, *args, **kwargs):
-        Service.__init__(self, model_config=model_config)
+        Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
     
     # GET room by id    
@@ -142,7 +142,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(user_status['status']):
+        if not user_status['status']:
             return {
                 "status": False,
                 "message": "Not logged in"
