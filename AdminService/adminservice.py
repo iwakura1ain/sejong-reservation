@@ -19,19 +19,34 @@ model_config = {
     "port": 3306,
 }
 
+api_config = {
+    "jwt_status": "http://127.0.0.1:5001/auth/jwt-status",
+}
+
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['createdAt', 'updatedAt']
 
 @admin.route('/rooms')
 class ConferenceRoom(Resource, Service):
     def __init__(self, *args, **kwargs):
-        Service.__init__(self, model_config=model_config)
+        Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
     # CREATE Room 
     def post(self):
         # request body data, need to be validated
         req = request.json
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+    
+        if(user_status['status'] 
+           and user_status['User']['type'] != 2):
+            return {
+                "status": False,
+                "message": "No authorization"
+            }, 200
+        
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate data from request body
@@ -75,6 +90,16 @@ class ConferenceRoom(Resource, Service):
     @admin.doc(responses={200: 'Success'})
     @admin.doc(responses={404: 'Fail'})
     def get(self): 
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+    
+        if(user_status['status']):
+            return {
+                "status": False,
+                "message": "No authorization"
+            }, 200
+        
         try:
             with self.query_model("Room") as (conn, Room):
                 # get all json data from Room table as list with dicts

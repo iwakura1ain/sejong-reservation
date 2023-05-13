@@ -229,7 +229,9 @@ class Service:
             raise NotImplementedError
 
         # for url endpoints such as example.com/api/room/1/users/4
-        url = self.api[api_name]["url"].format(**request_params) 
+        # url = self.api[api_name].format(**request_params) 
+        url = self.api_config[api_name]
+
 
         try:
             req = getattr(requests, request_method)
