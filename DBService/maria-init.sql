@@ -28,8 +28,8 @@ CREATE TABLE Reservation (
 	   reservation_topic VARCHAR(100) DEFAULT '',
 	   reservation_type INT DEFAULT NULL,
 	   reservation_date DATE NOT NULL,
-	   start_date DATE NOT NULL,
-	   end_date DATE NOT NULL,
+	   start_date TIME NOT NULL,
+	   end_date TIME NOT NULL,
 	   which_room INT NOT NULL,
 	   CONSTRAINT reservation_to_room
 	   FOREIGN KEY (which_room) REFERENCES Room(id),
