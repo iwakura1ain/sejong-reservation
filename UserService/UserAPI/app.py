@@ -13,7 +13,6 @@ import auth
 import users
 
 
-
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -38,7 +37,6 @@ def create_app(test_config=None):
     #db.init_app(app)
 
     api = Api(app)
-    
 
     return app, api
 
@@ -50,13 +48,18 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     """
     Will run for every request and check if token is revoked
     """
-    from config import TOKEN_BLOCKLIST
-    jti = jwt_payload["jti"]
     
-    print(f"checking if token in blocklist: {TOKEN_BLOCKLIST}")
+    from service import Service
+    from config import ORM
+    from sqlalchemy import select
 
-    return True if jti in TOKEN_BLOCKLIST else False
+    service = Service(model_config=ORM)
+    with service.query_model("Token_Blocklist") as (conn, Blocklist):
+        res = conn.execute(
+            select(Blocklist).where(Blocklist.jti == jwt_payload["jti"])
+        ).mappings().fetchone()
 
+        return False if res is None else True
 
 if __name__ == "__main__":    
     API.add_namespace(auth.AUTH, '/auth')  # add endpoints from auth.py

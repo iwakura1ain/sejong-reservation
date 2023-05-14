@@ -17,8 +17,3 @@ ORM = {
     "port": 3306,
 }
 
-
-# IMPORTANT!!!
-# TODO: change to db
-TOKEN_BLOCKLIST = set()
-

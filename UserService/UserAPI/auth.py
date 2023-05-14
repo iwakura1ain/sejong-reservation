@@ -37,7 +37,7 @@ AUTH = Namespace(
 # })
 
 include = ["id", "name", "type", "no_show"]
-exclude = ["password"]
+exclude = ["password", "created_at"]
 
 
 
@@ -170,22 +170,38 @@ class Logout(Service, Resource):
         Service.__init__(self, model_config=ORM)
         Resource.__init__(self, *args, **kwargs)
 
-    @staticmethod
-    def add_token_to_blocklist(jti):
-        from config import TOKEN_BLOCKLIST
+    
+    def add_token_to_blocklist(self, token):
+        # from config import TOKEN_BLOCKLIST
         
-        if jti not in TOKEN_BLOCKLIST:
-            TOKEN_BLOCKLIST.add(jti)
+        # if jti not in TOKEN_BLOCKLIST:
+        #     TOKEN_BLOCKLIST.add(jti)
+        #     return True
+        # return False
+        with self.query_model("Token_Blocklist") as (conn, Blocklist):
+            res = conn.execute(
+                select(Blocklist).where(Blocklist.jti == token["jti"])
+            ).mappings().fetchone()
+            if res is not None:
+                return False
+
+            res = conn.execute(
+                insert(Blocklist),
+                {
+                    "jti": token["jti"],
+                    "user_id": token["sub"]["id"],
+                    "type": token["sub"]["type"]
+                }
+            )
             return True
-        return False
 
     @jwt_required(verify_type=False)
     def delete(self):
         """
         Logout User.
         """
-        jti = get_jwt()["jti"]
-        if self.add_token_to_blocklist(jti):
+        jwt = get_jwt()
+        if self.add_token_to_blocklist(jwt):
             return {
                 "status": True,
                 "msg": "token revoked"

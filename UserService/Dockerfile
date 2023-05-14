@@ -2,7 +2,9 @@ FROM python:3.11.2-buster
 
 ENV PYTHONBUFFERED 1
 
-COPY UserAPI /UserAPI/
+COPY ./UserService/UserAPI /UserAPI/
+
+COPY ./Common/service.py/ /UserAPI/service.py
 
 WORKDIR /UserAPI
 
