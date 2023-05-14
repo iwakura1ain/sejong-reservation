@@ -7,6 +7,6 @@ import reservation
 app = Flask(__name__)
 app.config.SWAGGER_UI_DOC_EXPANSION = 'list' # none, list, full
 
-api = Api(app, doc="/docs/reservation")
+api = Api(app)
 api.add_namespace(reservation.ns)
 app.run(host="0.0.0.0", port=5555, debug=True)

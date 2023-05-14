@@ -2,28 +2,36 @@
 version: "3.9"
 services:
   reservationservice:
-    container_name: reservation-service
     build: ./ReservationService
     restart: on-failure # always
     ports:
       - "5555:5555"
     volumes:
       - ./ReservationService:/usr/src/app
-    depends_on:
-      - dbservice
 
-# userservice:
-#   build: ./UserService
-#   restart: always
-#   environment:
-#     DB_URL: dbservice
-#     DB_NAME: exampledb
-#     DB_PORT: 3306
-#     DB_USERNAME: testusr
-#     DB_PASSWORD: 1234
-# 
-#   ports:
-#     - "5556:5556"
+  userservice:
+    build: ./UserService
+    restart: always
+    environment:
+      DB_URL: dbservice
+      DB_NAME: exampledb
+      DB_PORT: 3306
+      DB_USERNAME: testusr
+      DB_PASSWORD: 1234
+    ports:
+      - "5001:5000"
+
+  adminservice:
+    build: ./AdminService
+    restart: always
+    environment:
+      DB_URL: dbservice
+      DB_NAME: exampledb
+      DB_PORT: 3306
+      DB_USERNAME: testusr
+      DB_PASSWORD: 1234
+    ports:
+      - "5557:5557"
 
   dbservice:
     container_name: dbservice
@@ -35,7 +43,6 @@ services:
       TZ: Asia/Seoul
     volumes:
       - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
-      - ./DBService/data:/var/lib/mysql
 
   dbmanager:
     container_name: dbmanager
@@ -43,10 +50,4 @@ services:
     image: adminer:latest
     ports: 
       - "9999:8080"
-#   image: dbeaver/cloudbeaver:latest
-#   ports:
-#    - "9999:8978"
-
     restart: on-failure #always
-    depends_on:
-      - dbservice
