@@ -2,9 +2,11 @@
 DROP TABLE IF EXISTS Reservation;
 DROP TABLE IF EXISTS User;
 DROP TABLE IF EXISTS Room;
+DROP TABLE IF EXISTS Token_Blocklist;
 -- create tables
 CREATE TABLE Room (
 	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	   room_name VARCHAR(20) NOT NULL DEFAULT '',
 	   room_address1 VARCHAR(20) NOT NULL DEFAULT '',
 	   room_address2 VARCHAR(20) NOT NULL DEFAULT '',
@@ -14,6 +16,7 @@ CREATE TABLE Room (
 ) DEFAULT CHARSET=utf8;
 CREATE TABLE User (
 	   id INT NOT NULL PRIMARY KEY,
+	   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	   password VARCHAR(128),
 	   name VARCHAR(20),
 	   dept INT NOT NULL,
@@ -24,20 +27,31 @@ CREATE TABLE User (
 ) DEFAULT CHARSET=utf8;
 CREATE TABLE Reservation (
 	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	   reservation_code VARCHAR(100) DEFAULT '',
 	   reservation_topic VARCHAR(100) DEFAULT '',
 	   reservation_type INT DEFAULT NULL,
 	   reservation_date DATE NOT NULL,
-	   start_date TIME NOT NULL,
-	   end_date TIME NOT NULL,
-	   which_room INT NOT NULL,
+	   start_time TIME NOT NULL,
+	   end_time TIME NOT NULL,
+	   room_id INT NOT NULL,
 	   CONSTRAINT reservation_to_room
-	   FOREIGN KEY (which_room) REFERENCES Room(id),
-	   creator INT NOT NULL,
+	   FOREIGN KEY (room_id) REFERENCES Room(id),
+	   creator_id INT NOT NULL,
 	   CONSTRAINT reservation_to_user
-	   FOREIGN KEY (creator) REFERENCES User(id),
-	   members JSON NOT NULL DEFAULT '[]',
+	   FOREIGN KEY (creator_id) REFERENCES User(id),
+	   members JSON NOT NULL DEFAULT '{}'
+	   CHECK (JSON_VALID(members)),
 	   room_used BOOLEAN NOT NULL DEFAULT 0
+) DEFAULT CHARSET=utf8;
+CREATE TABLE Token_Blocklist (
+       	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	   jti VARCHAR(36) NOT NULL,
+	   type VARCHAR(16) NOT NULL,
+	   blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	   user_id INT NOT NULL,
+	   CONSTRAINT blocklist_to_user
+	   FOREIGN KEY (user_id) REFERENCES User(id)
 ) DEFAULT CHARSET=utf8;
 CREATE USER 'development'@'%' IDENTIFIED BY '1234';
 GRANT ALL PRIVILEGES ON *.* TO 'development'@'%' IDENTIFIED BY '1234';
