@@ -41,7 +41,7 @@ services:
   adminservice:
     build:
       context: .
-      dockerfile: ./AdminService/dockerfile
+      dockerfile: ./AdminService/Dockerfile
     restart: always
     environment:
       DB_URL: 127.0.0.1
