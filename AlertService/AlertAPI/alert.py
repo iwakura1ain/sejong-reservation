@@ -50,10 +50,20 @@ class EmailSender(Resource):
             message.attach(MIMEText(text, "plain"))
             message.attach(MIMEText(html, "html"))
 
-            yield data["sender"], data["receiver"], message
+            yield data["sender"], receiver, message
 
     
     def post(self):
+        """
+        Send email
+        ---
+        request = {
+        title: email title
+        text: email contents
+        sender: example@example.com
+        receivers: [email1@mail.com, email2@mail.com]
+        }
+        """
         from flask import request
 
         try:
@@ -72,7 +82,7 @@ class EmailSender(Resource):
                 "msg": "sucess"
             }
 
-        except:
+        except OSError:
             return {
                 "status": False,
                 "msg": "error sending mail"
