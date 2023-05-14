@@ -214,7 +214,7 @@ class Service:
             raise e
 
         
-    def query_api(self, api_name, request_method, request_params=None, headers=None, body=None):
+    def query_api(self, api_name, request_method, request_params={}, headers=None, body=None):
         """
         method used for api queries
         ---
@@ -229,7 +229,7 @@ class Service:
             raise NotImplementedError
 
         # for url endpoints such as example.com/api/room/1/users/4
-        url = self.api[api_name]["url"].format(**request_params) 
+        url = self.api_config[api_name].format(**request_params) 
 
         try:
             req = getattr(requests, request_method)

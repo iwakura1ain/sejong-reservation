@@ -20,7 +20,7 @@ services:
 #     DB_PORT: 3306
 #     DB_USERNAME: testusr
 #     DB_PASSWORD: 1234
-# 
+#
 #   ports:
 #     - "5556:5556"
 
@@ -37,6 +37,21 @@ services:
       - ./DBService/data:/var/lib/mysql
     ports:
       - "3306:3306"
+
+  adminservice:
+    build:
+      context: .
+      dockerfile: ./AdminService/dockerfile
+    restart: always
+    environment:
+      DB_URL: 127.0.0.1
+      DB_NAME: sejong
+      DB_PORT: 3306
+      DB_USERNAME: development
+      DB_PASSWORD: 1234
+    ports:
+      - "5005:5000"
+
 
   adminer:
     container_name: adminerservice
