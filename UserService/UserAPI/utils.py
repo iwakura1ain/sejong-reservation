@@ -3,6 +3,8 @@ from flask_jwt_extended import (
     get_jwt
 )
 
+from flask_jwt_extended import jwt_required as jwt_required_original
+
 from functools import wraps
 import json
 
@@ -38,7 +40,7 @@ def protected():
         @wraps(fn)
         def decorator(*args, **kwargs):
             identity = retrieve_jwt()
-            if identity["isAdmin"] or identity["id"] == int(kwargs["id"]):
+            if identity["type"] == 2 or identity["id"] == int(kwargs["id"]):
                 return fn(*args, **kwargs)
             
             return {
@@ -49,3 +51,5 @@ def protected():
         return decorator
     return wrapper
 
+@jwt_required_original
+def jwt_required():
