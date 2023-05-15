@@ -75,6 +75,7 @@ def validate(self, data):
 # inject validate function into sqlalchemy
 DeclarativeMeta.validate = validate
 
+
 class Service:
     def __init__(self, *args, **kwargs):
         """
@@ -140,6 +141,7 @@ class Service:
             URL.create(
                 #"mysql+mysqlconnector",
                 "mariadb+pymysql",
+                **model_config        
             )
         )
 
@@ -221,15 +223,6 @@ class Service:
         request_params: request parameters
         headers: request headers
         body: request body
-<<<<<<< HEAD
-        ---
-        USAGE:
-        api_config = {
-        "api_name1": "http:api1:5000/path/to/api",
-        "api_name2": "http:api2:5000/path/to/api",
-        }
-=======
->>>>>>> UserService
         """
 
         if self.api_config is None:
@@ -248,7 +241,6 @@ class Service:
                 params=request_params,
                 data=body
             )
-
             return res.json() # will raise error if response is not json
 
         except Exception as e:

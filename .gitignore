@@ -4,5 +4,9 @@ ExampleService/ExampleAPI/.venv/
 WebService/WebApp/node_modules/
 UserService/UserAPI/.venv/
 UserService/UserAPI/__pycache__/
+<<<<<<< HEAD
 AlertService/
 .gitignore
+=======
+
+>>>>>>> UserService

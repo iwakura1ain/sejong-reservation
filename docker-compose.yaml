@@ -19,7 +19,9 @@ services:
       - "5555:5555"
 
   userservice:
-    build: ./UserService
+    build:
+      context: .
+      dockerfile: ./UserService/Dockerfile
     restart: always
     environment:
       DB_URL: dbservice
@@ -28,7 +30,7 @@ services:
       DB_USERNAME: testusr
       DB_PASSWORD: 1234
     ports:
-      - "5556:5556"
+      - "5000:5000"
 
   adminservice:
     build: ./AdminService
