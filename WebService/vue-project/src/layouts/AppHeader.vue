@@ -11,6 +11,7 @@
 			<router-link :to="{ name: 'MakeQuickReservation' }">
 				<text-button color="white">빠른예약</text-button>
 			</router-link>
+
 			<router-link :to="{ name: 'MakeReservation' }">
 				<text-button color="white">예약하기</text-button>
 			</router-link>
@@ -23,10 +24,12 @@
 			<router-link :to="{ name: 'UserMyPage' }">
 				<text-button color="white">{{ userinfoString }}</text-button>
 			</router-link>
-			<router-link :to="{ name: 'ManageMain' }">
-				<filled-button color="white">관리</filled-button>
-			</router-link>
-			<filled-button color="red">로그아웃</filled-button>
+			<div>
+				<router-link :to="{ name: 'ManageMain' }">
+					<filled-button color="white">관리</filled-button>
+				</router-link>
+				<filled-button color="red">로그아웃</filled-button>
+			</div>
 		</div>
 		<div v-else class="r-container">로그인안함</div>
 	</div>
@@ -77,6 +80,7 @@ const userinfoString = computed(() => {
 	.l-container,
 	.r-container {
 		display: flex;
+
 		align-items: center;
 	}
 
@@ -107,9 +111,21 @@ const userinfoString = computed(() => {
 	#app-header {
 		flex-direction: column;
 		padding: 24px 12px;
+
+		.l-container {
+			margin: 8px 0px;
+		}
+		.r-container {
+			margin-left: 0;
+		}
 	}
 }
 
 @media (max-width: 320px) {
+	#app-header {
+		.r-container {
+			flex-direction: column;
+		}
+	}
 }
 </style>
