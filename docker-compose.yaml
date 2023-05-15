@@ -1,13 +1,24 @@
 # TODO: change restart to "always" in production
 version: "3.9"
 services:
+
   reservationservice:
-    build: ./ReservationService
+    build:
+      context: .
+      dockerfile: ./ReservationService/dockerfile
     restart: on-failure # always
+    environment:
+      DB_URL: 127.0.0.1
+      DB_NAME: sejong
+      DB_PORT: 3306
+      DB_USERNAME: development
+      DB_PASSWORD: 1234
     ports:
       - "5555:5555"
-    volumes:
-      - ./ReservationService:/usr/src/app
+    # volumes:
+    #   - ./ReservationService:/usr/src/app
+    # depends_on:
+    #   - dbservice
 
   userservice:
     build: ./UserService
@@ -46,8 +57,7 @@ services:
 
   dbmanager:
     container_name: dbmanager
-
     image: adminer:latest
-    ports: 
+    ports:
       - "9999:8080"
     restart: on-failure #always

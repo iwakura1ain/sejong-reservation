@@ -92,7 +92,6 @@ def is_authorized(auth_info, reservation):
         return True
     return False
 
-
 ns = Namespace(
     name="reservation",
     description="예약 서비스 API",
@@ -164,6 +163,7 @@ class ReservationList(Resource, Service):
         Make a new reservation
         - POST /reservation: New reservation with data
         """
+
         # get token info
         auth_info = self.query_api("get_auth_info","get",headers=request.headers)
         if not is_valid_token(auth_info):
@@ -232,6 +232,7 @@ class ReservationByID(Resource, Service):
         - GET /reservation/1:
             - id==1인 예약을 조회
         """
+
         # get token info
         auth_info = self.query_api("get_auth_info","get",headers=request.headers)
         if not is_valid_token(auth_info):
@@ -242,6 +243,7 @@ class ReservationByID(Resource, Service):
                 stmt = select(Reservation).where(Reservation.id==id)
                 row = conn.execute(stmt).mappings().fetchone()
                 row = serialize(row)
+
             return {"status":True, "reservation":row}, 200
         except Exception as e:
             return {"status":False, "msg":"Invalid ID"}, 400
@@ -251,6 +253,7 @@ class ReservationByID(Resource, Service):
         Update a reservation
         - PATCH /reservation/1: id==1인 예약을 변경
         """
+
         # data to update
         upd_reservation = request.json
         # if not authorized to delete, return
@@ -275,13 +278,14 @@ class ReservationByID(Resource, Service):
                 # update reservation
                 stmt = (update(Reservation)
                     .where(Reservation.id == id)
+
                     .values(upd_reservation))
                 conn.execute(stmt)
-
                 # select updated reservation
                 stmt = select(Reservation).where(Reservation.id == id)
                 row = conn.execute(stmt).mappings().fetchone()
                 row = serialize(row)
+
             return {"status": True, "reservation": row}, 200
         except Exception as e:
             return {"status":False, "msg":"Invalid ID"}, 400
@@ -291,6 +295,7 @@ class ReservationByID(Resource, Service):
         Delete a reservation
         - DELETE /reservation/1: id==1인 예약을 삭제
         """
+
         # get token info
         auth_info = self.query_api("get_auth_info","get",headers=request.headers)
         if not is_valid_token(auth_info):
@@ -316,3 +321,4 @@ class ReservationByID(Resource, Service):
             return {"status": True, "msg": "Deleted"}, 200
         except Exception as e:
             return {"status":False, "msg":"Invalid ID"}, 400
+
