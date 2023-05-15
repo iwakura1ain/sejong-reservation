@@ -1,12 +1,8 @@
-ExampleService/ExampleAPI/.venv/
+**/.venv/
 **/__pycache__/
 *.pyc
 WebService/WebApp/node_modules/
 UserService/UserAPI/.venv/
 UserService/UserAPI/__pycache__/
-<<<<<<< HEAD
-AlertService/
-.gitignore
-=======
-
->>>>>>> UserService
+AlertService/AlertAPI/.venv/
+AlertService/AlertAPI/__pycache__/

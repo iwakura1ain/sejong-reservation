@@ -100,7 +100,7 @@ class Service:
         # model_config = {
         #     username="testusr",
         #     password="1234",
-        #     host="db-service",
+        #     host="dbservice",
         #     database="exampledb",
         #     port=3306,
         # }
@@ -214,7 +214,7 @@ class Service:
             raise e
 
         
-    def query_api(self, api_name, request_method, request_params={}, headers=None, body=None):
+    def query_api(self, api_name, request_method, request_params=None, headers=None, body=None):
         """
         method used for api queries
         ---
@@ -223,20 +223,15 @@ class Service:
         request_params: request parameters
         headers: request headers
         body: request body
-        ---
-        USAGE:
-        api_config = {
-        "api_name1": "http:api1:5000/path/to/api",
-        "api_name2": "http:api2:5000/path/to/api",
-        }
         """
 
         if self.api_config is None:
             raise NotImplementedError
 
         # for url endpoints such as example.com/api/room/1/users/4
-        #url = self.api[api_name]["url"].format(**request_params)
-        url = self.api_config[api_name].format(**request_params)
+        # url = self.api[api_name].format(**request_params) 
+        url = self.api_config[api_name]
+
 
         try:
             req = getattr(requests, request_method)
@@ -247,7 +242,6 @@ class Service:
                 params=request_params,
                 data=body
             )
-
             return res.json() # will raise error if response is not jsn
 
         except Exception as e:
