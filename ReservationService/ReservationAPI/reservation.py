@@ -278,7 +278,6 @@ class ReservationByID(Resource, Service):
                 # update reservation
                 stmt = (update(Reservation)
                     .where(Reservation.id == id)
-
                     .values(upd_reservation))
                 conn.execute(stmt)
                 # select updated reservation
@@ -321,4 +320,9 @@ class ReservationByID(Resource, Service):
             return {"status": True, "msg": "Deleted"}, 200
         except Exception as e:
             return {"status":False, "msg":"Invalid ID"}, 400
+
+
+
+
+
 
