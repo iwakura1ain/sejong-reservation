@@ -1,7 +1,11 @@
 <template>
-	<div id="make-quick-reservation-view">빠른예약하기 뷰</div>
+	<div id="make-quick-reservation-view">
+		<section-header>빠른 예약하기</section-header>
+	</div>
 </template>
 
-<script setup></script>
+<script setup>
+import SectionHeader from '@/components/atoms/SectionHeader.vue';
+</script>
 
 <style lang="scss" scoped></style>

@@ -3,7 +3,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
 * {
   font-family: /*'Gothic A1',*/ 'Nanum Myeongjo', serif;
+  box-sizing: border-box;
 }
+
+// 갤럭시폴드
+@media(max-width : 320px) {
+  span, input {
+    font-size : 0.9rem !important;
+  }
+}
+
+// @import "bootstrap/scss/bootstrap.scss";
 
 // colors
 $sejong-red : #C3002F;
@@ -14,6 +24,7 @@ $almost-sejong-red : #bd6076;
 $light-sejong-red : #f0d6dc;
 
 $sejong-grey : #51626F;
+$sejong-grey-30 : #51626F30;
 
 $bg-grey : #F6F6F650;
 
@@ -27,6 +38,7 @@ $header-height : 64px;
 $footer-height : 32px;
 $routerview-minheight : calc( calc(100vh - ($header-height)) - $footer-height);
 $routerview-padding : 32px;
+$routerview-mobile-padding : 16px;
 
 $button-margin : 4px;
 $button-padding : 8px;

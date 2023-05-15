@@ -68,8 +68,8 @@ const userinfoString = computed(() => {
 	display: flex;
 	align-items: center;
 
-	height: $header-height;
-	padding: 0 24px;
+	// height: $header-height;
+	padding: 24px 24px;
 	color: white;
 	background-color: $sejong-red;
 
@@ -101,5 +101,15 @@ const userinfoString = computed(() => {
 	.r-container {
 		margin-left: auto;
 	}
+}
+
+@media (max-width: 850px) {
+	#app-header {
+		flex-direction: column;
+		padding: 24px 12px;
+	}
+}
+
+@media (max-width: 320px) {
 }
 </style>

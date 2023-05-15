@@ -23,5 +23,18 @@ const userinfo = ref({
 <style lang="scss" scoped>
 .app-router-view {
 	min-height: $routerview-minheight;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	width: 100%;
+
+	padding: $routerview-padding;
+}
+@media (max-width: 768px) {
+	.app-router-view {
+		padding: $routerview-mobile-padding;
+	}
 }
 </style>
