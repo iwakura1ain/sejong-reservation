@@ -1,6 +1,8 @@
 <template>
 	<app-header :isLogin="true" :user-info="userinfo"> </app-header>
-	<router-view class="app-router-view"></router-view>
+	<Transition appear>
+		<router-view class="app-router-view"></router-view>
+	</Transition>
 	<app-footer> </app-footer>
 </template>
 
@@ -36,5 +38,17 @@ const userinfo = ref({
 	.app-router-view {
 		padding: $routerview-mobile-padding;
 	}
+}
+</style>
+
+<style lang="scss">
+.v-enter-active,
+.v-leave-active {
+	transition: opacity 1s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+	opacity: 0;
 }
 </style>
