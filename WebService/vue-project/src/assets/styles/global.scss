@@ -34,11 +34,12 @@ $white-80 : rgba(255,255,255,0.8);
 
 
 // size
-$header-height : 64px;
-$footer-height : 32px;
-$routerview-minheight : calc( calc(100vh - ($header-height)) - $footer-height);
-$routerview-padding : 32px;
-$routerview-mobile-padding : 16px;
+$header-height : 90px;
+$footer-height : 270px;
+// $routerview-minheight : calc( calc(100vh - ($header-height)) - $footer-height);
+$routerview-minheight : calc( calc(100vh - ($header-height) - $footer-height));
+$routerview-padding : 128px 32px;
+$routerview-mobile-padding : 64px 16px;
 
 $button-margin : 4px;
 $button-padding : 8px;
