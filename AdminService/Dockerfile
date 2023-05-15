@@ -3,6 +3,7 @@ FROM python:3.11.2-buster
 ENV PYTHONBUFFERED 1
 
 COPY ./AdminService/AdminAPI /AdminAPI/
+
 COPY ./Common/service.py /AdminAPI/service.py
 
 WORKDIR /AdminAPI
@@ -29,5 +30,5 @@ RUN python3 -m pip install -r requirements.txt
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+CMD ["python3", "app.py"]
 
