@@ -1,9 +1,9 @@
 from flask import request
 from flask_restx import Resource, Namespace
 
-from sqlalchemy import select, insert, update, delete, desc, func
+from sqlalchemy import select, insert, update, delete, func
 
-from config import db_config, model_config, api_config
+from config import model_config, api_config
 from service import Service
 
 import json
@@ -54,7 +54,7 @@ class ReservationList(Resource, Service):
         """
 
         # get token info
-        auth_info = self.query_api("get-auth-info","get",headers=request.headers)
+        auth_info = self.query_api("get_auth_info","get",headers=request.headers)
         if not is_valid_token(auth_info):
             return {"status": False, "msg":"Unauthenticated"}, 400
 
@@ -103,7 +103,7 @@ class ReservationList(Resource, Service):
         """
 
         # get token info
-        auth_info = self.query_api("get-auth-info","get",headers=request.headers)
+        auth_info = self.query_api("get_auth_info","get",headers=request.headers)
         if not is_valid_token(auth_info):
             return {"status": False, "msg":"Unauthenticated"}, 400
 
@@ -112,7 +112,6 @@ class ReservationList(Resource, Service):
 
         # check date constraints. prof unlimited, grad=1week, undergrad=2days, undergrad=no multiple reserv.
         diff = date.today() - date.fromisoformat(new_reservation["reservation_date"])
-        myprint(diff)
         if auth_info["User"]["type"] == 1 or auth_info["User"]["type"] == 2:
             pass
         elif auth_info["User"]["type"] == 3 and diff > timedelta(weeks=1):
@@ -130,12 +129,11 @@ class ReservationList(Resource, Service):
             return {"status": False, "msg": "Open hours: 0900~1800"}
 
         # # check if room valid
-        # rooms = self.query_api("get-room","get",request_params={"..."})
         # TODO: use requests library GET /admin/rooms/1
 
         # reservation_topic string len check
         if len(new_reservation["reservation_topic"]) > 100:
-            return {"status": False, "msg": "Open hours: 0900~1800"}
+            return {"status": False, "msg": "reservation topic is too long"}
 
         try:
             with self.query_model("Reservation") as (conn, Reservation):
@@ -169,7 +167,10 @@ class ReservationList(Resource, Service):
                     .where(Reservation.end_time == new_reservation["end_time"]))
                 rows = conn.execute(stmt).mappings().fetchall()
                 # if duplicates with same contents exist, use only the first one and delete the rest
-                row = serialize(row[0])
+                if len(rows)>1:
+                    # delete rows[1:]
+                    pass
+                row = serialize(rows[0])
                 return {"status": True, "msg":"Success", "reservation": row}, 200
         except Exception as e:
             return {"status":False, "msg":"Reservation failed"}, 400
@@ -191,34 +192,32 @@ class ReservationByID(Resource, Service):
         - GET /reservation/1:
             - id==1인 예약을 조회
         """
-
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 stmt = select(Reservation).where(Reservation.id==id)
                 row = conn.execute(stmt).mappings().fetchone()
                 row = serialize(row)
-            return row, 200
+            return {"status":True, "reservation":row}, 200
         except Exception as e:
-            return {"status": False, "error": str(e)}, 400
+            return {"status":False, "msg":"No ..."}, 400
 
     def patch(self, id: int):
         """
         Update a reservation
         - PATCH /reservation/1: id==1인 예약을 변경
         """
-
+        # data to update
+        upd_reservation = request.json
+        # if not authorized to delete, return
+        # authorized: creator, admin?
+        # TODO: data validation
         try:
             with self.query_model("Reservation") as (conn, Reservation):
-                # data to update
-                update_data = request.json
-                # TODO: data validation
-
                 # update reservation
                 stmt = (update(Reservation)
                     .where(Reservation.id == id)
-                    .values(update_data))
+                    .values(upd_reservation))
                 conn.execute(stmt)
-                
                 # select updated reservation
                 stmt = select(Reservation).where(Reservation.id == id)
                 row = conn.execute(stmt).mappings().fetchone()
@@ -232,8 +231,11 @@ class ReservationByID(Resource, Service):
         Delete a reservation
         - DELETE /reservation/1: id==1인 예약을 삭제
         """
+        # if not authorized to delete, return
+        # authorized: creator, admin
         try:
             with self.query_model("Reservation") as (conn, Reservation):
+                # TODO: first, check if reservation with id exist.
                 # delete reservation
                 stmt = delete(Reservation).where(Reservation.id == id)
                 conn.execute(stmt)
