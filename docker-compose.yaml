@@ -82,4 +82,4 @@ services:
       dockerfile: ./AlertService/dockerfile
     restart: always
     ports:
-      - "5002:5000"
+      - "5000:5000"
