@@ -53,6 +53,7 @@ services:
     ports:
       - "3306:3306"
 
+
   adminservice:
     build:
       context: .
@@ -74,3 +75,11 @@ services:
     restart: on-failure #always
     ports:
       - "9999:8080"
+
+  alertservice:
+    build:
+      context: .
+      dockerfile: ./AlertService/dockerfile
+    restart: always
+    ports:
+      - "5002:5000"
