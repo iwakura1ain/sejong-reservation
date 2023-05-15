@@ -38,8 +38,8 @@ $header-height : 90px;
 $footer-height : 270px;
 // $routerview-minheight : calc( calc(100vh - ($header-height)) - $footer-height);
 $routerview-minheight : calc( calc(100vh - ($header-height) - $footer-height));
-$routerview-padding : 128px 32px;
-$routerview-mobile-padding : 64px 16px;
+$routerview-padding : 64px 32px 128px 32px;
+$routerview-mobile-padding : 32px 16px 64px 16px;
 
 $button-margin : 4px;
 $button-padding : 8px;
