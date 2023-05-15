@@ -1,8 +1,15 @@
 **/.venv/
 **/__pycache__/
-*.pyc
 WebService/WebApp/node_modules/
 UserService/UserAPI/.venv/
 UserService/UserAPI/__pycache__/
 AlertService/AlertAPI/.venv/
 AlertService/AlertAPI/__pycache__/
+**/node_modules/
+
+
+
+
+
+
+

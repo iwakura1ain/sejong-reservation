@@ -1,15 +1,24 @@
+# TODO: change restart to "always" in production
 version: "3.9"
 services:
+
   reservationservice:
-    container_name: reservation-service
-    build: ./ReservationService
+    build:
+      context: .
+      dockerfile: ./ReservationService/dockerfile
     restart: on-failure # always
+    environment:
+      DB_URL: 127.0.0.1
+      DB_NAME: sejong
+      DB_PORT: 3306
+      DB_USERNAME: development
+      DB_PASSWORD: 1234
     ports:
       - "5555:5555"
-    volumes:
-      - ./ReservationService:/usr/src/app
-    depends_on:
-      - dbservice
+    # volumes:
+    #   - ./ReservationService:/usr/src/app
+    # depends_on:
+    #   - dbservice
 
   userservice:
     build:
@@ -40,7 +49,7 @@ services:
       - "5557:5557"
 
   dbservice:
-    container_name: db-service
+    container_name: dbservice
     image: mariadb:11.0-rc-jammy
     restart: on-failure # always
     env_file:
@@ -52,7 +61,6 @@ services:
       - ./DBService/data:/var/lib/mysql
     ports:
       - "3306:3306"
-
 
   adminservice:
     build:
@@ -68,9 +76,8 @@ services:
     ports:
       - "5005:5000"
 
-
-  adminer:
-    container_name: adminerservice
+  dbmanager:
+    container_name: dbmanager
     image: adminer:latest
     restart: on-failure #always
     ports:
