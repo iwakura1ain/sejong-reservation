@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 -- drop tables
 DROP TABLE IF EXISTS Reservation;
 DROP TABLE IF EXISTS User;
@@ -103,9 +101,4 @@ GRANT ALL PRIVILEGES ON *.* TO 'development'@'%' IDENTIFIED BY '1234';
 -- 	INSERT Timeslot (room)
 -- 	VALUES ((SELECT reservationRoom FROM Reservation WHERE Reservation.reservationTopic="컴퓨터공학과 교수 회의")); 
 -- END FOR;
-
-
-
->>>>>>> DBService
-
 
