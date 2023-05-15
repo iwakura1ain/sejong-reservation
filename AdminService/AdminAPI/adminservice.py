@@ -2,7 +2,9 @@ from flask import request
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
 from service import Service, validate
-import utils
+from config import model_config, api_config
+#import utils
+from utils import serialization, check_jwt_exists
 
 # namespace for handy routing
 admin = namespace.Namespace(
@@ -10,18 +12,6 @@ admin = namespace.Namespace(
     description="유저, 회의실, 예약 관리를 위한 API"
 )
 
-# model configuration for orm model
-model_config = {
-    "username": "development",
-    "password": "1234",
-    "host": "sejong-reservation-dbservice-1",
-    "database": "sejong",
-    "port": 3306,
-}
-
-api_config = {
-    "jwt_status": "http://127.0.0.1:5001/auth/jwt-status",
-}
 
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['created_at', 'updated_at']
@@ -41,7 +31,7 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(user_status['status'] 
+        if(check_jwt_exists(user_status) 
            and user_status['User']['type'] != 2):
             return {
                 "status": False,
@@ -95,7 +85,8 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if not user_status['status']:
+
+        if not check_jwt_exists(user_status):
             return {
                 "status": False,
                 "message": "Not logged in"
@@ -107,8 +98,10 @@ class ConferenceRoom(Resource, Service):
                 rooms = conn.execute(select(Room)).mappings().all()
             
                 # serialize each room data in Room table
-                serialized_rooms = [utils.serialization(room, exclude=exclude) 
-                                    for room in rooms]
+                serialized_rooms = [
+                    serialization(room, exclude=exclude)
+                    for room in rooms
+                ]
 
                 # if there's no such room
                 if len(serialized_rooms) == 0:
@@ -142,7 +135,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if not user_status['status']:
+        if not check_jwt_exists(user_status):
             return {
                 "status": False,
                 "message": "Not logged in"
@@ -181,7 +174,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(user_status['status'] 
+        if(check_jwt_exists(user_status) 
            and user_status['User']['type'] != 2):
             return {
                 "status": False,
@@ -225,7 +218,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(user_status['status'] 
+        if(check_jwt_exists(user_status) 
            and user_status['User']['type'] != 2):
             return {
                 "status": False,

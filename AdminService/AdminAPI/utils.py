@@ -11,6 +11,11 @@ def serialization(data, include=[], exclude=[]):
 
     return serialized_data
 
+def check_jwt_exists(auth_info):
+    if "status" not in auth_info.keys():
+        return False
+    return auth_info["status"]
+
 # from sqlalchemy import insert, update
 # def create_update_data(table, data, method):
 #     if method == 'create':  

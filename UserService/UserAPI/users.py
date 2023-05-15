@@ -24,7 +24,7 @@ USERS = Namespace(
     description="사용자 CRUD 위한 API",
 )
 
-exclude = ["password"]
+exclude = ["password", "created_at"]
 
 @USERS.route("")
 class UserList(Service, Resource):
@@ -39,10 +39,12 @@ class UserList(Service, Resource):
         Get user list.
         """
         try:
-            with self.query_model("Users") as (conn, User):
+            with self.query_model("User") as (conn, User):
                 res = conn.execute(
                     select(User)
-                ).mappings().all()
+                ).mappings().fetchall()
+                print(res)
+                print(serialize(res[0], exclude=exclude))
 
                 return {
                     "status": True,
@@ -153,5 +155,6 @@ class UserDetail(Service, Resource):
                 
 
         
+
 
 

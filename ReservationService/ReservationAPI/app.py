@@ -9,4 +9,6 @@ app.config.SWAGGER_UI_DOC_EXPANSION = 'list' # none, list, full
 
 api = Api(app)
 api.add_namespace(reservation.ns)
-app.run(host="0.0.0.0", port=5555, debug=True)
+
+if __name__=="__main__":
+    app.run(host="0.0.0.0", port=5555, debug=True)

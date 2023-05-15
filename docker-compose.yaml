@@ -5,16 +5,16 @@ services:
   reservationservice:
     build:
       context: .
-      dockerfile: ./ReservationService/dockerfile
+      dockerfile: ./ReservationService/Dockerfile
     restart: on-failure # always
     environment:
-      DB_URL: 127.0.0.1
+      DB_URL: dbservice
       DB_NAME: sejong
       DB_PORT: 3306
       DB_USERNAME: development
       DB_PASSWORD: 1234
     ports:
-      - "5555:5555"
+      - "5000:5000"
     # volumes:
     #   - ./ReservationService:/usr/src/app
     # depends_on:
@@ -24,32 +24,47 @@ services:
     build:
       context: .
       dockerfile: ./UserService/Dockerfile
-    restart: always
+    restart: on-failure # always
     environment:
       DB_URL: dbservice
-      DB_NAME: exampledb
+      DB_NAME: sejong
       DB_PORT: 3306
-      DB_USERNAME: testusr
+      DB_USERNAME: development
       DB_PASSWORD: 1234
     ports:
-      - "5000:5000"
+      - "5001:5000"
 
   adminservice:
     build:
       context: .
-      dockerfile: ./UserService/Dockerfile
-    restart: always
+      dockerfile: ./AdminService/Dockerfile
+    restart: on-failure # always
     environment:
       DB_URL: dbservice
-      DB_NAME: exampledb
+      DB_NAME: sejong
       DB_PORT: 3306
-      DB_USERNAME: testusr
+      DB_USERNAME: development
       DB_PASSWORD: 1234
     ports:
-      - "5557:5557"
+      - "5002:5000"
+
+  alertservice:
+    build:
+      context: .
+      dockerfile: ./AlertService/dockerfile
+    restart: always
+    ports:
+      - "5003:5000"
+
+  dbmanager:
+    #container_name: dbmanager
+    image: adminer:latest
+    restart: on-failure #always
+    ports:
+      - "9999:8080"
 
   dbservice:
-    container_name: dbservice
+    #container_name: dbservice
     image: mariadb:11.0-rc-jammy
     restart: on-failure # always
     env_file:
@@ -58,35 +73,19 @@ services:
       TZ: Asia/Seoul
     volumes:
       - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
-      - ./DBService/data:/var/lib/mysql
+#      - ./DBService/data:/var/lib/mysql
     ports:
       - "3306:3306"
 
-  adminservice:
-    build:
-      context: .
-      dockerfile: ./AdminService/Dockerfile
-    restart: always
-    environment:
-      DB_URL: 127.0.0.1
-      DB_NAME: sejong
-      DB_PORT: 3306
-      DB_USERNAME: development
-      DB_PASSWORD: 1234
+  nginxreverseproxy:
+    image: nginx:latest
+    #container_name: production_nginx
+    volumes:
+      - ./Common/nginx_reverse_proxy.conf:/etc/nginx/conf.d/default.conf
+      - ./Common/nginx_proxy_params.conf:/etc/nginx/proxy_params
+      # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.pem:/etc/nginx/cert/star_xx_com.pem
+      # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.key:/etc/nginx/cert/star_xx_com.key
+      # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.crt:/etc/nginx/cert/star_xx_com.crt
     ports:
-      - "5005:5000"
-
-  dbmanager:
-    container_name: dbmanager
-    image: adminer:latest
-    restart: on-failure #always
-    ports:
-      - "9999:8080"
-
-  alertservice:
-    build:
-      context: .
-      dockerfile: ./AlertService/dockerfile
-    restart: always
-    ports:
-      - "5000:5000"
+      - 8080:8080
+      - 80:80

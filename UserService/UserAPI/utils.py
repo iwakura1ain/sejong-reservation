@@ -51,5 +51,3 @@ def protected():
         return decorator
     return wrapper
 
-@jwt_required_original
-def jwt_required():

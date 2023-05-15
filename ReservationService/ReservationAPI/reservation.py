@@ -16,17 +16,16 @@ def is_valid_token(auth_info):
     """
     checks if token is valid.
     """
-    if auth_info["msg"] == "Token has expired" \
-        or auth_info["status"] == False:
+    if "status" not in auth_info.keys():
         return False
-    return True
+    return auth_info["status"]
 
 def is_admin(auth_info):
     """
     check if admin
     """
     # TODO 관리자가 아니더라도 user가 관리하는 방이면 관리자급 조회가능하도록?
-    if auth_info["User"]["type"] == 1:
+    if auth_info["User"]["type"] == 2:
         return True
     return False
 
@@ -88,7 +87,7 @@ def is_authorized(auth_info, reservation):
     if user["id"] == reservation["creator_id"]:
         return True
     # user is admin
-    if user["type"] == 1:
+    if user["type"] == 2:
         return True
     return False
 
@@ -165,14 +164,14 @@ class ReservationList(Resource, Service):
         """
 
         # get token info
-        auth_info = self.query_api("get_auth_info","get",headers=request.headers)
+        auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
         if not is_valid_token(auth_info):
             return {"status": False, "msg":"Unauthenticated"}, 400
 
         new_reservation = request.json
         #TODO: generate code for a new reservation
 
-        msg = check_date_constraints(new_reservation)
+        msg = check_date_constraints(auth_info, new_reservation)
         if msg:
             return {"status": False, "msg": msg}, 400
 
