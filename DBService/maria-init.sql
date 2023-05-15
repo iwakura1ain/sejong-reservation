@@ -17,6 +17,7 @@ CREATE TABLE Room (
 	   maxUsers INT DEFAULT 0,
 	   previewImage MEDIUMBLOB
 ) DEFAULT CHARSET=utf8;
+
 CREATE TABLE User (
 	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -31,6 +32,7 @@ CREATE TABLE User (
 	   noShowCount INT NOT NULL DEFAULT 0,
 	   isBanned INT NOT NULL DEFAULT 0	   
 ) DEFAULT CHARSET=utf8;
+
 CREATE TABLE Timeslot (
 	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	   timeslot INT NOT NULL,
@@ -39,6 +41,7 @@ CREATE TABLE Timeslot (
 	   CONSTRAINT Timeslot_Room
 	   FOREIGN KEY (room) REFERENCES Room(id)	   
 ) DEFAULT CHARSET=utf8;
+
 CREATE TABLE Reservation (
 	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -56,6 +59,7 @@ CREATE TABLE Reservation (
 	   members JSON NOT NULL DEFAULT '[]',
 	   roomUsed BOOLEAN NOT NULL DEFAULT 0
 ) DEFAULT CHARSET=utf8;
+
 CREATE TABLE ReservationTime (
 		reservation INT,
 	   	CONSTRAINT ReservationTime_Reservation
