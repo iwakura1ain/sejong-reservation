@@ -73,7 +73,7 @@ const pw = ref('');
 		background-color: white;
 		padding: 24px;
 		margin-top: 48px;
-		border: 1px solid $sejong-grey;
+		border: 1px solid lightgrey;
 		border-radius: $box-radius;
 
 		.field-set {
@@ -96,6 +96,35 @@ const pw = ref('');
 				// width: 98px;
 				text-align: center;
 				width: 100%;
+			}
+		}
+	}
+}
+
+@media (max-width: 360px) {
+	#login-view {
+		.logo-container {
+			transform: scale(0.6);
+			.logotext-ko {
+				font-size: 1.6rem;
+			}
+			.logotext-en {
+				font-size: 0.85rem;
+			}
+		}
+
+		.form-container {
+			.field-set {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				.label {
+					margin-bottom: 4px;
+				}
+			}
+			.btn-group {
+				margin-top: 4px;
+				transform: translateX(-4px);
 			}
 		}
 	}
