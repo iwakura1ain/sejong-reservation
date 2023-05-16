@@ -5,15 +5,9 @@
 
 - 이원진 / 컴퓨터공학과 / 17011573 / studioplug17@gmail.com / 010-5898-9817
     
-    ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/8d721fb4-ba53-44d1-81f4-86d5b5df5ab0/Untitled.jpeg)
-    
 - 안창언 / 컴퓨터공학과 / 17011505 / ernie937@gmail.com
     
-    ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d68be413-8a61-4f7c-8c36-2a16656cac64/Untitled.png)
-    
 - 장호진 / 컴퓨터공학과 / 17011540 / jhojin7@sju.ac.kr / 010-4534-7640
-    
-    ![Screenshot_20230207_114124_Drive.jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/0d0e2d3a-b201-4d16-9312-13ecf2d2f409/Screenshot_20230207_114124_Drive.jpg)
     
 - 한수현 / 컴퓨터공학과 / 18011561 / suess98@naver.com
 
