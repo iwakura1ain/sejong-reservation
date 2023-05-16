@@ -18,6 +18,11 @@ from utils import retrieve_jwt, serialize, protected
 from config import ORM
 
 
+"""
+This code creates a Flask-RestX namespace object called "USERS" for handling CRUD (Create, Read,
+Update, Delete) operations related to users in an API. The namespace is assigned a name "users" and
+a description "사용자 CRUD 위한 API" (which means "API for user CRUD" in Korean).
+"""
 # namespace for "/auth"
 USERS = Namespace(
     name="users",
@@ -26,9 +31,19 @@ USERS = Namespace(
 
 exclude = ["password", "created_at"]
 
+
+
+"""
+This is a Python class that defines a resource for getting a list of users, with authentication and
+serialization.
+"""
 @USERS.route("")
 class UserList(Service, Resource):
     def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, passing ORM as a model configuration parameter to the Service class.
+        """
         Service.__init__(self, model_config=ORM)
         Resource.__init__(self, *args, **kwargs)
 
@@ -36,7 +51,12 @@ class UserList(Service, Resource):
     @protected()
     def get(self):
         """
-        Get user list.
+        This function retrieves a list of users and returns it as a serialized JSON object, while also
+        handling exceptions.
+        :return: A dictionary is being returned with the keys "status" and "Users". The value of
+        "status" is a boolean indicating whether the operation was successful or not, and the value of
+        "Users" is a list of serialized user objects. If an exception occurs, a dictionary with the keys
+        "status" and "msg" is returned instead.
         """
         try:
             with self.query_model("User") as (conn, User):
@@ -59,9 +79,17 @@ class UserList(Service, Resource):
             }, 500
 
 
+"""
+This code defines a Flask-RestX resource for handling CRUD operations related to a specific user
+identified by their `id`. The resource includes three methods: `get`, `patch`, and `delete`.
+"""
 @USERS.route("/<id>")
 class UserDetail(Service, Resource):
     def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, passing ORM as a model configuration parameter to the Service class.
+        """
         Service.__init__(self, model_config=ORM)
         Resource.__init__(self, *args, **kwargs)
 
@@ -69,7 +97,14 @@ class UserDetail(Service, Resource):
     @protected()
     def get(self, id):
         """
-        Get user info
+        This function retrieves user information with authentication and protection using JWT.
+        
+        :param id: The parameter "id" is the unique identifier of the user whose information is being
+        retrieved
+        :return: This code defines a GET endpoint for retrieving user information. If the user with the
+        specified ID exists in the database, the endpoint returns a JSON response with a "status" key
+        set to True, a "msg" key set to "retrieved", and a "User" key set to the serialized user object.
+        If the user does not exist, the endpoint returns a JSON response with a "
         """
         try:
             with self.query_model("User") as (conn, User):
@@ -100,7 +135,13 @@ class UserDetail(Service, Resource):
     @protected()
     def patch(self, id):  # TODO: differenciate what admins and users can change
         """
-        Modify user
+        This is a Python function that modifies a user's information and returns a response with the
+        updated user data.
+        
+        :param id: The id parameter is the unique identifier of the user that needs to be modified
+        :return: a JSON response with a status message and the updated user information in case of
+        success, or an error message in case of failure. The status message indicates whether the update
+        was successful or not.
         """
         try:
             with self.query_model("User") as (conn, User):
@@ -131,7 +172,14 @@ class UserDetail(Service, Resource):
     @protected()
     def delete(self, id):  # TODO: differenciate what admins and users can change
         """
-        Delete User
+        This function deletes a user with a given ID, and returns a success message if the deletion was
+        successful.
+        
+        :param id: The id parameter is the unique identifier of the user that needs to be deleted
+        :return: A dictionary containing a status and message, along with an HTTP status code. If the
+        deletion is successful, the status will be True and the message will be "deleted", with an HTTP
+        status code of 200. If there is an error, the status will be False and the message will be
+        "error", with an HTTP status code of 200.
         """
         try:
             with self.query_model("User") as (conn, User):
