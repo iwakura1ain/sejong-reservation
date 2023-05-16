@@ -5,6 +5,7 @@ from sqlalchemy import select, insert, update, delete, func
 
 from config import model_config, api_config
 from service import Service
+
 from utils import (
     serialize,
     is_valid_token, is_admin, is_authorized,
@@ -86,14 +87,14 @@ class ReservationList(Resource, Service):
         """
 
         # get token info
-        auth_info = self.query_api("get_auth_info","get",headers=request.headers)
+        auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
         if not is_valid_token(auth_info):
             return {"status": False, "msg":"Unauthenticated"}, 400
 
         new_reservation = request.json
         #TODO: generate code for a new reservation
 
-        msg = check_date_constraints(new_reservation)
+        msg = check_date_constraints(auth_info, new_reservation)
         if msg:
             return {"status": False, "msg": msg}, 400
 

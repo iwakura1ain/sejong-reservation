@@ -1,12 +1,6 @@
 from os import getenv
 
-# model_config = {
-#   "username": "development",
-#   "password": "1234",
-#   "host": "sejong-reservation-dbservice-1",
-#   "port": 3306,
-# }
-
+# model configuration for orm model
 model_config = {
     "username": getenv("DB_USERNAME"),
     "password": getenv("DB_PASSWORD"),
@@ -16,5 +10,5 @@ model_config = {
 }
 
 api_config = {
-  "get_auth_info": "http://userservice:5000/auth/jwt-status",
+    "jwt_status": "http://userservice:5000/auth/jwt-status",
 }

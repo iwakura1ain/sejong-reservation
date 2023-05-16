@@ -1,0 +1,144 @@
+* 유저 서비스
+초기 버전이니 양해 바람.
+- Mariadb에 DBService에서 사용하는 User 스키마가 아니라 username, password만 있는 단순 스키마 사용
+- JWT 토큰 사용해서 인증
+- 토큰 유효기간 초과와 로그아웃은 아직 구현 X -> 라이브레리에서 지원하니 나중에 추가하겠습
+
+* 실행 방법
+
+** DBService 실행 
+#+begin_src bash
+  cd sejong-reservation
+  docker compose start dbservice
+#+end_src
+
+** UserService 도커로 빌드 후 실행 
+#+begin_src bash
+  cd UserService
+  docker build -t user-service .
+  docker run -p 5000:5000 user-service
+#+end_src
+
+그후 127.0.0.1:5000 접속해서 api 문서 확인하기
+
+** UserService 로컬로 실행
+#+begin_src bash
+  cd UserService/UserAPI
+  pip3 install -r requirements.txt
+  python3 app.py
+#+end_src
+
+그후 127.0.0.1:5000 접속해서 api 문서 확인하기
+
+** UserService 테스팅
+메인 페이지 있는 api endpoint에 포스트맨으로 리퀘스트 날리기 
+
+* Integration
+** 주요 클래스
+#+begin_src python
+  class Service:
+      def __init__(self, *args, **kwargs)  
+      def query_db(self, query, args=(), retval=False) # 등록된 디비 sql문으로 조회 
+      def query_api(self, api_name, request_method, request_params=None, headers=None, body=None) # 등록된 api 조회
+#+end_src
+** METHOD: __init__()
+
+서비스 클래스 초기화 할때 db 정보와 api 정보 등록
+
+*** PARAMS
+/키워드=값/ 으로 전달
+- db_config = {
+    'host': '127.0.0.1',
+    'port': 3306,
+    'user': 'testusr2',
+    'password': '1234',
+    'database': 'exampledb2',
+    'autocommit': True
+  }
+
+- api_config = {
+    'api_name1': {'url': 'example.com:9999/api/api1'},
+    'api_name2': {'url': 'example.com:9999/api/api2'}
+  }
+*** EXAMPLE: Flask RestX에서 사용방법
+#+begin_src python
+  @auth.route('/register') # flask_restx의 api 엔드포인트 
+  class AuthRegister(Service, Resource):
+      def __init__(self, *args, **kwargs):
+          Service.__init__(self, db_config=db_config) # 서비스 클래스의 __init__ 메서드 호출, 이때 db_config 또는 api_config 등록 
+          Resource.__init__(self, *args, **kwargs) # flask_restx의 __init__ 메서드 호출
+
+#+end_src
+** METHOD: query_db()
+
+등록된 디비 sql문으로 조회
+
+*** PARAMS
+- query: String | 디비에 보낼 sql문, 변수는 "?"로 표기
+- args: Tuple | 위에 query에서 사용한 변수들의 Tuple
+- retval: Bool | sql문에서 리턴값이 있는 SELECT문 등은 True, INSERT문 등은 False (꼭 확인해야함 안그럼 에러남)
+
+*** RETURN
+- retval=True
+  Tuple 형식으로 db에서 조회된 값이 전부 리턴됨
+  :값이 있는 경우:
+
+  (
+    ("1", "name1", "passwd1"),
+    ("2", "name2", "passwd2"),
+    ...
+  )
+
+  :값이 없는 경우:
+  None
+
+- retval=False
+  :sql이 실행 성공한 경우:
+  True
+
+  :sql이 실행 실패한 경우:
+  False
+  
+*** EXAMPLE
+#+begin_src python
+  try:  # 항상 try문으로 db 조회 시작 
+      sql, args = "SELECT * FROM 테이블 WHERE x=?", ("?에 들어갈 변수",)  # 조회할 query 만들기 
+      retval = self.query_db(sql, args=args, retval=True)  # 메서드 사용해서 db 조회
+
+      if retval:  # db에서 반환받은 결과 검사
+          return JSON  # 결과가 기준에 맞을시
+      
+      return JSON  # 결과가 기준에 맞지 않을시 
+
+  except Exception as e:  # db 조회중 에러가 났을때 
+      return ERROR
+#+end_src
+
+** METHOD: query_api()
+
+등록된 api 조회, 아직 테스팅은 안했으나 아마 될듯 
+
+*** PARAMS
+- api_name: String | 맨 처음 __init__메서드에서 등록한 api의 이름
+- request_method: "get", "post", "put", "delete" 중 하나 | 사용할 http 메서드
+- request_params: Dict | url에 넣을 변수들
+- headers: Dict | 헤더에 넣을 값
+- body: Dict | 바디에 넣을 값
+
+*** RETURN
+api에서 리턴받은 값을 Dict 형태로 반환 
+
+*** EXAMPLE
+#+begin_src python
+  try:
+      retval = self.query_api(self, "api_name1", "get", headers="Authentication: Bearer JWT")  # api 조회 
+      if retval:  # api에서 받은 값을 검사 
+          return JSON  # 결과가 기준에 맞을시 
+
+      return JSON  # 결과가 기준에 맞지 않을시 
+
+  except Exception as e:  # api 조회중 에러가 났을때 
+      return ERROR
+#+end_src
+
+

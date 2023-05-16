@@ -223,12 +223,6 @@ class Service:
         request_params: request parameters
         headers: request headers
         body: request body
-        ---
-        USAGE:
-        api_config = {
-        "api_name1": "http:api1:5000/path/to/api",
-        "api_name2": "http:api2:5000/path/to/api",
-        }
         """
 
         if self.api_config is None:
@@ -247,8 +241,7 @@ class Service:
                 params=request_params,
                 data=body
             )
-
-            return res.json() # will raise error if response is not jsn
+            return res.json() # will raise error if response is not json
 
         except Exception as e:
             return False
