@@ -47,9 +47,9 @@ def check_time_conflict(conn, Reservation, new_reservation):
     new_start_time = new_reservation["start_time"]
     new_end_time = new_reservation["end_time"]
     stmt = (select(Reservation.id, Reservation.reservation_date,
-        Reservation.start_time, Reservation.end_time, Reservation.which_room)
+        Reservation.start_time, Reservation.end_time, Reservation.room_id)
         .where(Reservation.reservation_date == new_reservation["reservation_date"])
-        .where(Reservation.which_room == new_reservation["which_room"])
+        .where(Reservation.room_id == new_reservation["room_id"])
         .filter(func.time(Reservation.start_time).between(new_start_time, new_end_time))
         .filter(func.time(Reservation.end_time).between(new_start_time, new_end_time)))
     rows = conn.execute(stmt).mappings().fetchall()
