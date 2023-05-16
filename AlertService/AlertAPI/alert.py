@@ -10,7 +10,12 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
-# namespace for "/alert"
+"""
+This code is creating a Flask-RestX namespace called "EMAIL" for an email sending API. The namespace
+is used to group related resources and define their routes. The name parameter sets the name of the
+namespace, and the description parameter provides a brief description of what the namespace does.
+namespace for "/alert"
+"""
 EMAIL = Namespace(
     name="email",
     description="사용자에게 이메일을 보내는 API",
@@ -24,10 +29,33 @@ with open("mail-format.html", mode="r") as f:
     mail_format = f.read()
 
 
+"""
+This code defines a Flask-RestX resource called `EmailSender` within the `EMAIL` namespace. The
+resource handles HTTP POST requests to send emails using the `smtplib` library. The `validate`
+method checks that the required keys (`sender`, `receivers`, `text`, and `title`) are present in the
+request data. The `create_message` method generates a MIME message for each receiver, with both
+plain text and HTML versions of the email contents. The `post` method handles the HTTP POST request,
+validates the request data, and sends the email using the `smtplib` library. If the email is sent
+successfully, the method returns a JSON response with a `status` of `True` and a `msg` of
+`"success"`. If there is an error sending the email, the method returns a JSON response with a
+`status` of `False` and a `msg` of `"error sending mail"`.
+"""
 @EMAIL.route('')
 class EmailSender(Resource):
     @staticmethod
     def validate(data):
+        """
+        The static method "validate" checks if a dictionary contains the required keys and raises a
+        KeyError if any are missing.
+        
+        :param data: The `data` parameter is a dictionary that contains information about a message,
+        including the sender, receivers, text, and title. The `validate` method is a static method that
+        checks if all the required keys are present in the dictionary and raises a `KeyError` if any key
+        is missing
+        
+        :return: The `data` dictionary is being returned if all the keys in the `keys` list are present
+        in the `data` dictionary. If any of the keys are missing, a `KeyError` is raised.
+        """
         keys = ["sender", "receivers", "text", "title"]
 
         for k in keys:
@@ -38,6 +66,12 @@ class EmailSender(Resource):
     
     @staticmethod
     def create_message(data):
+        """
+        This is a static method that creates and yields email messages in both plain text and HTML
+        formats for multiple receivers.
+        
+        :param data: The `data` parameter is a dictionary that contains the following keys and values:
+        """
         for receiver in data["receivers"]:
             html = mail_format.format(text=data["text"])
             text = data["text"]
@@ -55,7 +89,13 @@ class EmailSender(Resource):
     
     def post(self):
         """
-        Send email
+        This function sends an email with a specified title, contents, sender, and receivers using the
+        SMTP protocol and returns a success or error message.
+        
+        :return: a dictionary with two keys: "status" and "msg". If the email is sent successfully,
+        "status" is True and "msg" is "success". If there is an error sending the email, "status" is
+        False and "msg" is "error sending mail".
+        
         ---
         request = {
         title: email title
