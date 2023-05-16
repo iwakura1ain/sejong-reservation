@@ -1,11 +1,16 @@
 **/.venv/
 **/__pycache__/
 WebService/WebApp/node_modules/
+**/node_modules/
 UserService/UserAPI/.venv/
 UserService/UserAPI/__pycache__/
 AlertService/AlertAPI/.venv/
 AlertService/AlertAPI/__pycache__/
-**/node_modules/
+ReservationService/ReservationAPI/.venv/
+ReservationService/ReservationAPI/__pycache__/
+AdminService/AdminAPI/.venv/
+AdminService/AdminAPI/__pycache__/
+
 
 
 
