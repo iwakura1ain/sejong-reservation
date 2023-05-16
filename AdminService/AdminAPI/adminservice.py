@@ -41,6 +41,7 @@ class ConferenceRoom(Resource, Service):
     """
     This function creates a new room in a database table, Room, after validating the request body data and
     checking user authorization.
+
     :return: a JSON response with a message indicating whether the room was successfully created or
     not. If the user does not have authorization, the response will indicate that there is no
     authorization. If the room already exists in the database, the response will indicate that the
@@ -105,6 +106,7 @@ class ConferenceRoom(Resource, Service):
     """
     This function retrieves all rooms from the Room table and returns them as serialized data, along
     with a success message, or a failure message if there are no rooms or an error occurs.
+
     :return: This code returns a JSON response containing all the rooms in the Room table of the
     database, along with a success message. If there are no rooms in the table, it returns a message
     indicating that the room was not found. If there is an error, it returns a message indicating
@@ -177,6 +179,7 @@ class ConferenceRoomById(Resource, Service):
     This function retrieves a room by its ID and returns its details in a dictionary format.
     
     :param id: The id of the room that we want to retrieve
+
     :return: This code returns a JSON response containing the details of a room with the given id if
     it exists in the database. If the user is not logged in, it returns a message indicating that
     the user is not logged in. If the room with the given id does not exist in the database, it
@@ -226,6 +229,7 @@ class ConferenceRoomById(Resource, Service):
     This function deletes a room by its ID after checking user authorization.    
     
     :param id: The id parameter is the unique identifier of the room that needs to be deleted
+
     :return: a dictionary with a "message" key indicating the status of the room deletion process. If
     the deletion is successful, the message will be "Room Deleted" with a status code of 200. If the
     room with the given id is not found, the message will be "Room id:{id} not found" with a status code
@@ -278,6 +282,7 @@ class ConferenceRoomById(Resource, Service):
     
     :param id: The parameter "id" is the identifier of the room that needs to be updated. It is used
     to locate the specific room in the database and update its information
+    
     :return: a JSON response with a message indicating whether the room update was successful or
     not. If the update was successful, the message will be "Room Updated" with a status code of 200.
     If the update failed, the message will be "Room Update Failed" with a status code of 500. If the
