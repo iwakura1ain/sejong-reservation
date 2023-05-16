@@ -77,7 +77,7 @@ services:
     ports:
       - "3306:3306"
 
-  gateway:
+  gatewayservice:
     image: nginx:latest
     #container_name: production_nginx
     volumes:
