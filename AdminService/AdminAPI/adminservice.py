@@ -6,7 +6,11 @@ from config import model_config, api_config
 #import utils
 from utils import serialization, check_jwt_exists
 
-# namespace for handy routing
+"""
+This code creates a Flask-RestX namespace called "admin" with a name and description. Namespaces are
+used to group related API endpoints together for easier organization and routing.
+namespace for handy routing
+"""
 admin = namespace.Namespace(
     name="admin",
     description="유저, 회의실, 예약 관리를 위한 API"
@@ -16,12 +20,33 @@ admin = namespace.Namespace(
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['created_at', 'updated_at']
 
+"""
+The above code is defining a Flask RESTful API endpoint for managing conference rooms. It includes a
+POST method for creating a new conference room and a GET method for retrieving all conference rooms.
+The code also includes authorization checks to ensure that only authorized users can create or
+retrieve conference rooms. The POST method validates the request body data and inserts the data into
+the Room table in the database. The GET method retrieves all conference rooms from the Room table
+and serializes the data before returning it as a response.
+"""
 @admin.route('/rooms')
 class ConferenceRoom(Resource, Service):
+    """
+    This is the initialization function for a class that inherits from both Service and Resource
+    classes, passing arguments to both parent classes.
+    """
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
+    """
+    This function creates a new room in a database table, Room, after validating the request body data and
+    checking user authorization.
+    :return: a JSON response with a message indicating whether the room was successfully created or
+    not. If the user does not have authorization, the response will indicate that there is no
+    authorization. If the room already exists in the database, the response will indicate that the
+    room already exists. If there is an error during the creation of the room, the response will
+    indicate that the room creation failed.
+    """
     # CREATE Room 
     def post(self):
         # request body data, need to be validated
@@ -77,9 +102,15 @@ class ConferenceRoom(Resource, Service):
                 "message": "Room Create Failed"
             }, 500
         
+    """
+    This function retrieves all rooms from the Room table and returns them as serialized data, along
+    with a success message, or a failure message if there are no rooms or an error occurs.
+    :return: This code returns a JSON response containing all the rooms in the Room table of the
+    database, along with a success message. If there are no rooms in the table, it returns a message
+    indicating that the room was not found. If there is an error, it returns a message indicating
+    that the room GET failed.
+    """
     # GET all rooms
-    @admin.doc(responses={200: 'Success'})
-    @admin.doc(responses={404: 'Fail'})
     def get(self): 
         # check if user is logged in.
         user_status = self.query_api( 
@@ -122,14 +153,36 @@ class ConferenceRoom(Resource, Service):
                 "message": "Room Get Failed"
             }, 500
         
-# GET, DELETE, UPDATE by room id
+"""
+The above code defines a Flask route for handling GET, DELETE, and PATCH requests for a conference
+room by its ID. It checks if the user is logged in and has authorization for DELETE and PATCH
+requests. For GET request, it retrieves the conference room details by its ID from the database and
+returns it in JSON format. For DELETE request, it deletes the conference room by its ID from the
+database. For PATCH request, it updates the conference room details by its ID in the database. It
+also validates the request body data before updating the conference room details.
+GET, DELETE, UPDATE by room id
+"""
 @admin.route('/rooms/<int:id>')
 class ConferenceRoomById(Resource, Service):
+    """
+    This is the initialization function for a class that inherits from both Service and Resource
+    classes, passing arguments to both parent classes.
+    """
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
-    
+
     # GET room by id    
+    """
+    This function retrieves a room by its ID and returns its details in a dictionary format.
+    
+    :param id: The id of the room that we want to retrieve
+    :return: This code returns a JSON response containing the details of a room with the given id if
+    it exists in the database. If the user is not logged in, it returns a message indicating that
+    the user is not logged in. If the room with the given id does not exist in the database, it
+    returns a message indicating that the room was not found. If there is an error while executing
+    the code,
+    """
     def get(self, id):
         # check if user is logged in.
         user_status = self.query_api( 
@@ -169,6 +222,15 @@ class ConferenceRoomById(Resource, Service):
             }, 500
         
     # DELETE room by id
+    """
+    This function deletes a room by its ID after checking user authorization.    
+    
+    :param id: The id parameter is the unique identifier of the room that needs to be deleted
+    :return: a dictionary with a "message" key indicating the status of the room deletion process. If
+    the deletion is successful, the message will be "Room Deleted" with a status code of 200. If the
+    room with the given id is not found, the message will be "Room id:{id} not found" with a status code
+    of 400. If there is an error during
+    """    
     def delete(self, id):
         # check user if has authorization.
         user_status = self.query_api( 
@@ -210,6 +272,17 @@ class ConferenceRoomById(Resource, Service):
             }, 500
         
     # UPDATE Room
+    """
+    This is a Python function that updates a room in a database, with authorization and validation
+    checks.
+    
+    :param id: The parameter "id" is the identifier of the room that needs to be updated. It is used
+    to locate the specific room in the database and update its information
+    :return: a JSON response with a message indicating whether the room update was successful or
+    not. If the update was successful, the message will be "Room Updated" with a status code of 200.
+    If the update failed, the message will be "Room Update Failed" with a status code of 500. If the
+    user does not have authorization to update the room, the message will be
+    """
     def patch(self, id):
         # request body data, need to be validated
         req = request.json
