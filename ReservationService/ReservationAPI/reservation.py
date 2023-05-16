@@ -15,9 +15,7 @@ def serialize(row):
     string representation of non-serializable values.
 
     :param row: The parameter "row" is likely a dictionary or a row object from a database query result.
-    The function "serialize" converts the dictionary or row object into a JSON string by first
-    converting it to a dictionary with string values (using the "default=str" argument in the
-    json.dumps() function) and
+
     :return: The function `serialize` is returning a dictionary that is created by converting the input
     `row` into a JSON string using `json.dumps`, and then converting that JSON string back into a
     dictionary using `json.loads`. The `default=str` argument is used to ensure that any
@@ -32,9 +30,8 @@ def is_valid_token(auth_info):
     authentication information dictionary.
 
     :param auth_info: The auth_info parameter is a dictionary that contains information about an
-    authentication token. The function is_valid_token checks if the token is valid by checking if the
-    "status" key is present in the dictionary and has a truthy value. If the "status" key is not present
-    or has a falsy
+    authentication token. 
+
     :return: a boolean value. If the "status" key is not present in the input dictionary "auth_info", it
     returns False. Otherwise, it returns the value associated with the "status" key, which is expected
     to be a boolean value indicating whether the token is valid or not.
@@ -49,8 +46,9 @@ def is_admin(auth_info):
     The function checks if the user is an admin based on their authentication information.
 
     :param auth_info: It is a dictionary containing information about the user's authentication status.
-    It likely includes information such as the user's ID, username, and type of account (e.g. regular
-    user or administrator)
+    It includes information such as the user's ID, username, and the type of account (e.g. regular
+    user or administrator).
+
     :return: a boolean value indicating whether the user is an admin or not. If the user is an admin,
     the function returns True, otherwise it returns False.
     """
@@ -65,12 +63,15 @@ def check_time_conflict(conn, Reservation, new_reservation):
     This function checks for time conflicts between a new reservation and existing reservations in a
     database.
 
-    :param conn: The database connection object used to execute the SQL query
-    :param Reservation: The Reservation parameter is likely a SQLAlchemy Table object representing a
+    :param conn: The database connection object used to execute the SQL query.
+
+    :param Reservation: The Reservation parameter is a SQLAlchemy Table object representing a
     table in a database that stores information about reservations, such as the reservation date, start
-    time, end time, and which room the reservation is for
+    time, end time, and which room the reservation is for.
+
     :param new_reservation: The new reservation that needs to be checked for time conflicts with
-    existing reservations
+    existing reservations.
+
     :return: a list of serialized rows from the database that represent any existing reservations that
     conflict with the new reservation being passed in as an argument.
     """
@@ -92,7 +93,8 @@ def check_start_end_time(new_reservation):
     open hours and the start time is earlier than the end time.
 
     :param new_reservation: A dictionary containing information about a new reservation, including the
-    start time and end time
+    start time and end time.
+
     :return: either a string indicating an error message if the reservation's start_time is later than
     the end_time or if the reservation is not within the open hours, or it returns None if the
     reservation's start_time and end_time are valid and within the open hours.
@@ -114,9 +116,11 @@ def check_date_constraints(auth_info, new_reservation):
     reservation date constraints.
 
     :param auth_info: A dictionary containing information about the user making the reservation,
-    including their user type
+    including their user type.
+
     :param new_reservation: A dictionary containing information about a new reservation, including the
-    reservation date in ISO format (YYYY-MM-DD)
+    reservation date in ISO format (YYYY-MM-DD).
+
     :return: a string message if the date constraints are not met based on the user type, otherwise it
     returns None.
     """
@@ -136,9 +140,11 @@ def is_authorized(auth_info, reservation):
     information and the reservation's creator ID.
 
     :param auth_info: A dictionary containing information about the user who is trying to access the
-    reservation. It includes the user's ID and type (1 for regular user, 2 for admin)
+    reservation. It includes the user's ID and type (1 for regular user, 2 for admin).
+
     :param reservation: The reservation is a dictionary that contains information about a reservation,
-    such as the creator_id, start time, end time, and other relevant details
+    such as the creator_id, start time, end time, and other relevant details.
+
     :return: a boolean value indicating whether the user is authorized to access the reservation or not.
     True is returned if the user is the creator of the reservation or an admin, and False is returned
     otherwise.
@@ -178,6 +184,7 @@ class ReservationList(Resource, Service):
         """
         This function retrieves a list of reservations based on various filters such as date range and
         room name.
+
         :return: a JSON object with a "status" key indicating whether the request was successful or not,
         and a "reservations" key containing a list of reservation objects. The HTTP status code returned
         is either 200 for a successful request or 400 for a failed request.
@@ -236,6 +243,7 @@ class ReservationList(Resource, Service):
         """
         This function creates a new reservation and checks for conflicts and constraints before
         inserting it into the database.
+
         :return: a JSON object with a "status" key and a corresponding boolean value, as well as a "msg"
         key with a corresponding string value. The HTTP status code is also included in the return
         statement. If the reservation is successfully created, the function also includes a
@@ -323,12 +331,13 @@ class ReservationByID(Resource, Service):
         the result.
         
         :param id: The parameter "id" is an integer that represents the ID of a reservation that needs
-        to be retrieved
-        :type id: int
+        to be retrieved.
+
         :return: a JSON object with the status of the request and either the reservation information or
         an error message. If the authentication token is invalid, it will return a status of False and
         an "Unauthenticated" error message. If the reservation ID is invalid, it will return a status of
-        False and an "Invalid ID" error message. If the reservation is found, it will return a status
+        False and an "Invalid ID" error message. If the reservation is found, it will return a status of
+        True and the found reservation data.
         """
         # Read a reservation by reservation ID
         # - GET /reservation/1:
@@ -355,8 +364,8 @@ class ReservationByID(Resource, Service):
         input data.
         
         :param id: The id parameter is an integer that represents the unique identifier of a reservation
-        that needs to be updated
-        :type id: int
+        that needs to be updated.
+
         :return: a dictionary with two keys: "status" and "reservation". The value of "status" is a
         boolean indicating whether the update was successful or not, and the value of "reservation" is a
         serialized row of the updated reservation. If there is an error, the function returns a
@@ -404,8 +413,8 @@ class ReservationByID(Resource, Service):
         This function deletes a reservation with a given ID if the user is authorized to do so.
         
         :param id: The id parameter is an integer that represents the unique identifier of the
-        reservation that needs to be deleted
-        :type id: int
+        reservation that needs to be deleted.
+
         :return: a dictionary with keys "status" and "msg". The value of "status" indicates whether the
         deletion was successful or not, and the value of "msg" provides additional information about the
         status. The HTTP status code is also included in the return statement.

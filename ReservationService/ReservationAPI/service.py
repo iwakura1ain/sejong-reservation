@@ -30,9 +30,7 @@ def validator(key):
     This is a Python decorator function that registers validation functions.
     
     :param key: The key parameter is a string that represents the validation function's target. It is
-    used to register the validation function in a global dictionary called VALIDATORS. The key is
-    typically in the format of "object.property", where "object" is the name of the object being
-    validated and "property" is the
+    used to register the validation function in a global dictionary called VALIDATORS.
     
     :return: The `validator` function returns the inner `decorator_register` function, which is used to
     register the decorated validation function in a global dictionary `VALIDATORS` with the specified
@@ -60,7 +58,7 @@ def validate(self, data):
     
     :param data: The parameter `data` is a JSON dictionary that represents the request body. It contains
     key-value pairs that correspond to the fields and values of the model that the validator is being
-    applied to
+    applied to.
     
     :return: The method is returning a dictionary of validated values mapped to the model.
     
@@ -163,8 +161,7 @@ class Service:
         
         :param model_config: It is a dictionary containing the configuration parameters for the ORM
         (Object-Relational Mapping) engine. These parameters include the database connection details
-        such as the host, port, username, password, and database name. The ORM engine is used to map the
-        database tables to Python classes and objects, allowing for
+        such as the host, port, username, password, and database name.
         
         :return: If `ORM_BASE` and `ORM_ENGINE` are not `None`, the function returns without doing
         anything. Otherwise, it initializes the ORM engine and base by creating an engine using the
@@ -194,7 +191,7 @@ class Service:
         columns.
         
         :param tables: The `tables` parameter is a list of table names that the function will use to
-        initialize the model
+        initialize the model.
         
         :return: a dictionary containing the ORM classes for each table in the input `tables` list. The
         keys of the dictionary are the table names and the values are the corresponding ORM classes.
@@ -221,7 +218,7 @@ class Service:
         """
         This is a context manager function used for ORM database queries in Python.
         
-        :param model_name: The name of the table in the ORM database that you want to query
+        :param model_name: The name of the table in the ORM database that you want to query.
 
         ---
         USAGE:
@@ -248,16 +245,16 @@ class Service:
         value indicating whether the query is a SELECT statement or not, and returns the results of the
         query or True/False depending on the value of the boolean.
         
-        :param query: The SQL query to be executed on the database
+        :param query: The SQL query to be executed on the database.
         
         :param args: args is a tuple of arguments to be passed to the SQL query. These arguments are
         used to replace placeholders in the query string. For example, if the query string contains a
-        placeholder '%s', the first element of the args tuple will replace it
+        placeholder '%s', the first element of the args tuple will replace it.
         
         :param retval: The parameter `retval` is a boolean flag that indicates whether the SQL query is
         a SELECT statement or not. If `retval` is True, it means that the query is a SELECT statement
         and the method should return the result set of the query. If `retval` is False, it means that,
-        defaults to False (optional)
+        defaults to False (optional).
         
         :return: The method returns either the result of the SQL query (if `retval` is True and the
         query is a SELECT statement) or a boolean value indicating whether the query was successful (if
@@ -292,7 +289,7 @@ class Service:
         This function is used for making API queries with specified parameters and returns the response
         in JSON format.
         
-        :param api_name: The name of the API that is registered in the `api_config` dictionary
+        :param api_name: The name of the API that is registered in the `api_config` dictionary.
         
         :param request_method: The HTTP request method to be used for the API query. It can be "get",
         "post", "put", or "delete"
@@ -300,16 +297,16 @@ class Service:
         :param request_params: Request parameters are additional data that can be sent along with the
         API request. These parameters are usually used to filter or sort the data that is returned by
         the API. For example, if you are querying a list of products, you might use request parameters
-        to filter the results by category or price range
+        to filter the results by category or price range.
         
         :param headers: Headers are additional information that can be sent along with a request to
         provide more context or authentication. They typically include key-value pairs such as
         authorization tokens, content type, and user agent. In the given code, headers are an optional
-        parameter that can be passed to the `query_api` method to include
+        parameter that can be passed to the `query_api` method to include.
 
         :param body: The request body is the data that is sent as part of the HTTP request. It can
         contain information such as form data, JSON data, or XML data. The body parameter in the
-        query_api function is used to pass this data to the API endpoint being queried
+        query_api function is used to pass this data to the API endpoint being queried.
         
         :return: the JSON response obtained from making an API query using the specified API name,
         request method, request parameters, headers, and body. If an error occurs during the API query,

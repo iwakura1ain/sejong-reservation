@@ -152,7 +152,7 @@ class Login(Service, Resource):
         - "access_token": a string representing the access token generated for the user
         - "refresh_token": a string representing the refresh token generated for the user
         - "User": a dictionary representing the user object, with keys and values based on the exclude
-        and include
+        and include.
 
         ---
         req body:
@@ -231,7 +231,8 @@ class Logout(Service, Resource):
         The function adds a token to a blocklist if it is not already present.
         
         :param token: The `token` parameter is a dictionary that represents a JSON Web Token (JWT) that
-        needs to be added to a blocklist. It contains the following keys:
+        needs to be added to a blocklist.
+        
         :return: a boolean value. It returns True if the token was successfully added to the blocklist,
         and False if the token was already in the blocklist.
         """

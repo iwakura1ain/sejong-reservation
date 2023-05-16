@@ -51,7 +51,7 @@ class EmailSender(Resource):
         :param data: The `data` parameter is a dictionary that contains information about a message,
         including the sender, receivers, text, and title. The `validate` method is a static method that
         checks if all the required keys are present in the dictionary and raises a `KeyError` if any key
-        is missing
+        is missing.
         
         :return: The `data` dictionary is being returned if all the keys in the `keys` list are present
         in the `data` dictionary. If any of the keys are missing, a `KeyError` is raised.
@@ -71,6 +71,7 @@ class EmailSender(Resource):
         formats for multiple receivers.
         
         :param data: The `data` parameter is a dictionary that contains the following keys and values:
+        어떤 키벨류값 들어있는지 써야함
         """
         for receiver in data["receivers"]:
             html = mail_format.format(text=data["text"])

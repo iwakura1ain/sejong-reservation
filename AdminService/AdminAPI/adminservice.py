@@ -178,7 +178,7 @@ class ConferenceRoomById(Resource, Service):
     """
     This function retrieves a room by its ID and returns its details in a dictionary format.
     
-    :param id: The id of the room that we want to retrieve
+    :param id: The id of the room that we want to retrieve.
 
     :return: This code returns a JSON response containing the details of a room with the given id if
     it exists in the database. If the user is not logged in, it returns a message indicating that
@@ -228,7 +228,7 @@ class ConferenceRoomById(Resource, Service):
     """
     This function deletes a room by its ID after checking user authorization.    
     
-    :param id: The id parameter is the unique identifier of the room that needs to be deleted
+    :param id: The id parameter is the unique identifier of the room that needs to be deleted.
 
     :return: a dictionary with a "message" key indicating the status of the room deletion process. If
     the deletion is successful, the message will be "Room Deleted" with a status code of 200. If the
@@ -281,7 +281,7 @@ class ConferenceRoomById(Resource, Service):
     checks.
     
     :param id: The parameter "id" is the identifier of the room that needs to be updated. It is used
-    to locate the specific room in the database and update its information
+    to locate the specific room in the database and update its information.
     
     :return: a JSON response with a message indicating whether the room update was successful or
     not. If the update was successful, the message will be "Room Updated" with a status code of 200.
