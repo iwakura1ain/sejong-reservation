@@ -17,4 +17,5 @@ model_config = {
 
 api_config = {
   "get_auth_info": "http://userservice:5000/auth/jwt-status",
+  "get_rooms_info": "http://adminservice:5000/admin/rooms",
 }

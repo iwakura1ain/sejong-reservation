@@ -39,14 +39,14 @@ class ReservationList(Resource, Service):
 
         # get token info
         auth_info = self.query_api("get_auth_info","get",headers=request.headers)
-        if not is_valid_token(auth_info):
+        if not auth_info["status"]:
             return {"status": False, "msg":"Unauthenticated"}, 400
 
         # parse request.args
         # TODO: use validators
         before = request.args.get("before")
         after = request.args.get("after")
-        room = request.args.get("room") 
+        room_name = request.args.get("room") 
         range_from = request.args.get("from")
         range_to = request.args.get("to")
 
@@ -56,11 +56,10 @@ class ReservationList(Resource, Service):
                 # full table
                 if is_admin(auth_info): 
                     stmt = select(Reservation)
-
                 # only relavent columns
                 else: 
                     stmt = select(Reservation.id, Reservation.reservation_date,
-                        Reservation.start_time, Reservation.end_time, Reservation.which_room)
+                        Reservation.start_time, Reservation.end_time, Reservation.room_id)
 
                 # filter by dates
                 if range_from and range_to:
@@ -72,15 +71,24 @@ class ReservationList(Resource, Service):
                     stmt = stmt.where(Reservation.reservation_date >= after)
 
                 # filter by room
-                if room:
-                    room_id = None # self.query_api to get room id.
-                    stmt = stmt.where(Reservation.which_room == room_id)
+                if room_name:
+                    rooms = self.query_api("get_rooms_info","get",headers=request.headers)
+                    rooms = rooms["allRooms"]
+                    room_id = None
+                    for room in rooms:
+                        if room["room_name"] == room_name:
+                            room_id = room["id"]
+                            break
+                    if not room_id:
+                        return {"status": False, "msg":"Invalid room ID."}, 400
+                    stmt = stmt.where(Reservation.room_id == room_id)
 
                 rows = conn.execute(stmt).mappings().fetchall()
                 rows = [serialize(row) for row in rows]
             return {"status": True, "reservations": rows}, 200
+
         except Exception as e:
-            return {"status": False, "msg":"Unauthenticated"}, 400
+            return {"status": False, "msg":f"Get reservation failed. {e}"}, 400
 
     def post(self):
         """
@@ -94,14 +102,10 @@ class ReservationList(Resource, Service):
         if not is_valid_token(auth_info):
             return {"status": False, "msg":"Unauthenticated"}, 400
         
-        new_reservation = request.json
-        import sys; print(new_reservation,file=sys.stderr)
-
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 # validate model
                 new_reservation = Reservation.validate(request.json)
-                import sys; print(new_reservation,file=sys.stderr)
 
                 msg = check_date_constraints(auth_info, new_reservation)
                 if msg:
@@ -115,9 +119,11 @@ class ReservationList(Resource, Service):
                 if len(new_reservation["reservation_topic"]) > 100:
                     return {"status": False, "msg": "reservation topic is too long"}
 
-                # TODO: check if room is valid
-                # if not is_valid_room(new_reservation):
-                #     return {"status": False, "msg": "Wrong Room ID"}
+                # check if room is valid
+                rooms = self.query_api("get_rooms_info","get",headers=request.headers)
+                room_ids = [room["id"] for room in rooms["allRooms"]]
+                if new_reservation["room_id"] not in room_ids:
+                    return {"status": False, "msg":"Invalid room ID."}, 400
 
                 # check time conflict
                 time_conflict_rows = check_time_conflict(conn, Reservation, new_reservation)
@@ -128,8 +134,8 @@ class ReservationList(Resource, Service):
 
                 # insert new reservation
                 conn.execute(insert(Reservation), new_reservation)
-
             return {"status":True, "reservation":new_reservation}, 200
+
         except Exception as e:
             return {"status":False, "msg":f"Reservation failed. {e}"}, 400
 
@@ -155,13 +161,18 @@ class ReservationByID(Resource, Service):
 
         try:
             with self.query_model("Reservation") as (conn, Reservation):
-                stmt = select(Reservation).where(Reservation.id==id)
+                # TODO: give less info if user is not owner...
+                stmt = select(Reservation).where(Reservation.id == id)
                 row = conn.execute(stmt).mappings().fetchone()
-                row = serialize(row)
+                # if reservation with this id doesn't exist
+                if not row:
+                    return {"status":False, "msg":"Invalid ID."}, 400
 
-            return {"status":True, "reservation":row}, 200
+                reservation = serialize(row)
+            return {"status":True, "reservation":reservation}, 200
+
         except Exception as e:
-            return {"status":False, "msg":"Invalid ID"}, 400
+            return {"status":False, "msg":f"Get reservation by ID failed. {e}"}, 400
 
     def patch(self, id: int):
         """
@@ -176,7 +187,7 @@ class ReservationByID(Resource, Service):
                 # check if reservation with id exist.
                 stmt = select(Reservation).where(Reservation.id == id)
                 row = conn.execute(stmt).mappings().fetchone()
-                if len(row) < 1:
+                if not row:
                     return {"status": False, "msg": "Invalid ID"}, 400
                 
                 # update serialized reservation with validate model
@@ -209,6 +220,7 @@ class ReservationByID(Resource, Service):
                 row = conn.execute(stmt).mappings().fetchone()
                 row = serialize(row)
             return {"status": True, "reservation": row}, 200
+
         except Exception as e:
             return {"status":False, "msg":f"Reservation edit failed. {e}"}, 400
 
@@ -241,6 +253,6 @@ class ReservationByID(Resource, Service):
                 stmt = delete(Reservation).where(Reservation.id == id)
                 conn.execute(stmt)
             return {"status": True, "msg": "Deleted"}, 200
-            #
+            
         except Exception as e:
             return {"status":False, "msg":"Invalid ID"}, 400
