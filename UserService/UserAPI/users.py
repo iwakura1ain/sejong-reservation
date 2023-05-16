@@ -53,6 +53,7 @@ class UserList(Service, Resource):
         """
         This function retrieves a list of users and returns it as a serialized JSON object, while also
         handling exceptions.
+        
         :return: A dictionary is being returned with the keys "status" and "Users". The value of
         "status" is a boolean indicating whether the operation was successful or not, and the value of
         "Users" is a list of serialized user objects. If an exception occurs, a dictionary with the keys
@@ -101,10 +102,11 @@ class UserDetail(Service, Resource):
         
         :param id: The parameter "id" is the unique identifier of the user whose information is being
         retrieved
+
         :return: This code defines a GET endpoint for retrieving user information. If the user with the
         specified ID exists in the database, the endpoint returns a JSON response with a "status" key
         set to True, a "msg" key set to "retrieved", and a "User" key set to the serialized user object.
-        If the user does not exist, the endpoint returns a JSON response with a "
+        If the user does not exist, the endpoint returns a JSON response with a error message."
         """
         try:
             with self.query_model("User") as (conn, User):
