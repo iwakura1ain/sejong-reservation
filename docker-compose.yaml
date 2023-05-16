@@ -88,4 +88,3 @@ services:
       # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.crt:/etc/nginx/cert/star_xx_com.crt
     ports:
       - 8080:8080
-      - 80:80
