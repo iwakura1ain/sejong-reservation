@@ -1,0 +1,127 @@
+<template>
+	<div class="room-card">
+		<div class="info-container">
+			<img class="room-img" :src="contents.roomImg" alt="회의실 사진" />
+			<div>
+				<span class="building">{{ contents.buildingName }}</span>
+				<span class="room">{{ contents.roomName }}</span>
+				<div class="max-user">
+					<img class="icon" :src="groupIcon" alt="최대 수용인원" />
+					<span class="value">{{ contents.maxUser }}명</span>
+				</div>
+				<div class="opening-hour">
+					<img class="icon" :src="clockIcon" alt="개방시간" />
+					<span class="value"
+						>{{ contents.openingHour[0] }} ─ {{ contents.openingHour[1] }}</span
+					>
+				</div>
+				<div class="btns">
+					<filled-button color="white" style="margin-left: 0">
+						자세히보기
+					</filled-button>
+					<filled-button @click="selectRoom">선택</filled-button>
+				</div>
+			</div>
+		</div>
+		<div class="reservation-viewer">
+			<!--  -->
+		</div>
+	</div>
+</template>
+
+<script setup>
+import FilledButton from '@/components/atoms/FilledButton.vue';
+import groupIcon from '@/assets/images/icons/group.png';
+import clockIcon from '@/assets/images/icons/time.png';
+
+const props = defineProps({
+	contents: {
+		required: false,
+		type: [Object, null],
+	},
+});
+
+const emit = defineEmits(['update-selected-room']);
+
+function selectRoom() {
+	console.log('[RoomCard] 방 선택 : ', props.contents.id);
+	emit('update-selected-room', props.contents.id);
+}
+</script>
+
+<style lang="scss" scoped>
+.room-card {
+	margin: 12px;
+	padding: 24px;
+
+	background-color: white;
+	border-radius: $box-radius;
+
+	box-shadow: 0px 4px 10px 4px rgba(0, 0, 0, 0.25);
+	-webkit-box-shadow: 0px 4px 10px 4px rgba(0, 0, 0, 0.25);
+	-moz-box-shadow: 0px 4px 10px 4px rgba(0, 0, 0, 0.25);
+
+	.info-container {
+		display: flex;
+		.room-img {
+			width: 192px;
+			height: 192px;
+			border-radius: $box-radius;
+		}
+
+		> div {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			padding-left: 12px;
+
+			.icon {
+				vertical-align: middle;
+				display: inline-block;
+				height: 24px;
+				width: auto;
+				margin-right: 8px;
+			}
+
+			.building {
+				display: block;
+				font-weight: bold;
+			}
+			.room {
+				display: block;
+				font-size: 1.6rem;
+				padding: 12px 0;
+			}
+			.opening-hour {
+				margin: 8px 0;
+			}
+
+			.max-user,
+			.opening-hour {
+				display: flex;
+				align-items: center;
+			}
+		}
+	}
+}
+
+@media (max-width: 768px) {
+	.room-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		margin: 12px 0;
+		border: 2px solid white;
+		.info-container {
+			flex-direction: column;
+			align-items: center;
+			.room-img {
+				width: 160px;
+				height: 160px;
+				margin-bottom: 24px;
+			}
+		}
+	}
+}
+</style>

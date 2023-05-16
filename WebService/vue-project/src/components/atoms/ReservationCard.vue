@@ -157,13 +157,13 @@ function getDateStr(str) {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		padding: 18px 18px;
+		padding: 18px 12px;
 	}
 
 	// 시간정보
 	.time-container {
 		align-items: center;
-		min-width: 84px;
+		min-width: 96px;
 		border-radius: $box-radius 0 0 $box-radius;
 
 		.date {
@@ -218,5 +218,11 @@ function getDateStr(str) {
 }
 .reservation-card:active {
 	transform: scale(105%);
+}
+
+@media (max-width: 768px) {
+	.reservation-card {
+		width: 100%;
+	}
 }
 </style>

@@ -1,5 +1,6 @@
 <template>
 	<div class="filled-button" :class="color">
+		<slot name="icon"></slot>
 		<span>
 			<slot></slot>
 		</span>

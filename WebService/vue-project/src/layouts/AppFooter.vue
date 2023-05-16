@@ -11,8 +11,8 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	height: $footer-height;
-
+	// height: $footer-height;
+	padding: 128px 0;
 	color: white;
 	background-color: $sejong-red;
 }
