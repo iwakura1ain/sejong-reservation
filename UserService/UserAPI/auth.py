@@ -59,7 +59,12 @@ class Register(Service, Resource):
         try:
             with self.query_model("User") as (conn, User):
                 # validate request body arguments
-                req = User.validate(request.json)
+                req, status = User.validate(request.json)
+                if not status:
+                    return {
+                        "status": False,
+                        "msg": "key:value pair wrong"
+                    }, 200
 
                 # check if user exists
                 res = conn.execute(
@@ -119,7 +124,12 @@ class Login(Service, Resource):
         try:
             with self.query_model("User") as (conn, User):
                 # validate request body
-                req = User.validate(data=request.json)
+                req, status = User.validate(request.json)
+                if not status:
+                    return {
+                        "status": False,
+                        "msg": "key:value pair wrong"
+                    }, 200
 
                 # get user
                 res = conn.execute(

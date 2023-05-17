@@ -104,7 +104,12 @@ class UserDetail(Service, Resource):
         """
         try:
             with self.query_model("User") as (conn, User):
-                req = User.validate(request.json)
+                req, status = User.validate(request.json)
+                if not status:
+                    return {
+                        "status": False,
+                        "msg": "key:value pair wrong"
+                    }, 200
 
                 conn.execute(
                     update(User).where(User.id == id).values(**req)
