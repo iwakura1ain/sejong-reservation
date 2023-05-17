@@ -15,8 +15,8 @@ services:
       DB_PASSWORD: 1234
     ports:
       - "5000:5000"
-    # volumes:
-    #   - ./ReservationService:/usr/src/app
+    volumes:
+      - ./ReservationService/ReservationAPI:/ReservationAPI
     # depends_on:
     #   - dbservice
 
@@ -73,7 +73,7 @@ services:
       TZ: Asia/Seoul
     volumes:
       - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
-#      - ./DBService/data:/var/lib/mysql
+        #- ./DBService/data:/var/lib/mysql
     ports:
       - "3306:3306"
 
