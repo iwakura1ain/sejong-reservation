@@ -41,8 +41,14 @@ class ConferenceRoom(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate data from request body
-                verified_json_body = Room.validate(req)
-                res = conn.execute(select(Room)).mappings().all()
+                verified_json_body, status = Room.validate(req)
+                if status:
+                    res = conn.execute(select(Room)).mappings().all()
+                else:
+                    return {
+                        "msg": "validation fail",
+                        "data": verified_json_body
+                    }, 200
                 
                 # if validated data is already in table, 
                 # send message 'data already exists'
@@ -78,18 +84,15 @@ class ConferenceRoom(Resource, Service):
             }, 500
         
     # GET all rooms
-    @admin.doc(responses={200: 'Success'})
-    @admin.doc(responses={404: 'Fail'})
-    def get(self): 
+    def get(self):     
         # check if user is logged in.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
-                "message": "Not logged in"
+                "message": "Not logged in",
             }, 200
         
         try:
@@ -150,7 +153,7 @@ class ConferenceRoomById(Resource, Service):
                 if res is None:
                     return {
                         "message": f"Room id:{id} not found"
-                    }, 400
+                    }, 200
                 
                 # GET room with given id
                 return {
@@ -190,7 +193,7 @@ class ConferenceRoomById(Resource, Service):
                 if res is None:
                     return {
                         "message": f"Room id:{id} not found"
-                    }, 400
+                    }, 200
                 
                 # DELETE room
                 conn.execute(
@@ -211,14 +214,14 @@ class ConferenceRoomById(Resource, Service):
         
     # UPDATE Room
     def patch(self, id):
-        # request body data, need to be validated
+        # request body data, needs to be validated
         req = request.json
         
         # check user if has authorization.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(check_jwt_exists(user_status) 
+        if(check_jwt_exists(user_status)
            and user_status['User']['type'] != 2):
             return {
                 "status": False,
@@ -227,17 +230,23 @@ class ConferenceRoomById(Resource, Service):
         
         try:
             with self.query_model("Room") as (conn, Room):
-                # validate request body data
-                # SELECT room by id and parse it into dict
-                verified_json_body = Room.validate(req)
-                res = conn.execute(select(Room)).mappings()
-                roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+                # validate data from request body
+                verified_json_body, status = Room.validate(req)
+                if status:
+                    # SELECT room by id and parse it into dict
+                    res = conn.execute(select(Room)).mappings().all()
+                    roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+                else:
+                    return {
+                        "msg": "validation fail",
+                        "data": verified_json_body
+                    }, 200
 
                 # if there's no such room by given id
                 if roomById is None:
                     return {
                         "message": f"Room id:{id} not found"
-                    }, 400
+                    }, 200
                 
                 # if updated room data already exists in the table
                 for room in res:
@@ -252,11 +261,6 @@ class ConferenceRoomById(Resource, Service):
                 # UPDATE room
                 conn.execute(
                     update(Room).where(Room.id == id),{
-                        # "room_name": verified_json_body['room_name'],
-                        # "room_address1": verified_json_body['room_address1'],
-                        # "room_address2": verified_json_body['room_address2'],
-                        # "max_users": verified_json_body['max_users'],
-                        # "is_usable": verified_json_body['is_usable'],
                         **verified_json_body 
                     }
                 )
