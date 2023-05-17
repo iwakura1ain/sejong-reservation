@@ -13,6 +13,7 @@ import MakeQuickReservationView from '@/views/user/MakeQuickReservationView.vue'
 import MakeReservationView from '@/views/user/MakeReservationView.vue';
 import ReservationHistoryView from '@/views/user/ReservationHistoryView.vue';
 import UserMyPageView from '@/views/user/UserMyPageView.vue';
+import UserEditProfileView from '@/views/user/UserEditProfileView.vue';
 import SuccessfullyReservedView from '@/views/user/SuccessfullyReservedView.vue';
 
 // 관리기능 뷰
@@ -75,6 +76,11 @@ const routes = [
 		path: '/mypage',
 		name: 'UserMyPage',
 		component: UserMyPageView,
+	},
+	{
+		path: '/mypage/profile/edit',
+		name: 'UserEditProfile',
+		component: UserEditProfileView,
 	},
 
 	// 관리기능 뷰
