@@ -51,3 +51,21 @@ def protected():
         return decorator
     return wrapper
 
+def admin_only():
+    """
+    decorator which protects endpoints that require authorization
+    """
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            identity = retrieve_jwt()
+            if identity["type"] == 2:
+                return fn(*args, **kwargs)
+            
+            return {
+                "status": False,
+                "msg": "unauthorized"
+            }, 200
+            
+        return decorator
+    return wrapper

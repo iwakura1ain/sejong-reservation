@@ -13,10 +13,11 @@ from flask_jwt_extended import (
     jwt_required
 )
 
+
+
 from service import Service
 from utils import retrieve_jwt, serialize, protected
 from config import ORM
-
 
 # namespace for "/auth"
 USERS = Namespace(
@@ -104,7 +105,12 @@ class UserDetail(Service, Resource):
         """
         try:
             with self.query_model("User") as (conn, User):
-                req = User.validate(request.json)
+                req, status = User.validate(request.json)
+                if not status:
+                    return {
+                        "status": False,
+                        "msg": "key:val pair invalid"
+                    }, 200
 
                 conn.execute(
                     update(User).where(User.id == id).values(**req)
@@ -150,11 +156,5 @@ class UserDetail(Service, Resource):
                 "status": False,
                 "msg": "error"
             }, 200
-
-
-                
-
-        
-
 
 
