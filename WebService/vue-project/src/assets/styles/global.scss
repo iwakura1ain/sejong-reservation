@@ -1,0 +1,47 @@
+// fonts
+// @import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@100;200;300;400;500;600;700;800;900');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+* {
+  font-family: /*'Gothic A1',*/ 'Nanum Myeongjo', serif;
+  box-sizing: border-box;
+}
+
+// 갤럭시폴드
+@media(max-width : 320px) {
+  span, input {
+    font-size : 0.9rem !important;
+  }
+}
+
+// @import "bootstrap/scss/bootstrap.scss";
+
+// colors
+$sejong-red : #C3002F;
+$sejong-red-30 : #C3002F20;
+$sejong-red-50 : #C3002F50;
+$sejong-red-80 : #C3002F80;
+$almost-sejong-red : #bd6076;
+$light-sejong-red : #f0d6dc;
+
+$sejong-grey : #51626F;
+$sejong-grey-30 : #51626F30;
+
+$bg-grey : #F6F6F650;
+
+$white-30 : rgba(255,255,255,0.3);
+$white-50 : rgba(255,255,255,0.5);
+$white-80 : rgba(255,255,255,0.8);
+
+
+// size
+$header-height : 90px;
+$footer-height : 270px;
+// $routerview-minheight : calc( calc(100vh - ($header-height)) - $footer-height);
+$routerview-minheight : calc( calc(100vh - ($header-height) - $footer-height));
+$routerview-padding : 64px 32px 128px 32px;
+$routerview-mobile-padding : 32px 16px 64px 16px;
+
+$button-margin : 4px;
+$button-padding : 8px;
+
+$box-radius : 0.5rem;
