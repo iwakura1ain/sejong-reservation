@@ -279,8 +279,3 @@ class Service:
 
         except Exception as e:
             return False
-
-
-
-    
-
