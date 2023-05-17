@@ -31,14 +31,12 @@ USERS = Namespace(
 
 exclude = ["password", "created_at"]
 
-
-
-"""
-This is a Python class that defines a resource for getting a list of users, with authentication and
-serialization.
-"""
 @USERS.route("")
 class UserList(Service, Resource):
+    """
+    This is a Python class that defines a resource for getting a list of users, with authentication and
+    serialization.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource
@@ -80,12 +78,12 @@ class UserList(Service, Resource):
             }, 500
 
 
-"""
-This code defines a Flask-RestX resource for handling CRUD operations related to a specific user
-identified by their `id`. The resource includes three methods: `get`, `patch`, and `delete`.
-"""
 @USERS.route("/<id>")
 class UserDetail(Service, Resource):
+    """
+    This code defines a Flask-RestX resource for handling CRUD operations related to a specific user
+    identified by their `id`. The resource includes three methods: `get`, `patch`, and `delete`.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource
@@ -200,11 +198,3 @@ class UserDetail(Service, Resource):
                 "status": False,
                 "msg": "error"
             }, 200
-
-
-                
-
-        
-
-
-

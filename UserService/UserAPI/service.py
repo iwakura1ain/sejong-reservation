@@ -94,11 +94,11 @@ def validate(self, data):
 DeclarativeMeta.validate = validate
 
 
-"""
-The Service class is a helper class for making database and API queries, with methods for querying
-SQL databases, ORM databases, and APIs.
-"""
 class Service:
+    """
+    The Service class is a helper class for making database and API queries, with methods for querying
+    SQL databases, ORM databases, and APIs.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is a constructor function for a class that initializes database, ORM, and API
@@ -348,8 +348,3 @@ class Service:
 
         except Exception as e:
             return False
-
-
-
-    
-

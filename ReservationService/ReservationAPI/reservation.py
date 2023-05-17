@@ -307,15 +307,15 @@ class ReservationList(Resource, Service):
             return {"status":False, "msg":"Reservation failed"}, 400
 
 
-"""
-The above code defines a Flask RESTful API endpoint for managing reservations. It includes methods
-for retrieving, updating, and deleting a reservation by its ID. The `get` method retrieves a
-reservation by its ID, the `patch` method updates a reservation by its ID, and the `delete` method
-deletes a reservation by its ID. The code also includes authorization checks to ensure that only
-authorized users can perform certain actions.
-"""
 @ns.route("/<int:id>")
 class ReservationByID(Resource, Service):
+    """
+    The above code defines a Flask RESTful API endpoint for managing reservations. It includes methods
+    for retrieving, updating, and deleting a reservation by its ID. The `get` method retrieves a
+    reservation by its ID, the `patch` method updates a reservation by its ID, and the `delete` method
+    deletes a reservation by its ID. The code also includes authorization checks to ensure that only
+    authorized users can perform certain actions.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource

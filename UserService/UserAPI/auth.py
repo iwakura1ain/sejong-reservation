@@ -45,16 +45,16 @@ exclude = ["password", "created_at"]
 
 
 
-"""
-This code defines a Flask-RESTX endpoint for registering new users. It uses the `Service` class and
-the `ORM` configuration to interact with the database. The `post` method handles the HTTP POST
-request and validates the request body arguments using the `User` model. It then checks if the user
-already exists in the database and returns an error message if so. If the user does not exist, it
-generates a password hash and creates a new user in the database using the `insert` method. Finally,
-it returns the newly created user as a JSON response.
-"""
 @AUTH.route('/register')
 class Register(Service, Resource):
+    """
+    This code defines a Flask-RESTX endpoint for registering new users. It uses the `Service` class and
+    the `ORM` configuration to interact with the database. The `post` method handles the HTTP POST
+    request and validates the request body arguments using the `User` model. It then checks if the user
+    already exists in the database and returns an error message if so. If the user does not exist, it
+    generates a password hash and creates a new user in the database using the `insert` method. Finally,
+    it returns the newly created user as a JSON response.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource
@@ -123,18 +123,18 @@ class Register(Service, Resource):
             }, 500
 
 
-"""
-This code defines a Flask-RESTX endpoint for logging in users. It uses the `Service` class and the
-`ORM` configuration to interact with the database. The `post` method handles the HTTP POST request
-and validates the request body arguments using the `User` model. It then checks if the user exists
-in the database and returns an error message if not. If the user exists, it checks if the password
-is correct using the `check_password_hash` function from the `werkzeug.security` module. If the
-password is correct, it generates an access token and a refresh token using the
-`create_access_token` and `create_refresh_token` functions from the `flask_jwt_extended` module.
-Finally, it returns the access token, refresh token, and user information as a JSON response.
-"""
 @AUTH.route('/login')
 class Login(Service, Resource):
+    """
+    This code defines a Flask-RESTX endpoint for logging in users. It uses the `Service` class and the
+    `ORM` configuration to interact with the database. The `post` method handles the HTTP POST request
+    and validates the request body arguments using the `User` model. It then checks if the user exists
+    in the database and returns an error message if not. If the user exists, it checks if the password
+    is correct using the `check_password_hash` function from the `werkzeug.security` module. If the
+    password is correct, it generates an access token and a refresh token using the
+    `create_access_token` and `create_refresh_token` functions from the `flask_jwt_extended` module.
+    Finally, it returns the access token, refresh token, and user information as a JSON response.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource
@@ -209,14 +209,14 @@ class Login(Service, Resource):
                 "msg": "Login Failed"
             }, 500
 
-"""
-The above code defines a Flask route for logging out a user. It uses the Flask-JWT-Extended library
-to require a valid access token for the route to be accessed. When the route is accessed, it adds
-the token to a token blocklist to prevent it from being used again, and returns a response
-indicating whether the token was successfully revoked or had already been revoked.
-"""
 @AUTH.route('/logout')
 class Logout(Service, Resource):
+    """
+    The above code defines a Flask route for logging out a user. It uses the Flask-JWT-Extended library
+    to require a valid access token for the route to be accessed. When the route is accessed, it adds
+    the token to a token blocklist to prevent it from being used again, and returns a response
+    indicating whether the token was successfully revoked or had already been revoked.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource
@@ -280,15 +280,15 @@ class Logout(Service, Resource):
             "msg": "already revoked"
         }
 
-"""
-The above code defines a Flask endpoint for checking if a user's JWT token is valid. The endpoint
-requires a valid JWT token to be included in the request header. If the token is valid, the endpoint
-returns a JSON response with a status of True, a message of "authenticated", and the serialized user
-object. If the token is invalid or an error occurs, the endpoint returns a JSON response with a
-status of False and a message of "jwt status Failed".
-"""
 @AUTH.route("/jwt-status")
 class JWTStatus(Service, Resource):
+    """
+    The above code defines a Flask endpoint for checking if a user's JWT token is valid. The endpoint
+    requires a valid JWT token to be included in the request header. If the token is valid, the endpoint
+    returns a JSON response with a status of True, a message of "authenticated", and the serialized user
+    object. If the token is invalid or an error occurs, the endpoint returns a JSON response with a
+    status of False and a message of "jwt status Failed".
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource
@@ -333,15 +333,15 @@ class JWTStatus(Service, Resource):
             }, 500
 
 
-"""
-The above code is defining a Flask endpoint for refreshing a JWT access token. It requires a valid
-refresh token to be included in the request header, which is checked using the `jwt_required`
-decorator with the `refresh=True` parameter. If the refresh token is valid, a new access token is
-created using the `create_access_token` function from the Flask-JWT-Extended library and returned in
-the response along with a status code of 200.
-"""
 @AUTH.route("/jwt-refresh")
 class JWTRefresh(Service, Resource):
+    """
+    The above code is defining a Flask endpoint for refreshing a JWT access token. It requires a valid
+    refresh token to be included in the request header, which is checked using the `jwt_required`
+    decorator with the `refresh=True` parameter. If the refresh token is valid, a new access token is
+    created using the `create_access_token` function from the Flask-JWT-Extended library and returned in
+    the response along with a status code of 200.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource

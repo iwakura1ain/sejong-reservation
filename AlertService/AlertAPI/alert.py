@@ -29,19 +29,19 @@ with open("mail-format.html", mode="r") as f:
     mail_format = f.read()
 
 
-"""
-This code defines a Flask-RestX resource called `EmailSender` within the `EMAIL` namespace. The
-resource handles HTTP POST requests to send emails using the `smtplib` library. The `validate`
-method checks that the required keys (`sender`, `receivers`, `text`, and `title`) are present in the
-request data. The `create_message` method generates a MIME message for each receiver, with both
-plain text and HTML versions of the email contents. The `post` method handles the HTTP POST request,
-validates the request data, and sends the email using the `smtplib` library. If the email is sent
-successfully, the method returns a JSON response with a `status` of `True` and a `msg` of
-`"success"`. If there is an error sending the email, the method returns a JSON response with a
-`status` of `False` and a `msg` of `"error sending mail"`.
-"""
 @EMAIL.route('')
 class EmailSender(Resource):
+    """
+    This code defines a Flask-RestX resource called `EmailSender` within the `EMAIL` namespace. The
+    resource handles HTTP POST requests to send emails using the `smtplib` library. The `validate`
+    method checks that the required keys (`sender`, `receivers`, `text`, and `title`) are present in the
+    request data. The `create_message` method generates a MIME message for each receiver, with both
+    plain text and HTML versions of the email contents. The `post` method handles the HTTP POST request,
+    validates the request data, and sends the email using the `smtplib` library. If the email is sent
+    successfully, the method returns a JSON response with a `status` of `True` and a `msg` of
+    `"success"`. If there is an error sending the email, the method returns a JSON response with a
+    `status` of `False` and a `msg` of `"error sending mail"`.
+    """
     @staticmethod
     def validate(data):
         """
