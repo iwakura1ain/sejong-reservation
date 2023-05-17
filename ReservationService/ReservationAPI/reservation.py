@@ -5,11 +5,12 @@ from sqlalchemy import select, insert, update, delete, func
 
 from config import model_config, api_config
 from service import Service
+# from validators import start_end_time_validator
 
 from utils import (
     serialize,
     is_valid_token, is_admin, is_authorized,
-    check_start_end_time, 
+    # check_start_end_time, 
     check_date_constraints, 
     check_time_conflict,
 )
@@ -58,7 +59,9 @@ class ReservationList(Resource, Service):
                     stmt = select(Reservation)
                 # only relavent columns
                 else: 
-                    stmt = select(Reservation.id, Reservation.reservation_date,
+                    stmt = select(Reservation.id, 
+                        Reservation.reservation_date, 
+                        Reservation.reservation_type,
                         Reservation.start_time, Reservation.end_time, Reservation.room_id)
 
                 # filter by dates
@@ -90,6 +93,8 @@ class ReservationList(Resource, Service):
         except Exception as e:
             return {"status": False, "msg":f"Get reservation failed. {e}"}, 400
 
+
+    # @start_end_time_validator
     def post(self):
         """
         Make a new reservation
@@ -105,13 +110,11 @@ class ReservationList(Resource, Service):
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 # validate model
-                new_reservation = Reservation.validate(request.json)
+                new_reservation,status = Reservation.validate(request.json)
+                if not status:
+                    return {"status": False, "msg": "Invalid reservation"}, 400
 
                 msg = check_date_constraints(auth_info, new_reservation)
-                if msg:
-                    return {"status": False, "msg": msg}, 400
-
-                msg = check_start_end_time(new_reservation)
                 if msg:
                     return {"status": False, "msg": msg}, 400
                 
@@ -193,7 +196,9 @@ class ReservationByID(Resource, Service):
                 # update serialized reservation with validate model
                 upd_reservation = serialize(row)
                 upd_reservation.update(request.json)
-                upd_reservation = Reservation.validate(upd_reservation)
+                upd_reservation,status = Reservation.validate(upd_reservation)
+                if not status:
+                    return {"status": False, "msg": "Invalid reservation"}, 400
 
                 # check time conflict
                 time_conflict_rows = check_time_conflict(conn, Reservation, upd_reservation)
@@ -205,10 +210,10 @@ class ReservationByID(Resource, Service):
                     return {"status": False, "msg":"Time conflict",
                         "reservations":time_conflict_rows}, 400
 
-                # check start, end times 
-                msg = check_start_end_time(upd_reservation)
-                if msg:
-                    return {"status": False, "msg": msg}
+                # # check start, end times 
+                # msg = check_start_end_time(upd_reservation)
+                # if msg:
+                #     return {"status": False, "msg": msg}
 
                 # update reservation
                 stmt = (update(Reservation)
