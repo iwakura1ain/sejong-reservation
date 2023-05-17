@@ -311,6 +311,8 @@ class UserImport(Service, Resource):
                 "msg": "no file selected"
             }, 200
 
+        f = f.read()
+        
         # check filetype
         mime = Magic(mime=True)
         if mime.from_buffer(f) not in self.allowed_filetypes:
@@ -327,8 +329,10 @@ class UserImport(Service, Resource):
             for row in users_sheet.iter_rows(min_row=2, min_col=1, max_col=8):
                 # create new user dict
                 new_user, status = User.validate(
-                    {key: val for key, val in zip(schema, row)}
+                    {key: val.value for key, val in zip(schema, row)}
                 )
+
+                print(f"inserting new user: {new_user}", flush=True)
                 if not status:
                     return {
                         "status": False,
