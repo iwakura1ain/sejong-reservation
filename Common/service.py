@@ -85,17 +85,15 @@ def validate(self, data):
     for keys in VALIDATORS.items():
         self.columns.issuperset(set(keys))
 
-
     # check if valid
-    validated = schema_exists.copy()
-    status = False
+    validated, status = schema_exists.copy(), True
     for keys, validator in VALIDATORS.items():
         keys = [k.split(".")[-1] for k in keys]
 
         validator_args = {k: schema_exists[k] for k in keys}
         if not validator(**validator_args):
             list(map(validated.pop, keys, repeat(None)))
-            status = True
+            status = False
             
     return validated, status
 # inject validate function into sqlalchemy
