@@ -3,7 +3,7 @@ from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
 from service import Service
 from config import model_config, api_config
-from utils import serialization, check_jwt_exists
+from utils import serialization, check_jwt_exists, check_if_room_identical
 from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
 
 # namespace for handy routing
@@ -34,22 +34,14 @@ class ConferenceRoom(Resource, Service):
            and user_status['User']['type'] != 2):
             return {
                 "status": False,
-                "message": "No authorization"
+                "msg": "No authorization"
             }, 200
         
         try:
             with self.query_model("Room") as (conn, Room):
                 # verified_json_body, status = Room.validate(req)
-                # # print(verified_json_body, status, flush=True)
-                # if status:
-                #     res = conn.execute(select(Room)).mappings().all()
-                # else:
-                #     return {
-                #         "msg": "validation fail",
-                #         "data": verified_json_body
-                #     }, 200
                 valid_data, invalid_data = Room.validate(req)
-                print(valid_data, invalid_data)
+                # print(valid_data, invalid_data, flush=True)
 
                 if len(invalid_data) > 0:
                     return {
@@ -63,19 +55,11 @@ class ConferenceRoom(Resource, Service):
                 
                 # if validated data is already in table, 
                 # send message 'data already exists'
-                if conn.execute(select(Room).where(Room.room_name == valid_data['room_name'])).mappings().fetchone():
-                    return {
+                if check_if_room_identical(conn, Room, valid_data):
+                    return { 
                         "status": False,
                         "msg": "Room already exists"
                     }, 200
-                
-                # for room in res:
-                #     if (verified_json_body['room_name'] in room['room_name'] and 
-                #     verified_json_body['room_address1'] in room['room_address1'] and 
-                #     verified_json_body['room_address2'] in room['room_address2']):
-                #         return{
-                #             "message": f"Room {verified_json_body['room_name']} already exists." 
-                #         }, 200
                 
                 # insert verified body data to Room table
                 conn.execute(
@@ -84,16 +68,6 @@ class ConferenceRoom(Resource, Service):
                         **valid_data
                     }
                 )
-
-                # conn.execute( 
-                #     insert(Room), {
-                #         "room_name": verified_json_body['room_name'],
-                #         "room_address1": verified_json_body['room_address1'],
-                #         "room_address2": verified_json_body['room_address2'],
-                #         "max_users": verified_json_body['max_users'],
-                #         "is_usable": verified_json_body['is_usable'],
-                #     }
-                # )
 
                 # CREATE room
                 return{
@@ -118,7 +92,7 @@ class ConferenceRoom(Resource, Service):
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
-                "message": "Not logged in",
+                "msg": "Not logged in",
             }, 200
         
         try:
@@ -135,20 +109,23 @@ class ConferenceRoom(Resource, Service):
                 # if there's no such room
                 if len(serialized_rooms) == 0:
                     return {
-                        "message": "Room Not Found"
+                        "status": False,
+                        "msg": "Room Not Found"
                     }, 200
 
                 # GET all rooms
                 return {
+                    "status": True,
                     "allRooms": serialized_rooms,
-                    "message": "Room found"
+                    "msg": "Room found"
                 }, 200
 
         # error
         except Exception as e:
             print(e)
             return {
-                "message": "Room Get Failed"
+                "status": False,
+                "msg": "Failed to get room data"
             }, 500
         
 # GET, DELETE, UPDATE by room id
@@ -167,7 +144,7 @@ class ConferenceRoomById(Resource, Service):
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
-                "message": "Not logged in"
+                "msg": "Not logged in"
             }, 200
         
         try:
@@ -178,23 +155,27 @@ class ConferenceRoomById(Resource, Service):
                 # if there's no room by given id
                 if res is None:
                     return {
-                        "message": f"Room id:{id} not found"
+                        "status": False,
+                        "msg": f"Room id:{id} not found"
                     }, 200
                 
                 # GET room with given id
                 return {
-                    "id": res.id,
-                    "room_name": res.room_name,
-                    "roomAdderss1": res.room_address1,
-                    "room_address2": res.room_address2,
-                    "max_user's": res.max_users,
+                    # "id": res.id,
+                    # "room_name": res.room_name,
+                    # "roomAdderss1": res.room_address1,
+                    # "room_address2": res.room_address2,
+                    # "max_users": res.max_users,
+                    "status": True,
+                    "msg": f"Room id:{id} found",
+                    "room": res
                 }, 200
 
         # error      
         except Exception as e:
             print(e)
             return {
-                "message": "Room GET failed"
+                "msg": "Room GET failed"
             }, 500
         
     # DELETE room by id
@@ -207,7 +188,7 @@ class ConferenceRoomById(Resource, Service):
            and user_status['User']['type'] != 2):
             return {
                 "status": False,
-                "message": "No authorization"
+                "msg": "No authorization"
             }, 200
         
         try:
@@ -218,7 +199,8 @@ class ConferenceRoomById(Resource, Service):
                 # if there's no room by given id
                 if res is None:
                     return {
-                        "message": f"Room id:{id} not found"
+                        "status": True,
+                        "msg": f"Room id:{id} not found"
                     }, 200
                 
                 # DELETE room
@@ -228,14 +210,16 @@ class ConferenceRoomById(Resource, Service):
 
                 # DELETE room done
                 return {
-                    "message": "Room Deleted"
+                    "status": True,
+                    "msg": "Room Deleted"
                 }, 200
 
         # error
         except Exception as e:
             print(e)
             return {
-                "message": "Room Delete Failed"
+                "status": False,
+                "msg": "Room Delete Failed"
             }, 500
         
     # UPDATE Room
@@ -251,36 +235,35 @@ class ConferenceRoomById(Resource, Service):
            and user_status['User']['type'] != 2):
             return {
                 "status": False,
-                "message": "No authorization"
+                "msg": "No authorization"
             }, 200
         
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate data from request body
-                verified_json_body, status = Room.validate(req)
-                if status:
-                    # SELECT room by id and parse it into dict
-                    res = conn.execute(select(Room)).mappings().all()
-                    roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
-                else:
+                valid_data, invalid_data = Room.validate(req)
+                
+                if len(invalid_data) > 0:
                     return {
-                        "msg": "validation fail",
-                        "data": verified_json_body
+                        "status": False,
+                        "msg": "invalid data",
+                        "invalid": invalid_data
                     }, 200
 
+                roomById = conn.execute(select(Room).where(Room.id == valid_data['id'])).mappings().fetchone()
                 # if there's no such room by given id
                 if roomById is None:
                     return {
-                        "message": f"Room id:{id} not found"
+                        "status": False,
+                        "msg": f"Room id:{id} not found"
                     }, 200
                 
                 # if updated room data already exists in the table
-                for room in res:
-                    if (verified_json_body['room_name'] in room['room_name'] and 
-                        verified_json_body['room_address1'] in room['room_address1'] and 
-                        verified_json_body['room_address2'] in room['room_address2']):
+                for room in valid_data:
+                    if check_if_room_identical(conn, Room, valid_data):
                         return{
-                            "message": f"Room {verified_json_body['room_name']} already exists." 
+                            "statsus": False,
+                            "msg": f"Room {room['room_name']} already exists." 
                         }, 200
 
                 
@@ -293,12 +276,14 @@ class ConferenceRoomById(Resource, Service):
 
                 # UPDATE room done
                 return {
-                    "message": "Room Updated"
+                    "status": True,
+                    "msg": "Room Updated"
                 }, 200
 
         # error
         except Exception as e:
             print(e)
             return {
-                "message": "Room Update Failed"
+                "status": False,
+                "msg": "Room Update Failed"
             }, 500
