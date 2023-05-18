@@ -3,52 +3,14 @@ from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
 from service import Service
 from config import model_config, api_config
-#import utils
 from utils import serialization, check_jwt_exists
+from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
 
 # namespace for handy routing
 admin = namespace.Namespace(
     name="admin",
     description="유저, 회의실, 예약 관리를 위한 API"
 )
-
-@validator("Room.room_name")
-def room_name_validator(room_name):
-    if len(room_name)>20:
-        return False
-    
-    return True
-
-@validator("Room.room_address1")
-def room_address1_validator(room_adderss1):
-    if len(room_adderss1)>20:
-        return False
-    
-    return True
-
-@validator("Room.room_address2")
-def room_address2_validator(room_address2):
-    if len(room_address2) > 20:
-        return False
-
-    return True
-
-@validator("Room.is_usable")
-def is_usable_validator(is_usable):
-    if type(is_usable) != int:
-        return False
-
-    return True
-
-@validator("Room.max_users")
-def max_users_validator(max_users):
-    if type(max_users) != int:
-        return False
-    
-    if max_users <= 0:
-        return False
-    
-    return True
 
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['created_at', 'updated_at']
@@ -88,48 +50,62 @@ class ConferenceRoom(Resource, Service):
                 #         "data": verified_json_body
                 #     }, 200
                 valid_data, invalid_data = Room.validate(req)
-                # print(valid_data, invalid_data)
-                if invalid_data:
-                    show_invalid_data = {}
-                    for k, v in invalid_data:
-                        show_invalid_data[k] = v
+                print(valid_data, invalid_data)
+
+                if len(invalid_data) > 0:
                     return {
-                        **show_invalid_data
+                        "status": False,
+                        "msg": "invalid data",
+                        "invalid": invalid_data
                     }, 200
                 
-                res = valid_data
+                res = conn.execute(select(Room)).mappings().all()
+                print(valid_data, res)
                 
                 # if validated data is already in table, 
                 # send message 'data already exists'
-                for room in res:
-                    if (verified_json_body['room_name'] in room['room_name'] and 
-                    verified_json_body['room_address1'] in room['room_address1'] and 
-                    verified_json_body['room_address2'] in room['room_address2']):
-                        return{
-                            "message": f"Room {verified_json_body['room_name']} already exists." 
-                        }, 200
+                if conn.execute(select(Room).where(Room.room_name == valid_data['room_name'])).mappings().fetchone():
+                    return {
+                        "status": False,
+                        "msg": "Room already exists"
+                    }, 200
+                
+                # for room in res:
+                #     if (verified_json_body['room_name'] in room['room_name'] and 
+                #     verified_json_body['room_address1'] in room['room_address1'] and 
+                #     verified_json_body['room_address2'] in room['room_address2']):
+                #         return{
+                #             "message": f"Room {verified_json_body['room_name']} already exists." 
+                #         }, 200
                 
                 # insert verified body data to Room table
-                conn.execute( 
+                conn.execute(
                     insert(Room), {
-                        "room_name": verified_json_body['room_name'],
-                        "room_address1": verified_json_body['room_address1'],
-                        "room_address2": verified_json_body['room_address2'],
-                        "max_users": verified_json_body['max_users'],
-                        "is_usable": verified_json_body['is_usable'],
+                        **valid_data
                     }
                 )
+                # conn.execute( 
+                #     insert(Room), {
+                #         "room_name": verified_json_body['room_name'],
+                #         "room_address1": verified_json_body['room_address1'],
+                #         "room_address2": verified_json_body['room_address2'],
+                #         "max_users": verified_json_body['max_users'],
+                #         "is_usable": verified_json_body['is_usable'],
+                #     }
+                # )
 
                 # CREATE room
                 return{
-                    "Message": "Room Created",
+                    "status": True,
+                    "msg": "Room Created"
                 }, 200
         
         # error
-        except OSError as e: # 모든 exception을 e로 받겠다, 그런데 지금 어디서 error가 나는지 모른다, 모든 exception을 받는게 아니라 특정한걸 받아보자
+        except Exception as e: # 모든 exception을 e로 받겠다, 그런데 지금 어디서 error가 나는지 모른다, 모든 exception을 받는게 아니라 특정한걸 받아보자
             print(e)
             return {
-                "message": "Room Create Failed"
+                "status": False,
+                "msg": "Room Create Failed"
             }, 500
         
     # GET all rooms
