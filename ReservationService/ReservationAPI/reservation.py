@@ -39,62 +39,80 @@ class ReservationList(Resource, Service):
         """
 
         # get token info
-        auth_info = self.query_api("get_auth_info","get",headers=request.headers)
-        if not auth_info["status"]:
-            return {"status": False, "msg":"Unauthenticated"}, 400
+        auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+        if auth_info.get("status") is None:
+            return {
+                "status": False,
+                "msg": "Unauthenticated"
+            }, 400
 
-        # parse request.args
-        # TODO: use validators
-        before = request.args.get("before")
-        after = request.args.get("after")
-        room_name = request.args.get("room") 
-        range_from = request.args.get("from")
-        range_to = request.args.get("to")
+        # query parameters
+        params = request.args
 
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 stmt = None
-                # full table
-                if is_admin(auth_info): 
+
+                # return columns based on user type
+                if is_admin(auth_info):  # full table
                     stmt = select(Reservation)
-                # only relavent columns
-                else: 
-                    stmt = select(Reservation.id, 
-                        Reservation.reservation_date, 
+                else:  # only relevant columns
+                    cols = [
+                        Reservation.id,
+                        Reservation.reservation_date,
                         Reservation.reservation_type,
-                        Reservation.start_time, Reservation.end_time, Reservation.room_id)
+                        Reservation.start_time,
+                        Reservation.end_time,
+                        Reservation.room_id
+                    ]
+                    stmt = select(*cols)
 
-                # filter by dates
-                if range_from and range_to:
-                    stmt = (stmt.where(Reservation.reservation_date >= range_from)
-                        .where(Reservation.reservation_date <= range_to))
-                if before:
+                # filter by room id
+                if room := params.get("room"):
+                    stmt = stmt.where(Reservation.room == room)
+                    
+                # filter by creator id 
+                if creator := params.get("creator"):
+                    stmt = stmt.where(Reservation.creator == creator)
+                    
+                # filter by room name
+                if room_name := params.get("room_name"):
+                    # rooms = self.query_api(
+                    #     "get_rooms_info",
+                    #     "get",
+                    #     headers=request.headers
+                    # )
+                    
+                    # for room in rooms["allRooms"]:
+                    #     if room["room_name"] == room_name:
+                    #         room_id = room["id"]
+                    #         break
+                    # if not room_id:
+                    #     return {"status": False, "msg":"Invalid room ID."}, 400
+                    # stmt = stmt.where(Reservation.room_id == room_id)
+                    return {"status": False, "msg": "not implemented"}, 400
+                
+                # filter by before date
+                if before := params.get("before"):
                     stmt = stmt.where(Reservation.reservation_date <= before)
-                if after:
+
+                # filter by after date
+                if after := params.get("after"):
                     stmt = stmt.where(Reservation.reservation_date >= after)
-
-                # filter by room
-                if room_name:
-                    rooms = self.query_api("get_rooms_info","get",headers=request.headers)
-                    rooms = rooms["allRooms"]
-                    room_id = None
-                    for room in rooms:
-                        if room["room_name"] == room_name:
-                            room_id = room["id"]
-                            break
-                    if not room_id:
-                        return {"status": False, "msg":"Invalid room ID."}, 400
-                    stmt = stmt.where(Reservation.room_id == room_id)
-
+                
                 rows = conn.execute(stmt).mappings().fetchall()
-                rows = [serialize(row) for row in rows]
-            return {"status": True, "reservations": rows}, 200
+                return {
+                    "status": True,
+                    "reservations": [serialize(row) for row in rows]
+                }, 200
 
         except Exception as e:
-            return {"status": False, "msg":f"Get reservation failed. {e}"}, 400
+            return {
+                "status": False,
+                "msg": "Get reservation list failed."
+            }, 400
 
 
-    # @start_end_time_validator
     def post(self):
         """
         Make a new reservation
@@ -105,7 +123,10 @@ class ReservationList(Resource, Service):
         # get token info
         auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
         if not is_valid_token(auth_info):
-            return {"status": False, "msg":"Unauthenticated"}, 400
+            return {
+                "status": False,
+                "msg": "Unauthenticated"
+            }, 400
         
         try:
             with self.query_model("Reservation") as (conn, Reservation):
