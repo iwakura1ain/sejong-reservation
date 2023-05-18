@@ -104,8 +104,8 @@ class UserDetail(Service, Resource):
         """
         try:
             with self.query_model("User") as (conn, User):
-                req, status = User.validate(request.json)
-                if not status:
+                req, invalidated = User.validate(request.json)
+                if len(invalidated) != 0:
                     return {
                         "status": False,
                         "msg": "key:value pair wrong"
