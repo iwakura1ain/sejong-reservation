@@ -111,7 +111,7 @@ class ReservationList(Resource, Service):
             with self.query_model("Reservation") as (conn, Reservation):
                 # validate model
                 new_reservation, invalid = Reservation.validate(request.json)
-                if invalid=={}:
+                if invalid!={}:
                     return {"status": False, "msg": f"Invalid reservation. {invalid}"}, 400
                 import sys; print(new_reservation, invalid, file=sys.stderr)
 
@@ -194,7 +194,7 @@ class ReservationByID(Resource, Service):
                 upd_reservation = serialize(row)
                 upd_reservation.update(request.json)
                 upd_reservation,invalid = Reservation.validate(upd_reservation)
-                if invalid=={}:
+                if invalid!={}:
                     return {"status": False, "msg": f"Invalid reservation. {invalid}"}, 400
 
                 # check time conflict
