@@ -1,7 +1,7 @@
 from flask import request
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
-from service import Service, validate
+from service import Service
 from config import model_config, api_config
 #import utils
 from utils import serialization, check_jwt_exists
@@ -12,6 +12,43 @@ admin = namespace.Namespace(
     description="유저, 회의실, 예약 관리를 위한 API"
 )
 
+@validator("Room.room_name")
+def room_name_validator(room_name):
+    if len(room_name)>20:
+        return False
+    
+    return True
+
+@validator("Room.room_address1")
+def room_address1_validator(room_adderss1):
+    if len(room_adderss1)>20:
+        return False
+    
+    return True
+
+@validator("Room.room_address2")
+def room_address2_validator(room_address2):
+    if len(room_address2) > 20:
+        return False
+
+    return True
+
+@validator("Room.is_usable")
+def is_usable_validator(is_usable):
+    if type(is_usable) != int:
+        return False
+
+    return True
+
+@validator("Room.max_users")
+def max_users_validator(max_users):
+    if type(max_users) != int:
+        return False
+    
+    if max_users <= 0:
+        return False
+    
+    return True
 
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['created_at', 'updated_at']
@@ -41,14 +78,26 @@ class ConferenceRoom(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate data from request body
-                verified_json_body, status = Room.validate(req)
-                if status:
-                    res = conn.execute(select(Room)).mappings().all()
-                else:
+                # verified_json_body, status = Room.validate(req)
+                # # print(verified_json_body, status, flush=True)
+                # if status:
+                #     res = conn.execute(select(Room)).mappings().all()
+                # else:
+                #     return {
+                #         "msg": "validation fail",
+                #         "data": verified_json_body
+                #     }, 200
+                valid_data, invalid_data = Room.validate(req)
+                # print(valid_data, invalid_data)
+                if invalid_data:
+                    show_invalid_data = {}
+                    for k, v in invalid_data:
+                        show_invalid_data[k] = v
                     return {
-                        "msg": "validation fail",
-                        "data": verified_json_body
+                        **show_invalid_data
                     }, 200
+                
+                res = valid_data
                 
                 # if validated data is already in table, 
                 # send message 'data already exists'
@@ -73,7 +122,7 @@ class ConferenceRoom(Resource, Service):
 
                 # CREATE room
                 return{
-                    "Message": "Room Created"
+                    "Message": "Room Created",
                 }, 200
         
         # error
