@@ -6,14 +6,19 @@
 			<reservation-card :reservation="data[1]"></reservation-card>
 			<reservation-card :reservation="data[2]"></reservation-card>
 		</div>
+
+		<section-header>모든 예약 내역</section-header>
+		<month-calendar />
 	</div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
+
 import FilledButton from '@/components/atoms/FilledButton.vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import ReservationCard from '@/components/atoms/ReservationCard.vue';
-import { ref } from 'vue';
+import MonthCalendar from '@/components/MonthCalendar.vue';
 
 const subdata = {
 	creatorID: -1,
@@ -45,6 +50,9 @@ const data = ref([
 		...subdata,
 	},
 ]);
+
+const qrcodeTempImg =
+	'https://www.investopedia.com/thmb/hJrIBjjMBGfx0oa_bHAgZ9AWyn0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/qr-code-bc94057f452f4806af70fd34540f72ad.png';
 </script>
 
 <style lang="scss" scoped>
