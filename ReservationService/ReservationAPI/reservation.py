@@ -110,17 +110,14 @@ class ReservationList(Resource, Service):
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 # validate model
-                new_reservation,status = Reservation.validate(request.json)
-                if not status:
-                    return {"status": False, "msg": "Invalid reservation"}, 400
+                new_reservation, invalid = Reservation.validate(request.json)
+                if invalid:
+                    return {"status": False, "msg": f"Invalid reservation. {invalid}"}, 400
+                import sys; print(new_reservation, invalid, file=sys.stderr)
 
                 msg = check_date_constraints(auth_info, new_reservation)
                 if msg:
                     return {"status": False, "msg": msg}, 400
-                
-                # reservation_topic string len check
-                if len(new_reservation["reservation_topic"]) > 100:
-                    return {"status": False, "msg": "reservation topic is too long"}
 
                 # check if room is valid
                 rooms = self.query_api("get_rooms_info","get",headers=request.headers)
@@ -196,9 +193,9 @@ class ReservationByID(Resource, Service):
                 # update serialized reservation with validate model
                 upd_reservation = serialize(row)
                 upd_reservation.update(request.json)
-                upd_reservation,status = Reservation.validate(upd_reservation)
-                if not status:
-                    return {"status": False, "msg": "Invalid reservation"}, 400
+                upd_reservation,invalid = Reservation.validate(upd_reservation)
+                if invalid:
+                    return {"status": False, "msg": f"Invalid reservation. {invalid}"}, 400
 
                 # check time conflict
                 time_conflict_rows = check_time_conflict(conn, Reservation, upd_reservation)
