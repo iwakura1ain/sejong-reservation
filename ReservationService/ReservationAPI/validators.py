@@ -1,7 +1,7 @@
 from service import validator
 from datetime import date, time
 
-@validator("Reservation.start_time","Reservation.end_time")
+@validator("Reservation.start_time", "Reservation.end_time")
 def validate_time(start_time, end_time):
     """
     checks validity of reservation's start_time and end_time 
@@ -12,8 +12,10 @@ def validate_time(start_time, end_time):
     try:
         start_time = time(start_time)
         end_time = time(end_time)
-    except Exception as e:
+
+    except Exception as e: #TODO: why? 
         return False
+
     if start_time > end_time:
         return False
     return True
@@ -26,3 +28,17 @@ def validate_reservation_topic(reservation_topic):
     if len(reservation_topic) > 100:
         return False
     return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+

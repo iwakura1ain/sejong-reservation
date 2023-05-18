@@ -1,7 +1,7 @@
 from sqlalchemy import select, func
 
 import json
-from datetime import date, time ,timedelta
+from datetime import date, time
 
 def serialize(row):
     return json.loads(json.dumps(dict(row), default=str))
@@ -52,7 +52,9 @@ def check_time_conflict(conn, Reservation, new_reservation):
         .where(Reservation.room_id == new_reservation["room_id"])
         .filter(func.time(Reservation.start_time).between(new_start_time, new_end_time))
         .filter(func.time(Reservation.end_time).between(new_start_time, new_end_time)))
+
     rows = conn.execute(stmt).mappings().fetchall()
+
     return [serialize(row) for row in rows]
 
 def check_start_end_time(new_reservation):
@@ -77,11 +79,26 @@ def check_date_constraints(auth_info, new_reservation):
     - returns None if allowed.
     - returns a message string if not allowed.
     """
-    diff = date.today() - date.fromisoformat(new_reservation["reservation_date"])
-    if auth_info["User"]["type"] == 1 or auth_info["User"]["type"] == 2:
-        pass
-    elif auth_info["User"]["type"] == 3 and diff > timedelta(weeks=1):
-        return "User(grad) cannot make reservation for this date"
-    elif auth_info["User"]["type"] == 4 and diff > timedelta(days=2):
-        return "User(undergrad) cannot make reservation for this date"
-    return None
+    # diff = date.today() - date.fromisoformat(new_reservation["reservation_date"])
+    # if auth_info["User"]["type"] == 1 or auth_info["User"]["type"] == 2:
+    #     pass
+    # elif auth_info["User"]["type"] == 3 and diff > timedelta(weeks=1):
+    #     return "User(grad) cannot make reservation for this date"
+    # elif auth_info["User"]["type"] == 4 and diff > timedelta(days=2):
+    #     return "User(undergrad) cannot make reservation for this date"
+    # return None
+
+    # how far a user type can reserve ahead of time
+
+    from config import reservation_limit
+    
+    user_type = auth_info["User"]["type"]
+    reservation_date = new_reservation["reservation_date"]
+    diff = date.fromisoformat(reservation_date) - date.today()
+    return True if diff < reservation_limit[user_type] else False
+    
+        
+
+
+
+
