@@ -39,7 +39,6 @@ class ConferenceRoom(Resource, Service):
         
         try:
             with self.query_model("Room") as (conn, Room):
-                # validate data from request body
                 # verified_json_body, status = Room.validate(req)
                 # # print(verified_json_body, status, flush=True)
                 # if status:
@@ -81,9 +80,11 @@ class ConferenceRoom(Resource, Service):
                 # insert verified body data to Room table
                 conn.execute(
                     insert(Room), {
+                        # **verified_json_body
                         **valid_data
                     }
                 )
+
                 # conn.execute( 
                 #     insert(Room), {
                 #         "room_name": verified_json_body['room_name'],
