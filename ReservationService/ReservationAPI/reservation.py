@@ -5,12 +5,10 @@ from sqlalchemy import select, insert, update, delete, func
 
 from config import model_config, api_config
 from service import Service
-# from validators import start_end_time_validator
 
 from utils import (
     serialize,
     is_valid_token, is_admin, is_authorized,
-    # check_start_end_time,
     check_date_constraints,
     check_time_conflict,
 )
@@ -255,6 +253,7 @@ class ReservationByID(Resource, Service):
 
                 # check if user is creator of reservation
                 # TODO: must implement is_authorized
+                # TODO: remove
                 if id != auth_info["User"]["id"]:
                     return {
                         "status": False,
@@ -309,12 +308,6 @@ class ReservationByID(Resource, Service):
                             "msg": "Time conflict",
                             "reservations": time_conflict_rows
                         }, 400
-
-                # TODO: moved to validator?
-                # # check start, end times 
-                # msg = check_start_end_time(upd_reservation)
-                # if msg:
-                #     return {"status": False, "msg": msg}
 
                 # update reservation
                 stmt = (
