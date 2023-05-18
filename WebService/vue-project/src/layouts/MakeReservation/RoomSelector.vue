@@ -10,7 +10,7 @@ RoomCard의 '선택'버튼이 클릭되면 선택된 room의 id를 받습니다.
 			v-for="room in rooms"
 			:key="room.id"
 			:contents="room"
-			:class="{ selected: room.id === selectedRoom.id }"
+			:selected="room.id === selectedRoom.id"
 			@update-selected-room="updateSelectedRoom"
 		></room-card>
 	</div>

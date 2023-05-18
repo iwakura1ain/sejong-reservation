@@ -1,5 +1,5 @@
 <template>
-	<div class="room-card">
+	<div class="room-card" :class="{ selected: selected }">
 		<div class="info-container">
 			<img class="room-img" :src="contents.roomImg" alt="회의실 사진" />
 			<div>
@@ -15,12 +15,14 @@
 						>{{ contents.openingHour[0] }} ─ {{ contents.openingHour[1] }}</span
 					>
 				</div>
-				<div class="btns">
-					<filled-button color="white" style="margin-left: 0">
+				<!-- <div class="btns"> -->
+				<!-- <filled-button color="white" style="margin-left: 0">
 						자세히보기
-					</filled-button>
-					<filled-button @click="selectRoom">선택</filled-button>
-				</div>
+					</filled-button> -->
+				<filled-button class="select-room-btn" @click="selectRoom"
+					>선택</filled-button
+				>
+				<!-- </div> -->
 			</div>
 		</div>
 		<div class="reservation-viewer">
@@ -38,6 +40,11 @@ const props = defineProps({
 	contents: {
 		required: false,
 		type: [Object, null],
+	},
+	selected: {
+		required: false,
+		type: Boolean,
+		default: false,
 	},
 });
 
@@ -63,6 +70,7 @@ function selectRoom() {
 
 	.info-container {
 		display: flex;
+		align-items: flex-end;
 		.room-img {
 			width: 192px;
 			height: 192px;
@@ -101,7 +109,20 @@ function selectRoom() {
 				display: flex;
 				align-items: center;
 			}
+
+			.select-room-btn {
+				text-align: center;
+				margin: 0;
+				margin-top: 8px;
+			}
 		}
+	}
+}
+
+.room-card.selected {
+	border: 2px solid $sejong-red;
+	.info-container {
+		filter: opacity(50%);
 	}
 }
 

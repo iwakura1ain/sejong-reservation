@@ -61,6 +61,7 @@ const routes = [
 		path: '/reservation/make',
 		name: 'MakeReservation',
 		component: MakeReservationView,
+		props: true, // "UserMainView" passes "startDateProp"
 	},
 	{
 		path: '/reservation/done',

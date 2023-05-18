@@ -8,16 +8,17 @@
 					<section-header size="small">회의실 선택</section-header>
 					<!-- <room-selector :rooms="step1Testdata" v-model="selectedRoomId" /> -->
 					<room-selector />
+					<RoomCalendar v-if="isRoomSelected" />
 				</article>
 			</Transition>
 
 			<Transition appear>
-				<article
-					v-if="Object.keys(selectedRoom).length > 0"
-					class="step step2-select-time"
-				>
+				<article v-if="isRoomSelected" class="step step2-select-time">
 					<section-header size="small">시간 선택</section-header>
-					<meeting-datetime-selector :selected-room="selectedRoom" />
+					<meeting-datetime-selector
+						:start-date-prop="$route.query.startDateProp"
+						:selected-room="selectedRoom"
+					/>
 				</article>
 			</Transition>
 
@@ -121,6 +122,7 @@ import { ref, computed } from 'vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
 import RoomSelector from '@/layouts/MakeReservation/RoomSelector.vue';
+import RoomCalendar from '@/components/RoomCalendar.vue';
 import MeetingDatetimeSelector from '@/layouts/MakeReservation/MeetingDatetimeSelector.vue';
 import MeetingMemberWriter from '@/layouts/MakeReservation/MeetingMemberWriter.vue';
 
@@ -144,6 +146,9 @@ const meetingDates = computed(() => {
 });
 
 const step = ref(1);
+const isRoomSelected = computed(() => {
+	return Object.keys(selectedRoom).length > 0;
+});
 
 function confirm() {
 	step.value = 4;

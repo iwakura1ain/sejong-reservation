@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch, toRefs } from 'vue';
 
 import RadioGroup from '@/components/RadioGroup.vue';
 import Vue3DatepickerWrapper from '@/components/wrappers/Vue3DatepickerWrapper.vue';
@@ -104,13 +104,27 @@ import {
 } from '@/stores/reservation.js';
 
 // define props, events
-defineProps({
+const props = defineProps({
 	selectedRoom: {
 		required: true,
 		type: Object,
 	},
+	startDateProp: {
+		required: false,
+		type: [String, null],
+		default: null,
+	},
 });
 defineEmits([]);
+
+const refstartDateProp = toRefs(props).startDateProp;
+watch(refstartDateProp, () => {
+	if (props.startDateProp) {
+		const dateObj = new Date(props.startDateProp);
+		dateObj.setHours(0, 0, 0, 0);
+		startDate.value = dateObj;
+	}
+});
 
 // [ states --> stores/reservation.js ]
 // const reservationType = ref(RESERVATION_TYPE.SINGLE); // 일정 유형 (단건, 정기)
