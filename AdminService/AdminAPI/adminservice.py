@@ -15,7 +15,7 @@ admin = namespace.Namespace(
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['created_at', 'updated_at']
 
-@admin.route('/rooms')
+@admin.route('')
 class ConferenceRoom(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
@@ -41,7 +41,6 @@ class ConferenceRoom(Resource, Service):
             with self.query_model("Room") as (conn, Room):
                 # verified_json_body, status = Room.validate(req)
                 valid_data, invalid_data = Room.validate(req)
-                # print(valid_data, invalid_data, flush=True)
 
                 if len(invalid_data) > 0:
                     return {
@@ -129,7 +128,7 @@ class ConferenceRoom(Resource, Service):
             }, 500
         
 # GET, DELETE, UPDATE by room id
-@admin.route('/rooms/<int:id>')
+@admin.route('/<int:id>')
 class ConferenceRoomById(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
@@ -250,7 +249,7 @@ class ConferenceRoomById(Resource, Service):
                         "invalid": invalid_data
                     }, 200
 
-                roomById = conn.execute(select(Room).where(Room.id == valid_data['id'])).mappings().fetchone()
+                roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
                 # if there's no such room by given id
                 if roomById is None:
                     return {
@@ -270,7 +269,7 @@ class ConferenceRoomById(Resource, Service):
                 # UPDATE room
                 conn.execute(
                     update(Room).where(Room.id == id),{
-                        **verified_json_body 
+                        **valid_data
                     }
                 )
 
@@ -281,7 +280,7 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error
-        except Exception as e:
+        except OSError as e:
             print(e)
             return {
                 "status": False,

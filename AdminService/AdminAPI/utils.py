@@ -21,8 +21,8 @@ from sqlalchemy import select
 def check_if_room_identical(conn, Room, valid_data):
     if (conn.execute(select(Room).where(Room.room_name == valid_data['room_name'])).mappings().fetchone()
         and conn.execute(select(Room).where(Room.room_address1 == valid_data['room_address1'])).mappings().fetchone()
-        and conn.execute(select(Room).where(Room.room_address1 == valid_data['room_address2'])).mappings().fetchone()):
-            return True
+        and conn.execute(select(Room).where(Room.room_address2 == valid_data['room_address2'])).mappings().fetchone()):
+        return True
 
 # from sqlalchemy import insert, update
 # def create_update_data(table, data, method):

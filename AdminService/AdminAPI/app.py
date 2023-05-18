@@ -11,8 +11,7 @@ try:
 except OSError:
     pass
 
-api.add_namespace(adminservice.admin, '')
-api.add_namespace(adminservice.admin, '<int:id>')
+api.add_namespace(adminservice.admin, '/admin/rooms')
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", debug=True) 
