@@ -147,7 +147,7 @@ const meetingDates = computed(() => {
 
 const step = ref(1);
 const isRoomSelected = computed(() => {
-	return Object.keys(selectedRoom).length > 0;
+	return Object.keys(selectedRoom.value).length > 0;
 });
 
 function confirm() {
