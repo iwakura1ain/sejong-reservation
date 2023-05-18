@@ -321,35 +321,42 @@ class UserImport(Service, Resource):
                 "msg": "invalid filetype"
             }, 200
 
-        created_count = 0
         with self.query_model("User") as (conn, User):
             users_sheet = load_workbook(filename=BytesIO(f)).active
-            schema = ["id", "password", "name", "dept", "phone", "email", "type", "no_show"]
-            
+            schema = User.columns
+
+            insert_values = []
             for row in users_sheet.iter_rows(min_row=2, min_col=1, max_col=8):
                 # create new user dict
-                new_user, status = User.validate(
+                new_user, invalid = User.validate(
                     {key: val.value for key, val in zip(schema, row)}
                 )
 
-                print(f"inserting new user: {new_user}", flush=True)
-                if not status:
+                #check excel values
+                if len(invalid) != 0:
                     return {
                         "status": False,
                         "msg": "invalid value",
                         "invalid": row
                     }, 200
 
-                # insert new user
-                conn.execute(
-                    insert(User), {**new_user}
-                )
+                # check if user in db 
+                res = conn.execute(
+                    select(User).where(User.id == new_user["id"])
+                ).mappings().fetchone()
+                if res is None:
+                    new_user["password"] = generate_password_hash(new_user["password"])
+                    insert_values.append(new_user)
 
-                created_count += 1
+            # insert new user
+            conn.execute(
+                insert(User), insert_values
+            )
 
         return {
             "status": True,
-            "created_count": created_count
+            "msg": "users imported",
+            "imported_count": len(insert_values)
         }, 200
 
 
