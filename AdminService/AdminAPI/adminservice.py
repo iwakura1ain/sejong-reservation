@@ -5,7 +5,6 @@ from service import Service
 from config import model_config, api_config
 from utils import serialization, check_jwt_exists, check_if_room_identical
 from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
-import base64
 
 # namespace for handy routing
 admin = namespace.Namespace(
@@ -25,8 +24,7 @@ class ConferenceRoom(Resource, Service):
     # CREATE Room 
     def post(self):
         # request body data, need to be validated
-        req = request.json
-        # preview_image = request.json['preview_image']
+        req = request.json  
 
         # check user if has authorization.
         user_status = self.query_api( 
@@ -154,7 +152,7 @@ class ConferenceRoomById(Resource, Service):
                 res = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
 
                 # if there's no room by given id
-                if res is None:
+                if len(res) == 0:
                     return {
                         "status": False,
                         "msg": f"Room id:{id} not found"
@@ -289,4 +287,67 @@ class ConferenceRoomById(Resource, Service):
             return {
                 "status": False,
                 "msg": "Room Update Failed"
+            }, 500
+
+@admin.route('/upload/<int:id>')
+class PreviewImageUpload(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, model_config=model_config, api_config=api_config)
+        Resource.__init__(self, *args, **kwargs)
+
+    def allowed_file(filename):
+        allowed_extensions = {'png', 'jpg', 'jpeg'}
+
+        return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+    def post(self, id):
+        # check user if has authorization.
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+        if(check_jwt_exists(user_status) 
+           and user_status['User']['type'] != 2):
+            return {
+                "status": False,
+                "msg": "No authorization"
+            }, 200
+        
+        uploaded_image = request.files['image']
+
+        # validate uploaded image
+        # check extension
+        if not uploaded_image or not self.allowed_file(uploaded_image):
+            return {
+                "status": False,
+                "msg": "image invalid",
+                "invalid": uploaded_image
+            }, 200
+
+        try:
+            with self.query_model("Room") as (conn, Room):
+                room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+
+                # if no room has been found by the given id
+                # return false and a message saying no room was found
+                if len(room) == 0:
+                    return {
+                        "status": False,
+                        "msg": f"Room id:{id} not found"
+                    }, 200
+
+                # insert image into the room                
+                room['preview_image'] = uploaded_image
+
+                # insert image done
+                return {
+                    "status": True,
+                    "msg": "Image uploaded",
+                    "uploadedImage": uploaded_image
+                }
+        except OSError as e:
+            print(e)
+            return {
+                "status": False,
+                "msg": "Uploading image failed"
             }, 500
