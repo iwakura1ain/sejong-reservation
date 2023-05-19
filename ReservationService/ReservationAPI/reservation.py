@@ -3,7 +3,7 @@ from flask_restx import Resource, Namespace
 
 from sqlalchemy import select, insert, update, delete, func
 
-from config import model_config, api_config
+from config import model_config, api_config, MINIMIZED_COLS
 from service import Service
 
 from utils import (
@@ -12,6 +12,8 @@ from utils import (
     check_date_constraints,
     check_time_conflict,
 )
+
+import uuid
 
 ns = Namespace(
     name="reservation",
@@ -34,18 +36,18 @@ class ReservationList(Resource, Service):
         - GET /reservation?room=센835: room_name이 "센835"인 회의실의 예약 조회
         """
 
-        # get token info
-        auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
-        if auth_info.get("status") is None:
-            return {
-                "status": False,
-                "msg": "Unauthenticated"
-            }, 400
-
-        # query parameters
-        params = request.args
-
         try:
+            # get token info
+            auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+            if not is_valid_token(auth_info):
+                return {
+                    "status": False,
+                    "msg": "Unauthenticated"
+                }, 400
+
+            # query parameters
+            params = request.args
+
             with self.query_model("Reservation") as (conn, Reservation):
                 stmt = None
 
@@ -55,14 +57,11 @@ class ReservationList(Resource, Service):
                 if is_admin(auth_info):  # full table
                     stmt = select(Reservation)
                 else:  # only relevant columns
-                    stmt = select(  # TODO: very messy
-                        Reservation.id,
-                        Reservation.reservation_date,
-                        Reservation.reservation_type,
-                        Reservation.start_time,
-                        Reservation.end_time,
-                        Reservation.room_id
-                    )
+                    # TODO: ok?
+                    select_cols = [
+                        getattr(Reservation,col) for col in MINIMIZED_COLS
+                    ]
+                    stmt = select(select_cols)
 
                 # filter by room id
                 if room := params.get("room"):
@@ -72,29 +71,6 @@ class ReservationList(Resource, Service):
                 if creator := params.get("creator"):
                     stmt = stmt.where(Reservation.creator_id == creator)
                     
-                # filter by room name
-                # TODO: query params for Adminservice
-                if room_name := params.get("room_name"):
-                    rooms = self.query_api(
-                        "get_rooms_info",
-                        "get",
-                        headers=request.headers
-                    )
-
-                    room_id = None
-                    for room in rooms["allRooms"]:
-                        if room["room_name"] == room_name:
-                            room_id = room["id"]
-                            break
-
-                    if not room_id:
-                        return {
-                            "status": False,
-                            "msg": "Invalid room ID."
-                        }, 400
-                    
-                    stmt = stmt.where(Reservation.room_id == room_id)
-                
                 # filter by before date
                 if before := params.get("before"):
                     stmt = stmt.where(Reservation.reservation_date <= before)
@@ -110,7 +86,7 @@ class ReservationList(Resource, Service):
                     "reservations": [serialize(row) for row in rows]
                 }, 200
 
-        except OSError as e:
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Get reservation list failed."
@@ -122,61 +98,78 @@ class ReservationList(Resource, Service):
         Make a new reservation
         - POST /reservation: New reservation with data
         """
-        #TODO: generate code for a new reservation
 
-        # get token info
-        auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
-        if not is_valid_token(auth_info):
-            return {
-                "status": False,
-                "msg": "Unauthenticated"
-            }, 400
-        
         try:
+            # get token info
+            auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+            if not is_valid_token(auth_info):
+                return {
+                    "status": False,
+                    "msg": "Unauthenticated"
+                }, 400
+            
+            reservations = request.json
+            valid_reservaiton, invalid_reservaiton = [], []
+
+            # make regular reservation uuid
+            regular_reservation_uuid = None
+            if len(reservations) > 1:
+                regular_reservation_uuid = uuid.uuid4()
+
             with self.query_model("Reservation") as (conn, Reservation):
-                # validate model
-                new_reservation, invalid = Reservation.validate(request.json)
-                if invalid != {}:
-                    return {
-                        "status": False,
-                        "msg": "Invalid reservation.",
-                        "invalid": invalid
-                    }, 400
+                for reservation in reservations:
+                    # validate model
+                    valid, invalid = Reservation.validate(reservation)
+                    if invalid != {}:
+                        return {
+                            "status": False,
+                            "msg": "Invalid reservation.",
+                            "invalid": invalid
+                        }, 400
 
-                if not check_date_constraints(auth_info, new_reservation):
-                    return {
-                        "status": False,
-                        "msg": "User cannot reserve that far into future"
-                    }, 400
-                
-                # check time conflict
-                time_conflict_rows = check_time_conflict(conn, Reservation, new_reservation)
-                # TODO: return attempted reservation request or already reserved rows?
-                # if time conficts exist, return conflicting rows
-                if len(time_conflict_rows) > 0:
-                    return {
-                        "status": False,
-                        "msg": "Time conflict",
-                        "reservations": time_conflict_rows
-                    }, 400
+                    user_type = auth_info["Uesr"]["type"]
+                    reservation_date = valid["reservation_date"]
+                    if not check_date_constraints(user_type, reservation_date):
+                        return {
+                            "status": False,
+                            "msg": "User cannot reserve that far into future"
+                        }, 400
 
-                # check if room is valid
-                # TODO: query params for AdminService
-                rooms = self.query_api("get_rooms_info", "get", headers=request.headers)
-                room_ids = [room["id"] for room in rooms["allRooms"]]
-                if new_reservation["room_id"] not in room_ids:
+                    # check rooms
+                    room_id =valid["room"] 
+                    room = self.query_api(
+                        "get_rooms_info", "get", 
+                        headers=request.headers, 
+                        request_params={"id": room_id}
+                    )
+                    if not room["status"]:
+                        return {
+                            "status": False,
+                            "msg": "Invalid room ID"
+                        }, 400
+
+                    if check_time_conflict(valid, connection=conn, model=Reservation):
+                        invalid_reservaiton.append(valid)
+                    
+                if len(invalid_reservaiton) > 0:
                     return {
                         "status": False,
-                        "msg": "Invalid room ID."
-                    }, 400
+                        "msg": "Conflict in reservations",
+                        "reservations":invalid_reservaiton
+                    }
 
-                
-                # insert new reservation
-                conn.execute(insert(Reservation), new_reservation)
-                
+                # use regular_reservation_uuid for valid reservation
+                valid["reservation_type"] = regular_reservation_uuid
+                valid_reservaiton.append(valid)
+                            
+            # insert
+            conn.execute(
+                insert(Reservation).values(valid_reservaiton)
+            )
+
             return {
                 "status": True,
-                "reservation": new_reservation
+                "reservations": valid_reservaiton,
             }, 200
 
         except Exception as e:
@@ -184,7 +177,6 @@ class ReservationList(Resource, Service):
                 "status": False,
                 "msg": "Reservation failed."
             }, 400
-
 
 @ns.route("/<int:id>")
 class ReservationByID(Resource, Service):
@@ -200,19 +192,30 @@ class ReservationByID(Resource, Service):
             - id==1인 예약을 조회
         """
 
-        # get token info
-        auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
-        if not is_valid_token(auth_info):
-            return {
-                "status": False,
-                "msg": "Unauthenticated"
-            }, 400
-
         try:
+            # get token info
+            auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+            if not is_valid_token(auth_info):
+                return {
+                    "status": False,
+                    "msg": "Unauthenticated"
+                }, 400
+
             with self.query_model("Reservation") as (conn, Reservation):
-                # TODO: give less info if user is not owner...
-                # -> do users need other people's reservation info?
-                stmt = select(Reservation).where(Reservation.id == id)
+                stmt = None
+
+                print("is_admin: ", is_admin(auth_info), flush=True)
+                
+                # return columns based on user type
+                if is_admin(auth_info):  # full table
+                    stmt = select(Reservation)
+                else:  # only relevant columns
+                    # TODO: getattr ok?
+                    select_cols = [
+                        getattr(Reservation,col) for col in MINIMIZED_COLS
+                    ]
+                    stmt = select(select_cols)
+
                 row = conn.execute(stmt).mappings().fetchone()
 
                 # if reservation with this id doesn't exist
@@ -239,39 +242,18 @@ class ReservationByID(Resource, Service):
         - PATCH /reservation/1: id==1인 예약을 변경
         """
 
-        # if not authorized to delete, return
-        # TODO: authorized: creator, admin?
         try:
+            # get token info
+            auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+            if not is_valid_token(auth_info):
+                return {
+                    "status": False,
+                    "msg": "Unauthenticated"
+                }, 400
+
             with self.query_model("Reservation") as (conn, Reservation):
-                # get token info
-                auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
-                if not is_valid_token(auth_info):
-                    return {
-                        "status": False,
-                        "msg": "Unauthenticated"
-                    }, 400
-
-                # check if user is creator of reservation
-                # TODO: must implement is_authorized
-                # TODO: remove
-                if id != auth_info["User"]["id"]:
-                    return {
-                        "status": False,
-                        "msg": "Unauthenticated"
-                    }, 400
-                
-                # check if reservation with id exist.
-                stmt = select(Reservation).where(Reservation.id == id)
-                row = conn.execute(stmt).mappings().fetchone()
-                # if reservation with this id doesn't exist
-                if not row:
-                    return {
-                        "status": False,
-                        "msg": "reservation not found"
-                    }, 400
-
-                # validate request key values
-                request_values, invalid = Reservation.validate(request.json)
+                # validate model
+                valid, invalid = Reservation.validate(request.json)
                 if invalid != {}:
                     return {
                         "status": False,
@@ -279,41 +261,48 @@ class ReservationByID(Resource, Service):
                         "invalid": invalid
                     }, 400
 
-                # create updated and serialized reservation with validated values
-                updated_reservation = serialize(row) # do we really need serialize()?
-                updated_reservation.update(request_values)
+                # select updated reservation
+                stmt = select(Reservation).where(Reservation.id == id)
+                row = conn.execute(stmt).mappings().fetchone()
 
-                # check date constraints if they exist
-                if ("reservation_date" in request_values.keys()
-                    and not check_date_constraints(auth_info, updated_reservation)):
+                # create updated and serialized reservation with validated values
+                row.update(valid)
+
+                user_type = auth_info["Uesr"]["type"]
+                reservation_date = row["reservation_date"]
+                if ("reservation_date" in valid.keys() 
+                    and not check_date_constraints(user_type, reservation_date)):
                     return {
                         "status": False,
-                        "msg": "Invalid reservation.",
+                        "msg": "User cannot reserve that far into future"
                     }, 400
-                    
-                # check time conflict
-                if "start_time" in request_values.keys() or "end_time" in request_values.keys():
-                    time_conflict_rows = check_time_conflict(
-                        conn, Reservation, updated_reservation
+
+                # check rooms
+                if "room_id" in valid.keys():
+                    room_id = row["room"] 
+                    room = self.query_api(
+                        "get_rooms_info", "get", 
+                        headers=request.headers, 
+                        request_params={"id": room_id}
                     )
-                    
-                    # if there is only one conflict with the same id, pass
-                    if len(time_conflict_rows) == 1 and time_conflict_rows[0]["id"] == id:
-                        pass  # TODO: logic strange here?
-                    
-                    # if time conficts exist, return conflicting rows
-                    elif len(time_conflict_rows) > 0:
+                    if not room["status"]:
                         return {
                             "status": False,
-                            "msg": "Time conflict",
-                            "reservations": time_conflict_rows
+                            "msg": "Invalid room ID"
                         }, 400
+
+                if ("start_time" in valid.keys() and "end_time" in valid.keys()
+                    and check_time_conflict(row, connection=conn, model=Reservation)):
+                    return {
+                        "status": False,
+                        "msg": "Conflict in reservations"
+                    }
 
                 # update reservation
                 stmt = (
                     update(Reservation)
                     .where(Reservation.id == id)
-                    .values(updated_reservation)
+                    .values(valid)
                 )
                 conn.execute(stmt)
                 
