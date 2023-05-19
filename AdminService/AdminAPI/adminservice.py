@@ -5,7 +5,7 @@ from service import Service
 from config import model_config, api_config
 from utils import serialization, check_jwt_exists, check_if_room_identical
 from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
-import base64
+
 
 # namespace for handy routing
 admin = namespace.Namespace(
@@ -22,18 +22,18 @@ class ConferenceRoom(Resource, Service):
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
-    # CREATE Room 
+    # CREATE room 
     def post(self):
         # request body data, need to be validated
-        req = request.json
-        # preview_image = request.json['preview_image']
+        req = request.json  
 
         # check user if has authorization.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
-           and user_status['User']['type'] != 2):
+           and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -41,7 +41,6 @@ class ConferenceRoom(Resource, Service):
         
         try:
             with self.query_model("Room") as (conn, Room):
-                # verified_json_body, status = Room.validate(req)
                 valid_data, invalid_data = Room.validate(req)
 
                 if len(invalid_data) > 0:
@@ -65,7 +64,6 @@ class ConferenceRoom(Resource, Service):
                 # insert verified body data to Room table
                 conn.execute(
                     insert(Room), {
-                        # **verified_json_body
                         **valid_data
                     }
                 )
@@ -77,7 +75,7 @@ class ConferenceRoom(Resource, Service):
                 }, 200
         
         # error
-        except OSError as e: # 모든 exception을 e로 받겠다, 그런데 지금 어디서 error가 나는지 모른다, 모든 exception을 받는게 아니라 특정한걸 받아보자
+        except OSError as e:
             print(e)
             return {
                 "status": False,
@@ -90,6 +88,7 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
@@ -142,6 +141,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
@@ -154,7 +154,7 @@ class ConferenceRoomById(Resource, Service):
                 res = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
 
                 # if there's no room by given id
-                if res is None:
+                if res == None:
                     return {
                         "status": False,
                         "msg": f"Room id:{id} not found"
@@ -187,8 +187,9 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
-           and user_status['User']['type'] != 2):
+           and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -225,7 +226,7 @@ class ConferenceRoomById(Resource, Service):
                 "msg": "Room Delete Failed"
             }, 500
         
-    # UPDATE Room
+    # UPDATE Room by id
     def patch(self, id):
         # request body data, needs to be validated
         req = request.json
@@ -234,8 +235,9 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(check_jwt_exists(user_status)
-           and user_status['User']['type'] != 2):
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        if(check_jwt_exists(user_status) 
+           and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -289,4 +291,70 @@ class ConferenceRoomById(Resource, Service):
             return {
                 "status": False,
                 "msg": "Room Update Failed"
+            }, 500
+
+@admin.route('/upload/<int:id>')
+class PreviewImageUpload(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, model_config=model_config, api_config=api_config)
+        Resource.__init__(self, *args, **kwargs)
+
+    def allowed_file(filename):
+        allowed_extensions = {'png', 'jpg', 'jpeg'}
+
+        return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+    
+    # insert preview_image into a room found by id
+    def post(self, id):
+        # check user if has authorization.
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        if(check_jwt_exists(user_status) 
+           and (user_status['User']['type'] != 2)):
+            return {
+                "status": False,
+                "msg": "No authorization"
+            }, 200
+        
+        uploaded_image = request.files['image']
+        # print(uploaded_image.filename, flush=True)
+
+        # validate uploaded image
+        # check extension
+        # Not working... upload_image.filename
+        # if (not uploaded_image 
+        #     or not self.allowed_file(uploaded_image.filename)):
+        #     return {
+        #         "status": False,
+        #         "msg": "image invalid",
+        #         "invalid": uploaded_image
+        #     }, 200
+
+        try:
+            with self.query_model("Room") as (conn, Room):
+                # The above code is reading the contents of an uploaded image file and storing it in
+                # the variable `preview_image`.
+                preview_image = uploaded_image.read()
+
+                # insert image into the room                
+                conn.execute(
+                    update(Room).where(Room.id == id), {
+                        "preview_image": preview_image
+                    }
+                )
+
+                # insert image done
+                return {
+                    "status": True,
+                    "msg": "Image uploaded",
+                    "uploadedImage": uploaded_image.filename,
+                }
+        except OSError as e:
+            print(e)
+            return {
+                "status": False,
+                "msg": "Uploading image failed"
             }, 500
