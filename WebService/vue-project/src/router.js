@@ -1,3 +1,6 @@
+// View 목록 문서
+// https://www.notion.so/sogeumguideopbap/Web-Service-193dca19bff94c64a5673b7a0f116fbe?pvs=4#55d729ed74cd460b89a4090fa9bf6eb5
+
 import { createRouter, createWebHistory } from 'vue-router';
 
 // 뷰 불러오기 ------------------------------------
@@ -6,6 +9,7 @@ import NotFoundView from '@/views/common/NotFoundView.vue';
 import LandingView from '@/views/common/LandingView.vue';
 import LoginView from '@/views/common/LoginView.vue';
 import RegisterView from '@/views/common/RegisterView.vue';
+import ReservationDetailView from '@/views/common/ReservationDetailView.vue';
 
 // 사용자 뷰
 import UserMainView from '@/views/user/UserMainView.vue';
@@ -19,8 +23,12 @@ import SuccessfullyReservedView from '@/views/user/SuccessfullyReservedView.vue'
 // 관리기능 뷰
 import ManageMainView from '@/views/manager/ManageMainView.vue';
 import ManageReservationView from '@/views/manager/ManageReservationView.vue';
-import ManageRoomView from '@/views/manager/ManageRoomView.vue';
 import ManageUserView from '@/views/manager/ManageUserView.vue';
+import ManageRoomView from '@/views/manager/ManageRoomView.vue';
+import MakeRoomView from '@/views/manager/MakeRoomView.vue';
+
+// 시스템 뷰 (일반사용자도 관리자도 아닌, 특별한 사용자 "system"만 접속가능)
+import CheckNoShowView from '@/views/system/CheckNoShowView.vue';
 
 // 라우터 설정 ------------------------------------
 const routes = [
@@ -44,6 +52,12 @@ const routes = [
 		path: '/register',
 		name: 'Register',
 		component: RegisterView,
+	},
+	{
+		path: '/reservation/detail/:id',
+		name: 'ReservationDetail',
+		component: ReservationDetailView,
+		props: true, // id값 : 백엔드 Reservation테이블의 id값과 동일(예약 식별자)
 	},
 
 	// 사용자 뷰
@@ -104,6 +118,19 @@ const routes = [
 		path: '/manage/room',
 		name: 'ManageRoom',
 		component: ManageRoomView,
+	},
+	{
+		path: '/manage/room/make',
+		name: 'MakeRoom',
+		component: MakeRoomView,
+	},
+
+	// system사용자용 뷰
+	// ** system사용자 = 일반사용자도 관리자도 아닌, 특별한 사용자
+	{
+		path: '/system/check/noshow',
+		name: 'CheckNoShow',
+		component: CheckNoShowView,
 	},
 ];
 
