@@ -1,3 +1,5 @@
+import base64
+
 def serialization(data, include=[], exclude=[]):
     serialized_data = {}
     
@@ -8,6 +10,10 @@ def serialization(data, include=[], exclude=[]):
     
     if exclude:
         serialized_data = dict((k, v) for k, v in data.items() if k not in exclude)
+
+    for key, value in serialized_data.items():
+        if isinstance(value, bytes):
+            serialized_data[key] = base64.b64encode(value).decode('utf-8')
 
     return serialized_data
 
