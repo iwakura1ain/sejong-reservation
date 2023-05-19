@@ -36,7 +36,7 @@ AUTH = Namespace(
 #     'Authorization': fields.String(description='Authorization which you must inclued in header', required=True, example="eyJ0e~~~~~~~~~")
 # })
 
-include = ["id", "name", "type", "no_show"]
+include = ["id", "name", "type", "email", "no_show"]
 exclude = ["password", "created_at"]
 
 
