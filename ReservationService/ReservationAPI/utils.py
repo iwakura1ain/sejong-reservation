@@ -1,7 +1,7 @@
 from sqlalchemy import select, func
 
 import json
-from datetime import date, time ,timedelta
+from datetime import date, time
 
 def serialize(row):
     return json.loads(json.dumps(dict(row), default=str))
@@ -10,8 +10,8 @@ def is_valid_token(auth_info):
     """
     checks if token is valid.
     """
-    if auth_info["msg"] == "Token has expired" \
-        or auth_info["status"] == False:
+    if ("status" not in auth_info.keys()
+        or not auth_info["status"]):
         return False
     return True
 
@@ -39,21 +39,37 @@ def is_admin(auth_info):
         return True
     return False
 
-def check_time_conflict(conn, Reservation, new_reservation):
+def check_time_conflict(reservation_dict, connection=None, model=None, reservation_id=False):
     """
     checks time conflict by checking for date, room, 
     and start_time or end_time in between new_reservation
+    - reservation_id is only used with PATCH
     """
-    new_start_time = new_reservation["start_time"]
-    new_end_time = new_reservation["end_time"]
-    stmt = (select(Reservation.id, Reservation.reservation_date,
-        Reservation.start_time, Reservation.end_time, Reservation.room_id)
-        .where(Reservation.reservation_date == new_reservation["reservation_date"])
-        .where(Reservation.room_id == new_reservation["room_id"])
-        .filter(func.time(Reservation.start_time).between(new_start_time, new_end_time))
-        .filter(func.time(Reservation.end_time).between(new_start_time, new_end_time)))
-    rows = conn.execute(stmt).mappings().fetchall()
-    return [serialize(row) for row in rows]
+    reservation_date = reservation_dict["reservation_date"]
+    room_id = reservation_dict["room_id"]
+    new_start_time = reservation_dict["start_time"]
+    new_end_time = reservation_dict["end_time"]
+
+    stmt = (
+        select(model)
+        .where(model.reservation_date == reservation_date)
+        .where(model.room_id == room_id)
+        .filter(func.time(model.start_time).between(new_start_time, new_end_time))
+        .filter(func.time(model.end_time).between(new_start_time, new_end_time))
+    )
+    
+    # get all reservations from same date, same room with time conflict
+    rows = connection.execute(stmt).mappings().fetchall()
+
+    # check if this function is called in PATCH
+    if reservation_id:
+        # if the only conflict is the reservation from PATCH, return false
+        if len(rows) == 1 and rows[0].id == reservation_id:
+            return False
+        return True
+
+    # if this function is called from POST
+    return True if len(rows) == 0 else False
 
 def check_start_end_time(new_reservation):
     """
@@ -77,11 +93,26 @@ def check_date_constraints(auth_info, new_reservation):
     - returns None if allowed.
     - returns a message string if not allowed.
     """
-    diff = date.today() - date.fromisoformat(new_reservation["reservation_date"])
-    if auth_info["User"]["type"] == 1 or auth_info["User"]["type"] == 2:
-        pass
-    elif auth_info["User"]["type"] == 3 and diff > timedelta(weeks=1):
-        return "User(grad) cannot make reservation for this date"
-    elif auth_info["User"]["type"] == 4 and diff > timedelta(days=2):
-        return "User(undergrad) cannot make reservation for this date"
-    return None
+    # diff = date.today() - date.fromisoformat(new_reservation["reservation_date"])
+    # if auth_info["User"]["type"] == 1 or auth_info["User"]["type"] == 2:
+    #     pass
+    # elif auth_info["User"]["type"] == 3 and diff > timedelta(weeks=1):
+    #     return "User(grad) cannot make reservation for this date"
+    # elif auth_info["User"]["type"] == 4 and diff > timedelta(days=2):
+    #     return "User(undergrad) cannot make reservation for this date"
+    # return None
+
+    # how far a user type can reserve ahead of time
+
+    from config import reservation_limit
+    
+    user_type = auth_info["User"]["type"]
+    reservation_date = new_reservation["reservation_date"]
+    diff = date.fromisoformat(reservation_date) - date.today()
+    return True if diff < reservation_limit[user_type] else False
+    
+        
+
+
+
+
