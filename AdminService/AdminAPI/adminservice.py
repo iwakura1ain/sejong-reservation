@@ -5,6 +5,7 @@ from service import Service
 from config import model_config, api_config
 from utils import serialization, check_jwt_exists, check_if_room_identical
 from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
+import base64
 
 # namespace for handy routing
 admin = namespace.Namespace(
@@ -25,6 +26,7 @@ class ConferenceRoom(Resource, Service):
     def post(self):
         # request body data, need to be validated
         req = request.json
+        # preview_image = request.json['preview_image']
 
         # check user if has authorization.
         user_status = self.query_api( 
@@ -75,7 +77,7 @@ class ConferenceRoom(Resource, Service):
                 }, 200
         
         # error
-        except Exception as e: # 모든 exception을 e로 받겠다, 그런데 지금 어디서 error가 나는지 모른다, 모든 exception을 받는게 아니라 특정한걸 받아보자
+        except OSError as e: # 모든 exception을 e로 받겠다, 그런데 지금 어디서 error가 나는지 모른다, 모든 exception을 받는게 아니라 특정한걸 받아보자
             print(e)
             return {
                 "status": False,
@@ -158,6 +160,8 @@ class ConferenceRoomById(Resource, Service):
                         "msg": f"Room id:{id} not found"
                     }, 200
                 
+                serialized_room = serialization(res, exclude=exclude)
+                
                 # GET room with given id
                 return {
                     # "id": res.id,
@@ -166,12 +170,12 @@ class ConferenceRoomById(Resource, Service):
                     # "room_address2": res.room_address2,
                     # "max_users": res.max_users,
                     "status": True,
+                    "room": serialized_room,
                     "msg": f"Room id:{id} found",
-                    "room": res
                 }, 200
 
         # error      
-        except Exception as e:
+        except OSError as e:
             print(e)
             return {
                 "msg": "Room GET failed"
