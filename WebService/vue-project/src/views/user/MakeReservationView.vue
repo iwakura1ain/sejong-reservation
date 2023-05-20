@@ -1,6 +1,6 @@
 <template>
 	<div id="make-reservation-view">
-		<section-header>예약하기</section-header>
+		<section-header id="big-section-header">예약하기</section-header>
 
 		<template v-if="step < 4">
 			<Transition appear>
@@ -8,7 +8,15 @@
 					<section-header size="small">회의실 선택</section-header>
 					<!-- <room-selector :rooms="step1Testdata" v-model="selectedRoomId" /> -->
 					<room-selector />
-					<RoomCalendar v-if="isRoomSelected" />
+
+					<div
+						v-if="isRoomSelected"
+						class="reserved-time-display-calendar-container"
+						style="display: flex; flex-direction: column; align-items: center"
+					>
+						<section-header size="small">회의실 예약내역</section-header>
+						<RoomCalendar />
+					</div>
 				</article>
 			</Transition>
 
@@ -31,9 +39,9 @@
 					<meeting-member-writer />
 
 					<div class="step-btn-container">
-						<filled-button class="step-btn" @click="confirm">
-							검토하기
-						</filled-button>
+						<a href="#big-section-header" @click="confirm">
+							<filled-button class="step-btn"> 검토하기 </filled-button>
+						</a>
 					</div>
 				</article>
 			</Transition>
@@ -100,12 +108,14 @@
 					</div>
 					<div style="display: flex; width: 100%">
 						<div class="step-btn-container">
-							<filled-button class="step-btn" color="white" @click="cancel">
-								수정하기
-							</filled-button>
+							<a href="#big-section-header">
+								<filled-button class="step-btn" color="white" @click="cancel">
+									수정하기
+								</filled-button>
+							</a>
 						</div>
 						<div class="step-btn-container">
-							<filled-button class="step-btn" @click="reserve">
+							<filled-button class="step-btn" @click="makeReservation">
 								예약하기
 							</filled-button>
 						</div>
@@ -118,6 +128,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
@@ -133,6 +144,8 @@ import {
 	topic,
 	members,
 } from '@/stores/reservation.js';
+
+const router = useRouter();
 
 const meetingTimeString = computed(() => {
 	const { start, end } = pickedTime.value;
@@ -152,15 +165,18 @@ const isRoomSelected = computed(() => {
 
 function confirm() {
 	step.value = 4;
+	// router.push('#big-section-header');
 }
 
 function cancel() {
 	step.value = 3;
 }
 
-function reserve() {
+function makeReservation() {
 	// stores/reservation 드래곤볼
 	// --
+
+	router.push({ name: 'SuccessfullyReserved', params: {} });
 }
 </script>
 

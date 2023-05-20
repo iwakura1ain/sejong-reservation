@@ -206,6 +206,8 @@ function selectReservation(reservationId) {
 			border-top-right-radius: $box-radius;
 			border: 1px solid lightgrey;
 			border-bottom: none;
+			border-top-left-radius: $box-radius;
+			border-top-right-radius: $box-radius;
 
 			.header-cell {
 				flex: 1;

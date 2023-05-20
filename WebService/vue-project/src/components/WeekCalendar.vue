@@ -236,7 +236,7 @@ function selectDayNumber(dateStr) {
 
 <style lang="scss" scoped>
 .week-calendar {
-	// $cell-min-width: 100px;
+	$cell-min-width: 100px;
 
 	width: 100%;
 
@@ -306,7 +306,7 @@ function selectDayNumber(dateStr) {
 				color: white;
 				font-size: 1.2rem;
 
-				// min-width: $cell-min-width;
+				min-width: $cell-min-width;
 			}
 		}
 		.body-container {
@@ -322,7 +322,7 @@ function selectDayNumber(dateStr) {
 				// padding: 0 2px;
 				background-color: white;
 
-				// min-width: $cell-min-width;
+				min-width: $cell-min-width;
 				.day-number {
 					padding: 4px;
 					font-size: 1rem;
