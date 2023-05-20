@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 
 import json
 from datetime import date, time
@@ -39,29 +39,32 @@ def is_admin(auth_info):
         return True
     return False
 
-def check_time_conflict(reservation_dict, connection=None, model=None, reservation_id=False):
+def check_time_conflict(reservation_dict, connection=None, model=None, reservation_id=None):
     """
     checks time conflict by checking for date, room, 
     and start_time or end_time in between new_reservation
     - reservation_id is only used with PATCH
+    returns true if confilts exist, else false.
     """
     reservation_date = reservation_dict["reservation_date"]
     room_id = reservation_dict["room_id"]
     new_start_time = reservation_dict["start_time"]
     new_end_time = reservation_dict["end_time"]
 
-    stmt = (
-        select(model)
+    stmt = (select(model)
         .where(model.reservation_date == reservation_date)
         .where(model.room_id == room_id)
-        .filter(func.time(model.start_time).between(new_start_time, new_end_time))
-        .filter(func.time(model.end_time).between(new_start_time, new_end_time))
+        .filter(and_(
+            model.start_time < new_end_time,
+            model.end_time > new_start_time,
+        ))
     )
-    
-    # get all reservations from same date, same room with time conflict
+
     rows = connection.execute(stmt).mappings().fetchall()
+    print(rows,flush=True)
 
     # check if this function is called in PATCH
+    # TODO: check for PATCH
     if reservation_id:
         # if the only conflict is the reservation from PATCH, return false
         if len(rows) == 1 and rows[0].id == reservation_id:
@@ -69,7 +72,10 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
         return True
 
     # if this function is called from POST
-    return True if len(rows) == 0 else False
+    if len(rows) == 0:
+        return False 
+    else: 
+        return True
 
 def check_start_end_time(new_reservation):
     """
@@ -87,7 +93,7 @@ def check_start_end_time(new_reservation):
     return None
 
 # check date constraints
-def check_date_constraints(auth_info, new_reservation):
+def check_date_constraints(auth_info, reservation_date):
     """
     checks if user is allowed to make reservation for specified date.
     - returns None if allowed.
@@ -107,7 +113,7 @@ def check_date_constraints(auth_info, new_reservation):
     from config import reservation_limit
     
     user_type = auth_info["User"]["type"]
-    reservation_date = new_reservation["reservation_date"]
+    # reservation_date = new_reservation["reservation_date"]
     diff = date.fromisoformat(reservation_date) - date.today()
     return True if diff < reservation_limit[user_type] else False
     

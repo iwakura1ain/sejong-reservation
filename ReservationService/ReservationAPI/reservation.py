@@ -58,10 +58,10 @@ class ReservationList(Resource, Service):
                     stmt = select(Reservation)
                 else:  # only relevant columns
                     # TODO: ok?
-                    select_cols = [
+                    select_cols = {
                         getattr(Reservation,col) for col in MINIMIZED_COLS
-                    ]
-                    stmt = select(select_cols)
+                    }
+                    stmt = select(*select_cols)
 
                 # filter by room id
                 if room := params.get("room"):
@@ -86,12 +86,11 @@ class ReservationList(Resource, Service):
                     "reservations": [serialize(row) for row in rows]
                 }, 200
 
-        except Exception as e:
+        except OSError as e:
             return {
                 "status": False,
                 "msg": "Get reservation list failed."
             }, 400
-
 
     def post(self):
         """
@@ -108,7 +107,7 @@ class ReservationList(Resource, Service):
                     "msg": "Unauthenticated"
                 }, 400
             
-            reservations = request.json
+            reservations = request.json.get("reservations", [])
             valid_reservaiton, invalid_reservaiton = [], []
 
             # make regular reservation uuid
@@ -127,16 +126,16 @@ class ReservationList(Resource, Service):
                             "invalid": invalid
                         }, 400
 
-                    user_type = auth_info["Uesr"]["type"]
+                    # user_type = auth_info["User"]["type"]
                     reservation_date = valid["reservation_date"]
-                    if not check_date_constraints(user_type, reservation_date):
+                    if not check_date_constraints(auth_info, reservation_date):
                         return {
                             "status": False,
                             "msg": "User cannot reserve that far into future"
                         }, 400
 
                     # check rooms
-                    room_id =valid["room"] 
+                    room_id =valid["room_id"] 
                     room = self.query_api(
                         "get_rooms_info", "get", 
                         headers=request.headers, 
@@ -161,18 +160,22 @@ class ReservationList(Resource, Service):
                 # use regular_reservation_uuid for valid reservation
                 valid["reservation_type"] = regular_reservation_uuid
                 valid_reservaiton.append(valid)
+                # print(f"valid_reservation: {valid_reservaiton}", type(valid_reservaiton), flush=True)
                             
-            # insert
-            conn.execute(
-                insert(Reservation).values(valid_reservaiton)
-            )
+                # insert
+                print(f"ret: {valid_reservaiton[0]}", flush=True)
+                ret = conn.execute(
+                    # insert(Reservation).values(valid_reservaiton[0])
+                    insert(Reservation), {**valid_reservaiton[0]}
+                )
+                print(f"ret: {ret.is_insert}", flush=True)
 
             return {
                 "status": True,
                 "reservations": valid_reservaiton,
             }, 200
 
-        except Exception as e:
+        except OSError as e:
             return {
                 "status": False,
                 "msg": "Reservation failed."

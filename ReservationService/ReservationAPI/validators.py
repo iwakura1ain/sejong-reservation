@@ -53,23 +53,23 @@ def validate_time(start_time, end_time):
         return False
     return True
 
-@validator("Reservation.members")
-def validate_members_list(members):
-    """
-    checks if members are in correct form
-    """
-    members = json.loads(members)
-    for member in members:
-        # check if only these keys exist
-        if member.keys() != ["name", "email"]:
-            return False
+# @validator("Reservation.members")
+# def validate_members_list(members):
+#     """
+#     checks if members are in correct form
+#     """
+#     members = json.loads(members)
+#     for member in members:
+#         # check if only these keys exist
+#         if member.keys() != ["name", "email"]:
+#             return False
 
-        # # TODO: maybe use library for email verification
-        # pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-        # if not (re.match(pattern, member["email"])):
-        #     return False
+#         # # TODO: maybe use library for email verification
+#         # pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+#         # if not (re.match(pattern, member["email"])):
+#         #     return False
 
-    return True
+#     return True
 
 @validator("Reservation.reservation_topic")
 def validate_reservation_topic(reservation_topic):
