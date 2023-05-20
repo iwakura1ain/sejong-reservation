@@ -1,0 +1,15 @@
+# 회의실 예약이 완료되었습니다.
+
+## 예약 내용 확인
+- 회의내용: {reservation_topic}
+- 장소: {room_name} ({room_address1} {room_address2})
+- 시간: {reservation_date} {start_time}~{end_time}
+- 예약자: {creator} {creator_email}
+- 참석자: {members_len}인 ({members_emails})
+- 인증코드: {code}
+
+## 회의실 사용 인증 (체크인) 방법
+1. 
+2. 
+3. 
+4. 

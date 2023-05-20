@@ -55,6 +55,8 @@ services:
       context: .
       dockerfile: ./AlertService/dockerfile
     restart: on-failure
+    volumes:
+      - ./AlertService/AlertAPI:/AlertAPI
     ports:
       - "5003:5000"
 

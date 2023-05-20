@@ -7,7 +7,7 @@ from nanoid import generate
 
 import json
 
-from config import model_config, api_config, MINIMIZED_COLS
+from config import model_config, api_config, MINIMIZED_COLS, SENDER
 from service import Service
 
 from utils import (
@@ -15,6 +15,7 @@ from utils import (
     is_valid_token, is_admin, is_authorized,
     check_date_constraints,
     check_time_conflict,
+    create_confirmation_email,
 )
 
 ns = Namespace(
@@ -148,6 +149,7 @@ class ReservationList(Resource, Service):
             reservations = request.json.get("reservations", [])
 
             # make regular reservation code
+            reservation_code = generate(size=8)
             reservation_type = generate(size=12) if len(
                 reservations) > 1 else None
             valid_reservaitons, invalid_reservaitons = [], []
@@ -180,7 +182,6 @@ class ReservationList(Resource, Service):
                         request_params={"id": valid["room_id"]}
                     )
 
-                    print(room)
                     if "status" not in room.keys() or not room["status"]:
                         return {
                             "status": False,
@@ -195,7 +196,7 @@ class ReservationList(Resource, Service):
                     else:
                         # insert reservation_type and reservation_code
                         valid["reservation_type"] = reservation_type
-                        valid["reservation_code"] = generate(size=8)
+                        valid["reservation_code"] = reservation_code
                         # insert into valid reservation list
                         valid_reservaitons.append(valid)
 
@@ -218,12 +219,18 @@ class ReservationList(Resource, Service):
                     ).mappings().fetchone()
                     retval.append(serialize(res))
 
+                # create and send email object
+                email_object = create_confirmation_email(
+                    retval[0], room["room"], auth_info["User"], sender=SENDER)
+                email_resp = self.query_api(
+                    "send_email", "post",
+                    headers=request.headers, body=json.dumps(email_object))
             return {
                 "status": True,
                 "reservations": retval,
             }, 200
 
-        except Exception as e:
+        except OSError as e:
             return {
                 "status": False,
                 "msg": "Reservation failed"
