@@ -2,9 +2,12 @@
 	<div id="user-main-view">
 		<section-header>예정된 회의</section-header>
 		<div class="reservation-card-container">
-			<reservation-card :reservation="data[0]"></reservation-card>
-			<reservation-card :reservation="data[1]"></reservation-card>
-			<reservation-card :reservation="data[2]"></reservation-card>
+			<reservation-card
+				v-for="item in reservations"
+				:key="item.id"
+				:rsv-data="item"
+				:room-data="fetchedRoomStore.getById(item.roomId)"
+			/>
 		</div>
 
 		<section-header>모든 예약 내역</section-header>
@@ -15,44 +18,60 @@
 <script setup>
 import { ref } from 'vue';
 
-import FilledButton from '@/components/atoms/FilledButton.vue';
+// import FilledButton from '@/components/atoms/FilledButton.vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import ReservationCard from '@/components/atoms/ReservationCard.vue';
 import MonthCalendar from '@/components/MonthCalendar.vue';
 
-const subdata = {
-	creatorID: -1,
-	creatorName: '이원진',
-	members: ['장호진', '안창언', '한수현', '이원진', '장호진'],
-	reservationRoomID: -1,
-	reservationRoomBuilding: '대양AI센터',
-	reservationRoomName: '835호',
-	isRegular: false,
-};
+import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
+import {
+	adminService,
+	reservationService,
+} from '@/assets/scripts/requests/request.js';
 
-const data = ref([
-	{
-		reservationDate: '2023-05-10',
-		reservationTimeslot: [50, 51, 52],
-		reservationTopic: '테스트 _ 1',
-		...subdata,
-	},
-	{
-		reservationDate: '2023-05-11',
-		reservationTimeslot: [120, 121, 122, 123, 124, 125, 126, 127, 128],
-		reservationTopic: '테스트 _ 2',
-		...subdata,
-	},
-	{
-		reservationDate: '2023-05-12',
-		reservationTimeslot: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-		reservationTopic: '테스트 _ 3',
-		...subdata,
-	},
-]);
+// 초기화 --------------------------------------
+init();
 
-const qrcodeTempImg =
-	'https://www.investopedia.com/thmb/hJrIBjjMBGfx0oa_bHAgZ9AWyn0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/qr-code-bc94057f452f4806af70fd34540f72ad.png';
+// 상태 ----------------------------------------
+const reservations = ref([]);
+
+// 함수 ----------------------------------------
+// 모든 회의실을 불러오는 함수
+async function fetchRooms() {
+	try {
+		const res = await adminService.getAllRooms();
+		if (res.status) {
+			fetchedRoomStore.value.setAll(res.data);
+			console.log('rooms are fetched', fetchedRoomStore.value);
+		}
+	} catch (err) {
+		alert('회의실 목록을 불러오는 중 문제가 생겼습니다.');
+		console.error(err);
+	}
+}
+
+// 예정된 회의 (오늘, 내일, 모레의 내가 생성한 예약)를 불러오는 함수
+async function fetchReservationsInThreeDays() {
+	try {
+		const res = await reservationService.get({
+			mine: true,
+		});
+		if (res.status) {
+			reservations.value = res.data;
+		}
+	} catch (err) {
+		alert('예약내역을 불러오는 중 문제가 생겼습니다.');
+		console.error(err);
+	}
+}
+
+async function init() {
+	await fetchRooms();
+	await fetchReservationsInThreeDays();
+}
+
+// 이벤트 핸들러 ---------------------------------
+//
 </script>
 
 <style lang="scss" scoped>
