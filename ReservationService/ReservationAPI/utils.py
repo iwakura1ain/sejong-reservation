@@ -85,3 +85,49 @@ def check_date_constraints(auth_info, new_reservation):
     elif auth_info["User"]["type"] == 4 and diff > timedelta(days=2):
         return "User(undergrad) cannot make reservation for this date"
     return None
+
+
+def create_confirmation_email(
+    reservation, room, creator,
+    sender="reservation_admin@sejong.ac.kr",
+    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다",
+    template_name="template-new-reservation.md"
+):
+    """
+    Generates an alert email for when new reservation is created.
+    sender: email address that sends out alert emails
+    title: email title
+    template_name: email body template file name
+
+    Returns a dict for POST alertservice/alert body
+    """
+
+    members_emails = [member["email"] for member in reservation["members"]]
+    receivers = [creator["email"]] + members_emails
+
+    template_data = {
+        "reservation_topic": reservation["reservation_topic"],
+        "reservation_date": reservation["reservation_date"],
+        "start_time": reservation["start_time"],
+        "end_time": reservation["end_time"],
+        "members_len": len(members_emails),
+        "members_emails": ", ".join(members_emails),
+        "code": reservation["reservation_code"],
+
+        "room_name": room["room_name"],
+        "room_address1": room["room_address1"],
+        "room_address2": room["room_address2"],
+
+        "creator": creator["name"],
+        "creator_email": creator["email"],
+    }
+
+    with open(template_name, "r") as f:
+        template = f.read()
+
+    return {
+        "title": title,
+        "text": template.format(**template_data),
+        "sender": sender,
+        "receivers": receivers
+    }
