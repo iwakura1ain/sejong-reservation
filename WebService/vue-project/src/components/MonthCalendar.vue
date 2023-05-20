@@ -128,7 +128,6 @@ function updateMonth(type, unit) {
 }
 
 const calendarArr = computed(() => {
-	console.log('hi', year.value, month.value);
 	const arr = getCalendarArray(year.value, month.value);
 	// reservations객체 주입
 	// const thisMonthReservations = fetchedReservations.getThisMonth

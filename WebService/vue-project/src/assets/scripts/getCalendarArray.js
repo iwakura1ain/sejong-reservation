@@ -41,7 +41,6 @@ function getCalDateArr(year, month) {
 	}
 
 	// 첫 주 앞에 빈 날짜 채우기
-	console.log(calDateArr);
 	const firstWeekEmptyNum = 7 - calDateArr[0].length;
 	for (let i = 0; i < firstWeekEmptyNum; i++) {
 		calDateArr[0].unshift(0);
@@ -55,11 +54,12 @@ function getCalDateArr(year, month) {
 
 	return calDateArr;
 }
+
 // 테스트
-const year = 2023;
-const month = 5;
-const calDateArr = getCalDateArr(year, month);
-console.log(calDateArr);
+// const year = 2023;
+// const month = 5;
+// const calDateArr = getCalDateArr(year, month);
+// console.log(calDateArr);
 /*
 [ 
   [0, 1, 2, 3, 4, 5, 6]
