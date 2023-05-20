@@ -62,7 +62,6 @@ def insert_into_dict(dest, keys, vals):
         if k not in dest.keys():
             dest[k] = v
 
-
 def validate(self, data):
     """
     Validator method for request body. Injected into sqlalchemy Model.
@@ -79,8 +78,11 @@ def validate(self, data):
     ---
     Returns dict of validated values mapped to model.
     """
+    import validators
 
-    # check if request data key in model schema 
+    print(VALIDATORS, flush=True)
+    
+    # check if request data key in model schema
     schema_exists = {}
     for key, val in data.items():
         schema_key = f"{self.__name__}.{key}"
@@ -88,19 +90,24 @@ def validate(self, data):
             schema_exists[key] = val
 
     # check if validation function keys in model schema
-    for keys in VALIDATORS.items():
-        self.columns.issuperset(set(keys))
+    for key_list in VALIDATORS.keys():
+        if not self.columns.issuperset(set(key_list)):
+            print("ERROR: validator function arguments wrong", flush=True)
+            raise KeyError
 
     # check if valid
     validated, invalidated = schema_exists.copy(), {}
     for keys, validator in VALIDATORS.items():
         keys = [k.split(".")[-1] for k in keys]
-
-        validator_args = {k: schema_exists[k] for k in keys}
-        if not validator(**validator_args):
+    
+        validator_args = {k: schema_exists.get(k) for k in keys}
+        if None in validator_args.values():
+            invalidated.update(validator_args)
+            
+        elif not validator(**validator_args):
             popped = list(map(validated.pop, keys, repeat(None)))
             insert_into_dict(invalidated, keys, popped)
-            
+           
     return validated, invalidated
 # inject validate function into sqlalchemy
 DeclarativeMeta.validate = validate

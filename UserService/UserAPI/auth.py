@@ -97,7 +97,7 @@ class Register(Service, Resource):
                     "User": serialize(res, exclude=exclude)
                 }, 200
 
-        except Exception as e:
+        except OSError as e:
             print(e)
             return {
                 "status": False,
