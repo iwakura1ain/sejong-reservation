@@ -1,7 +1,7 @@
 from flask import request
 from flask_restx import Resource, Namespace
 
-from sqlalchemy import select, insert, update, delete, func
+from sqlalchemy import select, insert, update, delete
 
 from nanoid import generate
 
@@ -15,18 +15,18 @@ from utils import (
     check_time_conflict,
 )
 
-import uuid
-
 ns = Namespace(
     name="reservation",
     description="예약 서비스 API",
     prefix="/reservation"
 )
 
+
 @ns.route("")
 class ReservationList(Resource, Service):
     def __init__(self, *args, **kwargs):
-        Service.__init__(self, model_config=model_config, api_config=api_config)
+        Service.__init__(self, model_config=model_config,
+                         api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
     def get(self):
@@ -40,8 +40,8 @@ class ReservationList(Resource, Service):
 
         try:
             # get token info
-            auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
-            print(auth_info,"/////////////////////////////////////////////////////////////////",flush=True)
+            auth_info = self.query_api(
+                "get_auth_info", "get", headers=request.headers)
             if not is_valid_token(auth_info):
                 return {
                     "status": False,
@@ -54,26 +54,24 @@ class ReservationList(Resource, Service):
             with self.query_model("Reservation") as (conn, Reservation):
                 stmt = None
 
-                print("is_admin: ", is_admin(auth_info), flush=True)
-                
                 # return columns based on user type
                 if is_admin(auth_info):  # full table
                     stmt = select(Reservation)
-                else:  # only relevant columns
-                    # TODO: ok?
+                # only relevant columns
+                else:
                     select_cols = {
-                        getattr(Reservation,col) for col in MINIMIZED_COLS
+                        getattr(Reservation, col) for col in MINIMIZED_COLS
                     }
                     stmt = select(*select_cols)
 
                 # filter by room id
                 if room := params.get("room"):
                     stmt = stmt.where(Reservation.room_id == room)
-                    
-                # filter by creator id 
+
+                # filter by creator id
                 if creator := params.get("creator"):
                     stmt = stmt.where(Reservation.creator_id == creator)
-                    
+
                 # filter by before date
                 if before := params.get("before"):
                     stmt = stmt.where(Reservation.reservation_date <= before)
@@ -81,7 +79,7 @@ class ReservationList(Resource, Service):
                 # filter by after date
                 if after := params.get("after"):
                     stmt = stmt.where(Reservation.reservation_date >= after)
-                
+
                 rows = conn.execute(stmt).mappings().fetchall()
 
                 return {
@@ -89,7 +87,7 @@ class ReservationList(Resource, Service):
                     "reservations": [serialize(row) for row in rows]
                 }, 200
 
-        except OSError as e:
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Get reservation list failed."
@@ -103,13 +101,14 @@ class ReservationList(Resource, Service):
 
         try:
             # get token info
-            auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+            auth_info = self.query_api(
+                "get_auth_info", "get", headers=request.headers)
             if not is_valid_token(auth_info):
                 return {
                     "status": False,
                     "msg": "Unauthenticated"
                 }, 400
-            
+
             reservations = request.json.get("reservations", [])
             valid_reservaiton, invalid_reservaiton = [], []
 
@@ -129,19 +128,19 @@ class ReservationList(Resource, Service):
                             "invalid": invalid
                         }, 400
 
-                    # user_type = auth_info["User"]["type"]
+                    user_type = auth_info["User"]["type"]
                     reservation_date = valid["reservation_date"]
-                    if not check_date_constraints(auth_info, reservation_date):
+                    if not check_date_constraints(user_type, reservation_date):
                         return {
                             "status": False,
                             "msg": "User cannot reserve that far into future"
                         }, 400
 
                     # check rooms
-                    room_id =valid["room_id"] 
+                    room_id = valid["room_id"]
                     room = self.query_api(
-                        "get_rooms_info", "get", 
-                        headers=request.headers, 
+                        "get_rooms_info", "get",
+                        headers=request.headers,
                         request_params={"id": room_id}
                     )
                     if not room["status"]:
@@ -152,24 +151,22 @@ class ReservationList(Resource, Service):
 
                     if check_time_conflict(valid, connection=conn, model=Reservation):
                         invalid_reservaiton.append(valid)
-                    
+
                 if len(invalid_reservaiton) > 0:
                     return {
                         "status": False,
                         "msg": "Conflict in reservations",
-                        "reservations":invalid_reservaiton
+                        "reservations": invalid_reservaiton
                     }
 
                 valid["reservation_code"] = generate(size=8)
                 valid["reservation_type"] = reservation_type
                 valid_reservaiton.append(valid)
-                # print(f"valid_reservation: {valid_reservaiton}", type(valid_reservaiton), flush=True)
-                            
+
                 # insert
                 print(f"ret: {valid_reservaiton[0]}", flush=True)
                 ret = conn.execute(
-                    # insert(Reservation).values(valid_reservaiton[0])
-                    insert(Reservation), {**valid_reservaiton}
+                    insert(Reservation), valid_reservaiton
                 )
                 print(f"ret: {ret.is_insert}", flush=True)
 
@@ -178,11 +175,12 @@ class ReservationList(Resource, Service):
                 "reservations": valid_reservaiton,
             }, 200
 
-        except OSError as e:
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Reservation failed."
             }, 400
+
 
 @ns.route("/<int:id>")
 class ReservationByID(Resource, Service):
@@ -200,7 +198,8 @@ class ReservationByID(Resource, Service):
 
         try:
             # get token info
-            auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+            auth_info = self.query_api(
+                "get_auth_info", "get", headers=request.headers)
             if not is_valid_token(auth_info):
                 return {
                     "status": False,
@@ -211,16 +210,16 @@ class ReservationByID(Resource, Service):
                 stmt = None
 
                 print("is_admin: ", is_admin(auth_info), flush=True)
-                
+
                 # return columns based on user type
                 if is_admin(auth_info):  # full table
                     stmt = select(Reservation)
-                else:  # only relevant columns
-                    # TODO: getattr ok?
-                    select_cols = [
-                        getattr(Reservation,col) for col in MINIMIZED_COLS
-                    ]
-                    stmt = select(select_cols)
+                # only relevant columns
+                else:
+                    select_cols = {
+                        getattr(Reservation, col) for col in MINIMIZED_COLS
+                    }
+                    stmt = select(*select_cols)
 
                 row = conn.execute(stmt).mappings().fetchone()
 
@@ -250,7 +249,8 @@ class ReservationByID(Resource, Service):
 
         try:
             # get token info
-            auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+            auth_info = self.query_api(
+                "get_auth_info", "get", headers=request.headers)
             if not is_valid_token(auth_info):
                 return {
                     "status": False,
@@ -271,13 +271,15 @@ class ReservationByID(Resource, Service):
                 stmt = select(Reservation).where(Reservation.id == id)
                 row = conn.execute(stmt).mappings().fetchone()
 
-                # create updated and serialized reservation with validated values
-                row.update(valid)
+                # create updated and serialized reservation
+                # from RowMapping to dict with validated values
+                row = serialize(row)
+                row.update(**valid)
 
-                user_type = auth_info["Uesr"]["type"]
+                user_type = auth_info["User"]["type"]
                 reservation_date = row["reservation_date"]
-                if ("reservation_date" in valid.keys() 
-                    and not check_date_constraints(user_type, reservation_date)):
+                if ("reservation_date" in valid.keys()
+                        and not check_date_constraints(user_type, reservation_date)):
                     return {
                         "status": False,
                         "msg": "User cannot reserve that far into future"
@@ -285,10 +287,10 @@ class ReservationByID(Resource, Service):
 
                 # check rooms
                 if "room_id" in valid.keys():
-                    room_id = row["room"] 
+                    room_id = row["room"]
                     room = self.query_api(
-                        "get_rooms_info", "get", 
-                        headers=request.headers, 
+                        "get_rooms_info", "get",
+                        headers=request.headers,
                         request_params={"id": room_id}
                     )
                     if not room["status"]:
@@ -298,7 +300,7 @@ class ReservationByID(Resource, Service):
                         }, 400
 
                 if ("start_time" in valid.keys() and "end_time" in valid.keys()
-                    and check_time_conflict(row, connection=conn, model=Reservation)):
+                        and check_time_conflict(row, connection=conn, model=Reservation)):
                     return {
                         "status": False,
                         "msg": "Conflict in reservations"
@@ -311,11 +313,11 @@ class ReservationByID(Resource, Service):
                     .values(valid)
                 )
                 conn.execute(stmt)
-                
+
                 # select updated reservation
                 stmt = select(Reservation).where(Reservation.id == id)
                 row = conn.execute(stmt).mappings().fetchone()
-                
+
             return {
                 "status": True,
                 "reservation": serialize(row)
@@ -334,13 +336,14 @@ class ReservationByID(Resource, Service):
         """
 
         # get token info
-        auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+        auth_info = self.query_api(
+            "get_auth_info", "get", headers=request.headers)
         if not is_valid_token(auth_info):
             return {
                 "status": False,
                 "msg": "Unauthenticated"
             }, 400
-        
+
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 # check if reservation with id exist.
@@ -360,7 +363,7 @@ class ReservationByID(Resource, Service):
                         "status": False,
                         "msg": "Unauthorized"
                     }, 400
-                
+
                 # delete reservation
                 stmt = delete(Reservation).where(Reservation.id == id)
                 conn.execute(stmt)
@@ -369,7 +372,7 @@ class ReservationByID(Resource, Service):
                 "status": True,
                 "msg": "Deleted"
             }, 200
-            
+
         except Exception as e:
             return {
                 "status": False,
