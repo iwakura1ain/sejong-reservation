@@ -8,12 +8,12 @@ DROP TABLE IF EXISTS Token_Blocklist;
 CREATE TABLE Room (
 	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	   room_name VARCHAR(20) NOT NULL DEFAULT '',
-	   room_address1 VARCHAR(20) NOT NULL DEFAULT '',
-	   room_address2 VARCHAR(20) NOT NULL DEFAULT '',
+	   room_name VARCHAR(40) NOT NULL DEFAULT '',
+	   room_address1 VARCHAR(80) NOT NULL DEFAULT '',
+	   room_address2 VARCHAR(80) NOT NULL DEFAULT '',
 	   is_usable BOOLEAN NOT NULL DEFAULT 0,
 	   max_users INT DEFAULT 0,
-	   preview_image MEDIUMBLOB
+	   preview_image_name VARCHAR(50) NOT NULL DEFAULT 'no-image.png'
 ) DEFAULT CHARSET=utf8;
 
 CREATE TABLE User (
@@ -30,10 +30,11 @@ CREATE TABLE User (
 
 CREATE TABLE Reservation (
 	   id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	   is_valid BOOLEAN NOT NULL DEFAULT 1,
 	   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	   reservation_code VARCHAR(100) DEFAULT '',
+	   reservation_code VARCHAR(8) NOT NULL,
+	   reservation_type VARCHAR(12) DEFAULT NULL,
 	   reservation_topic VARCHAR(100) DEFAULT '',
-	   reservation_type INT DEFAULT NULL,
 	   reservation_date DATE NOT NULL,
 	   start_time TIME NOT NULL,
 	   end_time TIME NOT NULL,

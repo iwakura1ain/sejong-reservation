@@ -2,10 +2,9 @@ from flask import request, send_from_directory, current_app
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
 from service import Service
-from config import model_config, api_config, filepath
+from config import model_config, api_config
 from utils import serialization, check_jwt_exists, check_if_room_identical
 from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
-from werkzeug.utils import secure_filename
 import os
 
 # namespace for handy routing
@@ -32,6 +31,7 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
@@ -43,7 +43,7 @@ class ConferenceRoom(Resource, Service):
             with self.query_model("Room") as (conn, Room):
                 valid_data, invalid_data = Room.validate(req)
 
-                if invalid_data:
+                if len(invalid_data) > 0:
                     return {
                         "status": False,
                         "msg": "invalid data",
@@ -141,6 +141,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
@@ -399,9 +400,8 @@ class DownloadImage(Resource):
     def get(self, filename):
         base_path = "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static"
         return send_from_directory(base_path, filename)
-    
-# upload/download in docker env
 
+# upload/download in docker env
 # insert file path into room['preview_image']
 
 # if room["is_usable"] has been changed to False from True, send request to reservation API

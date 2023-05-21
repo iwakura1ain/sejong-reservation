@@ -9,7 +9,11 @@ from config import model_config, api_config
 
 @validator("Room.room_name")
 def room_name_validator(room_name):
+<<<<<<< HEAD
     if len(room_name) >20:
+=======
+    if len(room_name ) >20:
+>>>>>>> 09dad8734fb9b4d80e172b6bc806f90fcdb514f6
         return False
 
     return True
@@ -28,7 +32,10 @@ def room_address2_validator(room_address2):
 
     return True
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 09dad8734fb9b4d80e172b6bc806f90fcdb514f6
 @validator("Room.is_usable")
 def is_usable_validator(is_usable):
     if type(is_usable) != int:
