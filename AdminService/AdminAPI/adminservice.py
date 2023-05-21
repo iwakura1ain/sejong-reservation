@@ -1,10 +1,11 @@
-from flask import request
+from flask import request, send_from_directory, current_app
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
-from service import Service, validate
+from service import Service
 from config import model_config, api_config
-#import utils
-from utils import serialization, check_jwt_exists
+from utils import serialization, check_jwt_exists, check_if_room_identical
+from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
+import os
 
 # namespace for handy routing
 admin = namespace.Namespace(
@@ -12,75 +13,73 @@ admin = namespace.Namespace(
     description="유저, 회의실, 예약 관리를 위한 API"
 )
 
-
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['created_at', 'updated_at']
 
-@admin.route('/rooms')
+@admin.route('')
 class ConferenceRoom(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
-    # CREATE Room 
+    # CREATE room 
     def post(self):
         # request body data, need to be validated
-        req = request.json
+        req = request.json  
 
         # check user if has authorization.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
-           and user_status['User']['type'] != 2):
+           and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
-                "message": "No authorization"
+                "msg": "No authorization"
             }, 200
         
         try:
             with self.query_model("Room") as (conn, Room):
-                # validate data from request body
-                verified_json_body, status = Room.validate(req)
-                if status:
-                    res = conn.execute(select(Room)).mappings().all()
-                else:
+                valid_data, invalid_data = Room.validate(req)
+
+                if len(invalid_data) > 0:
                     return {
-                        "msg": "validation fail",
-                        "data": verified_json_body
+                        "status": False,
+                        "msg": "invalid data",
+                        "invalid": invalid_data
                     }, 200
+                
+                res = conn.execute(select(Room)).mappings().all()
+                print(valid_data, res)
                 
                 # if validated data is already in table, 
                 # send message 'data already exists'
-                for room in res:
-                    if (verified_json_body['room_name'] in room['room_name'] and 
-                    verified_json_body['room_address1'] in room['room_address1'] and 
-                    verified_json_body['room_address2'] in room['room_address2']):
-                        return{
-                            "message": f"Room {verified_json_body['room_name']} already exists." 
-                        }, 200
+                if check_if_room_identical(conn, Room, valid_data):
+                    return { 
+                        "status": False,
+                        "msg": "Room already exists"
+                    }, 200
                 
                 # insert verified body data to Room table
-                conn.execute( 
+                conn.execute(
                     insert(Room), {
-                        "room_name": verified_json_body['room_name'],
-                        "room_address1": verified_json_body['room_address1'],
-                        "room_address2": verified_json_body['room_address2'],
-                        "max_users": verified_json_body['max_users'],
-                        "is_usable": verified_json_body['is_usable'],
+                        **valid_data
                     }
                 )
 
                 # CREATE room
                 return{
-                    "Message": "Room Created"
+                    "status": True,
+                    "msg": "Room Created"
                 }, 200
         
         # error
-        except OSError as e: # 모든 exception을 e로 받겠다, 그런데 지금 어디서 error가 나는지 모른다, 모든 exception을 받는게 아니라 특정한걸 받아보자
+        except OSError as e:
             print(e)
             return {
-                "message": "Room Create Failed"
+                "status": False,
+                "msg": "Room Create Failed"
             }, 500
         
     # GET all rooms
@@ -89,10 +88,11 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
-                "message": "Not logged in",
+                "msg": "Not logged in",
             }, 200
         
         try:
@@ -109,24 +109,27 @@ class ConferenceRoom(Resource, Service):
                 # if there's no such room
                 if len(serialized_rooms) == 0:
                     return {
-                        "message": "Room Not Found"
+                        "status": False,
+                        "msg": "Room Not Found"
                     }, 200
 
                 # GET all rooms
                 return {
+                    "status": True,
                     "allRooms": serialized_rooms,
-                    "message": "Room found"
+                    "msg": "Room found"
                 }, 200
 
         # error
         except Exception as e:
             print(e)
             return {
-                "message": "Room Get Failed"
+                "status": False,
+                "msg": "Failed to get room data"
             }, 500
         
 # GET, DELETE, UPDATE by room id
-@admin.route('/rooms/<int:id>')
+@admin.route('/<int:id>')
 class ConferenceRoomById(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
@@ -138,10 +141,11 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
-                "message": "Not logged in"
+                "msg": "Not logged in"
             }, 200
         
         try:
@@ -150,25 +154,31 @@ class ConferenceRoomById(Resource, Service):
                 res = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
 
                 # if there's no room by given id
-                if res is None:
+                if res == None:
                     return {
-                        "message": f"Room id:{id} not found"
+                        "status": False,
+                        "msg": f"Room id:{id} not found"
                     }, 200
+                
+                serialized_room = serialization(res, exclude=exclude)
                 
                 # GET room with given id
                 return {
-                    "id": res.id,
-                    "room_name": res.room_name,
-                    "roomAdderss1": res.room_address1,
-                    "room_address2": res.room_address2,
-                    "max_user's": res.max_users,
+                    # "id": res.id,
+                    # "room_name": res.room_name,
+                    # "roomAdderss1": res.room_address1,
+                    # "room_address2": res.room_address2,
+                    # "max_users": res.max_users,
+                    "status": True,
+                    "room": serialized_room,
+                    "msg": f"Room id:{id} found",
                 }, 200
 
         # error      
-        except Exception as e:
+        except OSError as e:
             print(e)
             return {
-                "message": "Room GET failed"
+                "msg": "Room GET failed"
             }, 500
         
     # DELETE room by id
@@ -177,11 +187,12 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
-           and user_status['User']['type'] != 2):
+           and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
-                "message": "No authorization"
+                "msg": "No authorization"
             }, 200
         
         try:
@@ -192,7 +203,8 @@ class ConferenceRoomById(Resource, Service):
                 # if there's no room by given id
                 if res is None:
                     return {
-                        "message": f"Room id:{id} not found"
+                        "status": True,
+                        "msg": f"Room id:{id} not found"
                     }, 200
                 
                 # DELETE room
@@ -202,17 +214,19 @@ class ConferenceRoomById(Resource, Service):
 
                 # DELETE room done
                 return {
-                    "message": "Room Deleted"
+                    "status": True,
+                    "msg": "Room Deleted"
                 }, 200
 
         # error
         except Exception as e:
             print(e)
             return {
-                "message": "Room Delete Failed"
+                "status": False,
+                "msg": "Room Delete Failed"
             }, 500
         
-    # UPDATE Room
+    # UPDATE Room by id
     def patch(self, id):
         # request body data, needs to be validated
         req = request.json
@@ -221,58 +235,168 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(check_jwt_exists(user_status)
-           and user_status['User']['type'] != 2):
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        if(check_jwt_exists(user_status) 
+           and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
-                "message": "No authorization"
+                "msg": "No authorization"
             }, 200
         
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate data from request body
-                verified_json_body, status = Room.validate(req)
-                if status:
-                    # SELECT room by id and parse it into dict
-                    res = conn.execute(select(Room)).mappings().all()
-                    roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
-                else:
+                valid_data, invalid_data = Room.validate(req)
+                
+                if len(invalid_data) > 0:
                     return {
-                        "msg": "validation fail",
-                        "data": verified_json_body
+                        "status": False,
+                        "msg": "invalid data",
+                        "invalid": invalid_data
                     }, 200
 
+                roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
                 # if there's no such room by given id
                 if roomById is None:
                     return {
-                        "message": f"Room id:{id} not found"
+                        "status": False,
+                        "msg": f"Room id:{id} not found"
                     }, 200
                 
                 # if updated room data already exists in the table
-                for room in res:
-                    if (verified_json_body['room_name'] in room['room_name'] and 
-                        verified_json_body['room_address1'] in room['room_address1'] and 
-                        verified_json_body['room_address2'] in room['room_address2']):
+                for room in valid_data:
+                    if check_if_room_identical(conn, Room, valid_data):
                         return{
-                            "message": f"Room {verified_json_body['room_name']} already exists." 
+                            "statsus": False,
+                            "msg": f"Room {room['room_name']} already exists." 
                         }, 200
 
                 
                 # UPDATE room
                 conn.execute(
                     update(Room).where(Room.id == id),{
-                        **verified_json_body 
+                        **valid_data
                     }
                 )
 
                 # UPDATE room done
                 return {
-                    "message": "Room Updated"
+                    "status": True,
+                    "msg": "Room Updated"
                 }, 200
 
         # error
-        except Exception as e:
+        except OSError as e:
             print(e)
             return {
-                "message": "Room Update Failed"
+                "status": False,
+                "msg": "Room Update Failed"
             }, 500
+
+@admin.route('/upload')
+class PreviewImageUpload(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, model_config=model_config, api_config=api_config)
+        Resource.__init__(self, *args, **kwargs)
+
+    @staticmethod
+    def allowed_file(filename):
+        allowed_extensions = {'png', 'jpg', 'jpeg'}
+
+        return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+    
+    # insert preview_image into a room found by id
+    def post(self):
+        uploaded_image = request.files['image']
+
+        base_path = "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static"
+        max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
+        
+        # check user if has authorization.
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+        if(check_jwt_exists(user_status) 
+           and (user_status['User']['type'] != 2)):
+            return {
+                "status": False,
+                "msg": "No authorization"
+            }, 200
+
+        # error checking 1: does file exists
+        if uploaded_image.filename == '':
+            return{
+                "status": False,
+                "msg": "No selected file"
+            }, 200
+        
+        # error checking 2: is file in allowed extensions
+        if not self.allowed_file(uploaded_image.filename):
+            file_extension = uploaded_image.filename.rsplit('.', 1)[1].lower()
+            return{
+                "status": False,
+                "msg": f"File with wrong extension, your file is a {file_extension} file. allowed file extensions are 'png', 'jpg', 'jpeg'"
+            }
+
+        # check file size
+        if ('Content-Length' in request.headers 
+            and int(request.headers['Content-Length']) > max_file_size):
+            return{
+                "status": False,
+                "msg": f"File size exceeds the maximum limit of {max_file_size}bytes"
+            }, 200
+
+        try:
+            with self.query_model("Room") as (conn, Room):
+                # # The above code is reading the contents of an uploaded image file and storing it in
+                # # the variable `preview_image`.
+                # preview_image = uploaded_image.read()
+
+                # # insert image into the room                
+                # conn.execute(
+                #     update(Room).where(Room.id == id), {
+                #         "preview_image": preview_image
+                #     }
+                # )
+
+                # print(self.allowed_file(uploaded_image), flush=True)
+
+                if uploaded_image:
+                    filename = uploaded_image.filename
+                    print(filename, flush=True)
+                    print(uploaded_image.save(os.path.join(base_path, filename)), flush=True)
+                    # base_path/filename
+
+                # insert image done
+                return {
+                    "status": True,
+                    "msg": "Image uploaded",
+                    "uploadedImage": uploaded_image.filename,
+                }
+        except OSError as e:
+            print(e)
+            return {
+                "status": False,
+                "msg": "Uploading image failed"
+            }, 500
+    
+@admin.route('/download/<string:filename>')
+class DownloadImage(Resource):
+    def get(self, filename):
+        base_path = "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static"
+        return send_from_directory(base_path, filename)
+
+# error checking, check login & authorization, check file size
+
+# upload/download in docker env
+
+# when uploading, check file's name: cd .. >> if image name is '../.png' >> base_path + '../.png' 
+# "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static/../.png"
+# "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/.png"
+# so, check for file name to not interrupt directory >> search internet for good case
+
+# insert file path into room['preview_image']
+
+# if room["is_usable"] has been changed to False from True, send request to reservation API
+# to cancel all the reserved conference for the room

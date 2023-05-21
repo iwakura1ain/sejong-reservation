@@ -57,6 +57,12 @@ def validator(*args):
     return decorator_register
 
 
+def insert_into_dict(dest, keys, vals):
+    for k, v in zip(keys, vals):
+        if k not in dest.keys():
+            dest[k] = v
+
+
 def validate(self, data):
     """
     Validator method for request body. Injected into sqlalchemy Model.
@@ -86,16 +92,16 @@ def validate(self, data):
         self.columns.issuperset(set(keys))
 
     # check if valid
-    validated, status = schema_exists.copy(), True
+    validated, invalidated = schema_exists.copy(), {}
     for keys, validator in VALIDATORS.items():
         keys = [k.split(".")[-1] for k in keys]
 
         validator_args = {k: schema_exists[k] for k in keys}
         if not validator(**validator_args):
-            list(map(validated.pop, keys, repeat(None)))
-            status = False
+            popped = list(map(validated.pop, keys, repeat(None)))
+            insert_into_dict(invalidated, keys, popped)
             
-    return validated, status
+    return validated, invalidated
 # inject validate function into sqlalchemy
 DeclarativeMeta.validate = validate
 
