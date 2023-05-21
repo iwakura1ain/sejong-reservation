@@ -40,19 +40,29 @@ class UserList(Service, Resource):
         """
         try:
             with self.query_model("User") as (conn, User):
-                res = conn.execute(
-                    select(User)
-                ).mappings().fetchall()
-                print(res)
-                print(serialize(res[0], exclude=exclude))
+                stmt = select(User)
 
+                params = request.args
+                if user_type := params.get("user_type"):
+                    stmt = stmt.where(User.type == user_type)
+
+                if dept := params.get("dept"):
+                    stmt = stmt.where(User.dept == dept)
+                    
+                if order_by := params.get("order_by"):
+                    col = getattr(User, order_by)
+                    stmt = stmt.order_by(col)
+
+                if count := request.args.get("count"):
+                    stmt = stmt.limit(count)
+
+                res = conn.execute(stmt).mappings().fetchall()
                 return {
                     "status": True,
                     "Users": [serialize(r, exclude=exclude) for r in res]
                 }
 
         except Exception as e:
-            print(e)
             return {
                 "status": False,
                 "msg": "error"
