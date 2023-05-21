@@ -19,3 +19,5 @@ model_config = {
 api_config = {
     "jwt_status": "http://127.0.0.1:5001/auth/jwt-status",
 }
+
+filepath = "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static"

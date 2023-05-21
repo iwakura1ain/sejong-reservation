@@ -2,7 +2,7 @@ from flask import request, send_from_directory, current_app
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
 from service import Service
-from config import model_config, api_config
+from config import model_config, api_config, filepath
 from utils import serialization, check_jwt_exists, check_if_room_identical
 from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
 from werkzeug.utils import secure_filename
@@ -32,7 +32,6 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
@@ -44,7 +43,7 @@ class ConferenceRoom(Resource, Service):
             with self.query_model("Room") as (conn, Room):
                 valid_data, invalid_data = Room.validate(req)
 
-                if len(invalid_data) > 0:
+                if invalid_data:
                     return {
                         "status": False,
                         "msg": "invalid data",
@@ -142,7 +141,6 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
@@ -307,21 +305,27 @@ class PreviewImageUpload(Resource, Service):
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
     
+    # @staticmethod
+    # def check_filepath(joined_path):
+    #     normalized_path = os.path.normpath(joined_path)
+      
+    #     if normalized_path != joined_path:
+    #         return False
+    #     return True
+    
     @staticmethod
-    def check_filename(filename, base_path):
-        # Define a list of forbidden characters and patterns
-        joined_path = os.path.join(base_path, filename)
-        normalized_path = os.path.normpath(joined_path)
-        if normalized_path != joined_path:
+    def check_if_file_unique(joined_path):
+        if os.path.exists(joined_path):
             return False
         return True
     
     # insert preview_image into a room found by id
     def post(self):
-        uploaded_image = request.files['image']
-        base_path = "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static"
         max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
+        uploaded_image = request.files['image']
+    
         filename = secure_filename(uploaded_image.filename)
+        joined_path = os.path.join(filepath, filename)
         
         # check user if has authorization.
         user_status = self.query_api( 
@@ -334,28 +338,27 @@ class PreviewImageUpload(Resource, Service):
                 "msg": "No authorization"
             }, 200
 
-        # error checking 1: does file exists
+        # error checking : does file exists
         if uploaded_image.filename == '':
             return{
                 "status": False,
                 "msg": "No selected file"
             }, 200
         
-        # error checking 2: is file in allowed extensions
-        if not self.allowed_file(uploaded_image.filename):
+        # error checking : is file in allowed extensions
+        if not self.allowed_file(filename):
             return{
                 "status": False,
                 "msg": "File with wrong extension",
                 "filename": uploaded_image.filename
             }
-        
-        # error checking 3: is file name valid
-        if self.check_filename(uploaded_image.filename, base_path):
+
+        # error checking: is file unique
+        if not self.check_if_file_unique(joined_path):
             return {
                 "status": False,
-                "msg": "File with wrong name",
-                "filename": uploaded_image.filename
-            }
+                "msg": "File already exists"
+            }, 200
 
         # check file size
         if ('Content-Length' in request.headers 
@@ -366,12 +369,24 @@ class PreviewImageUpload(Resource, Service):
             }, 200
 
         try:
-            # insert image
-            return {
-                "status": True,
-                "msg": "Image uploaded",
-                "uploadedImage": uploaded_image.filename,
-            }
+            with self.query_model("Room") as (conn, Room):
+                # insert file path into the data
+                # conn.execute(
+                #     update(Room).where(Room.id == id),{
+                #         "preview_image_name": joined_path
+                #     }
+                # )
+
+                # save image
+                uploaded_image.save(joined_path)
+
+                # insert image
+                return {
+                    "status": True,
+                    "msg": "Image uploaded",
+                    "uploadedImage": uploaded_image.filename,
+                    # "uploadedPath": joined_path
+                }
         except OSError as e:
             print(e)
             return {
