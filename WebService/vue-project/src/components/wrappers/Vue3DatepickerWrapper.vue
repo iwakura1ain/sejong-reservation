@@ -22,7 +22,7 @@
 import Datepicker from 'vue3-datepicker';
 import { ko } from 'date-fns/locale';
 import { toRefs, ref, watch } from 'vue';
-import getTodayZeroHour from '@/assets/scripts/getTodayZeroHour.js';
+import getTodayZeroHour from '@/assets/scripts/utils/getTodayZeroHour.js';
 
 // define props, emits
 const props = defineProps({
@@ -40,12 +40,10 @@ const localDateState = ref(getTodayZeroHour());
 
 const refPropDate = toRefs(props).modelValue;
 watch(refPropDate, () => {
-	console.log('wathced', refPropDate.value);
 	localDateState.value = refPropDate.value;
 });
 
 watch(localDateState, () => {
-	console.log('aa', localDateState.value);
 	emits('update:modelValue', localDateState.value);
 });
 </script>

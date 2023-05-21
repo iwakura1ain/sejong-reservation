@@ -154,7 +154,6 @@ const meetingTimeString = computed(() => {
 
 const meetingDates = computed(() => {
 	const arr = datetimeAvailability.value.filter(item => item.available);
-	console.log(arr);
 	return arr;
 });
 

@@ -128,8 +128,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import getCalendarArray from '@/assets/scripts/getCalendarArray.js';
-import getWeekNumber from '@/assets/scripts/getWeekNumber.js';
+import getCalendarArray from '@/assets/scripts/utils/getCalendarArray.js';
+import getWeekNumber from '@/assets/scripts/utils/getWeekNumber.js';
 
 defineProps({
 	showRoomName: {
@@ -160,7 +160,6 @@ const month = ref(now.m);
 const week = ref(now.w);
 
 const calendarArr = computed(() => {
-	console.log('hi', year.value, month.value);
 	const arr = getCalendarArray(year.value, month.value);
 	// reservations객체 주입
 	// const thisMonthReservations = fetchedReservations.getThisMonth
@@ -184,7 +183,6 @@ function getTimeBlockHeight(startTime, endTime) {
 	const diffAsMinute = endTimeAsMinute - startTimeAsMinute;
 	const blockPixelHeight = parseInt(diffAsMinute / minutePerPx);
 
-	console.log(startTimeAsMinute, endTimeAsMinute, blockPixelHeight);
 	return blockPixelHeight;
 }
 
@@ -193,7 +191,7 @@ function getTimeBlockPosition(startTime) {
 	const [st_h, st_m] = startTime.split(':');
 	const startTimeAsMinute = parseInt(st_h) * 60 + parseInt(st_m);
 	const blockPixelPosition = parseInt(startTimeAsMinute / minutePerPx);
-	console.log(blockPixelPosition);
+
 	return blockPixelPosition;
 }
 

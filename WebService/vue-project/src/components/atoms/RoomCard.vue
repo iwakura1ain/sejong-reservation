@@ -15,14 +15,9 @@
 						>{{ contents.openingHour[0] }} ─ {{ contents.openingHour[1] }}</span
 					>
 				</div>
-				<!-- <div class="btns"> -->
-				<!-- <filled-button color="white" style="margin-left: 0">
-						자세히보기
-					</filled-button> -->
 				<filled-button class="select-room-btn" @click="selectRoom"
 					>선택</filled-button
 				>
-				<!-- </div> -->
 			</div>
 		</div>
 		<div class="reservation-viewer">
@@ -51,7 +46,6 @@ const props = defineProps({
 const emit = defineEmits(['update-selected-room']);
 
 function selectRoom() {
-	console.log('[RoomCard] 방 선택 : ', props.contents.id);
 	emit('update-selected-room', props.contents.id);
 }
 </script>

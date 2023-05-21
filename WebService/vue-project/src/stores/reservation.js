@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import getTodayZeroHour from '@/assets/scripts/getTodayZeroHour.js';
+import getTodayZeroHour from '@/assets/scripts/utils/getTodayZeroHour.js';
 import { RESERVATION_TYPE, REPEAT_END_TYPE } from '@/assets/constants.js';
 
 // RoomSelector --------------------------------------------------------

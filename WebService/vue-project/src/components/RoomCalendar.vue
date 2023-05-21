@@ -3,7 +3,7 @@
 		<div v-if="!isCalendarShown">
 			<filled-button @click="showCalendar"> 달력 열기 </filled-button>
 		</div>
-		<tempalte v-else>
+		<template v-else>
 			<filled-button color="white" @click="unshowCalendar">
 				달력 닫기
 			</filled-button>
@@ -23,7 +23,7 @@
 			<filled-button color="white" @click="unshowCalendar">
 				달력 닫기
 			</filled-button>
-		</tempalte>
+		</template>
 	</div>
 </template>
 

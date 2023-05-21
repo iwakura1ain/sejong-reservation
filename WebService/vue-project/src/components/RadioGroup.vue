@@ -50,7 +50,6 @@ const len = computed(() => {
 
 // event handlers
 function updateSelect(index) {
-	console.log('[RadioGroup]', index, '->', props.buttons[index]);
 	selectedValue.value = props.buttons[index].value;
 	emits('update:modelValue', props.buttons[index].value);
 }

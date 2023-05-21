@@ -29,7 +29,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="month-calendar-innerwrap" v-hscroll>
+		<div class="month-calendar-innerwrap">
 			<div class="header-container">
 				<div class="header-cell sun">일</div>
 				<div class="header-cell mon">월</div>
@@ -87,7 +87,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import getCalendarArray from '@/assets/scripts/getCalendarArray.js';
+import getCalendarArray from '@/assets/scripts/utils/getCalendarArray.js';
 
 defineProps({
 	showRoomName: {

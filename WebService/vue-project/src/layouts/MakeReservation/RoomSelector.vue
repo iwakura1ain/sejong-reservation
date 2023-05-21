@@ -22,23 +22,6 @@ import RoomImgTest_1 from '@/assets/images/test/roomimg_1.jpg';
 import RoomImgTest_2 from '@/assets/images/test/roomimg_2.jpg';
 import { selectedRoom } from '@/stores/reservation.js';
 
-// define props, events
-// defineProps({
-// 	modelValue: {
-// 		required: false,
-// 		type: [Number, String, null],
-// 		default: null,
-// 	},
-// 	rooms: {
-// 		required: true,
-// 		type: Array,
-// 	},
-// });
-// const emit = defineEmits(['update:modelValue']);
-
-// state
-// const selectedRoomId = ref(-1);
-
 const rooms = [
 	{
 		id: 0,
@@ -58,16 +41,8 @@ const rooms = [
 	},
 ];
 
-// event handlers
-// function updateSelectedRoomId(id) {
-// 	console.log('[RoomSelector] 방 선택 : ', id);
-// 	selectedRoomId.value = id;
-// 	// emit('update:modelValue', id);
-// }
 function updateSelectedRoom(id) {
-	console.log('[RoomSelector] 방 선택 : ', id);
 	selectedRoom.value = rooms[id];
-	// emit('update:modelValue', id);
 }
 </script>
 
