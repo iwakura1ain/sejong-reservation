@@ -13,10 +13,11 @@ from flask_jwt_extended import (
     jwt_required
 )
 
+
+
 from service import Service
 from utils import retrieve_jwt, serialize, protected
 from config import ORM
-
 
 # namespace for "/auth"
 USERS = Namespace(
@@ -114,6 +115,7 @@ class UserDetail(Service, Resource):
         """
         try:
             with self.query_model("User") as (conn, User):
+
                 req, invalidated = User.validate(request.json)
                 if len(invalidated) != 0:
                     return {
@@ -167,9 +169,10 @@ class UserDetail(Service, Resource):
             }, 200
 
 
-                
 
-        
+
+
+
 
 
 
