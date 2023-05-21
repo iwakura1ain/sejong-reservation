@@ -7,6 +7,7 @@
 				:key="item.id"
 				:rsv-data="item"
 				:room-data="fetchedRoomStore.getById(item.roomId)"
+				@click="goDetailPage(item.id, item.reservationType)"
 			/>
 		</div>
 
@@ -17,6 +18,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 // import FilledButton from '@/components/atoms/FilledButton.vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
@@ -24,31 +26,16 @@ import ReservationCard from '@/components/atoms/ReservationCard.vue';
 import MonthCalendar from '@/components/MonthCalendar.vue';
 
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
-import {
-	adminService,
-	reservationService,
-} from '@/assets/scripts/requests/request.js';
+import { reservationService } from '@/assets/scripts/requests/request.js';
 
 // 초기화 --------------------------------------
+const router = useRouter();
 init();
 
 // 상태 ----------------------------------------
 const reservations = ref([]);
 
 // 함수 ----------------------------------------
-// 모든 회의실을 불러오는 함수
-async function fetchRooms() {
-	try {
-		const res = await adminService.getAllRooms();
-		if (res.status) {
-			fetchedRoomStore.value.setAll(res.data);
-			console.log('rooms are fetched', fetchedRoomStore.value);
-		}
-	} catch (err) {
-		alert('회의실 목록을 불러오는 중 문제가 생겼습니다.');
-		console.error(err);
-	}
-}
 
 // 예정된 회의 (오늘, 내일, 모레의 내가 생성한 예약)를 불러오는 함수
 async function fetchReservationsInThreeDays() {
@@ -66,12 +53,20 @@ async function fetchReservationsInThreeDays() {
 }
 
 async function init() {
-	await fetchRooms();
 	await fetchReservationsInThreeDays();
 }
 
 // 이벤트 핸들러 ---------------------------------
-//
+function goDetailPage(id, reservationType) {
+	console.log(id, reservationType);
+	router.push({
+		name: 'ReservationDetail',
+		query: {
+			id,
+			reservationType,
+		},
+	});
+}
 </script>
 
 <style lang="scss" scoped>

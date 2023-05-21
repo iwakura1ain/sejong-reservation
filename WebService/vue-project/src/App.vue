@@ -11,6 +11,13 @@ import AppHeader from '@/layouts/AppHeader.vue';
 import AppFooter from '@/layouts/AppFooter.vue';
 import { ref } from 'vue';
 
+import { adminService } from '@/assets/scripts/requests/request.js';
+import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
+
+// 초기화 -----------------------------
+init();
+
+// 상태 (state) -----------------------
 // test data
 const userinfo = ref({
 	username: '이원진',
@@ -20,6 +27,26 @@ const userinfo = ref({
 	noShowCount: 0,
 	isBanned: false,
 });
+
+// 일반 함수 --------------------------
+
+// 모든 회의실을 불러오는 함수
+async function fetchRooms() {
+	try {
+		const res = await adminService.getAllRooms();
+		if (res.status) {
+			fetchedRoomStore.value.setAll(res.data);
+			console.log('rooms are fetched', fetchedRoomStore.value);
+		}
+	} catch (err) {
+		alert('회의실 목록을 불러오는 중 문제가 생겼습니다.');
+		console.error(err);
+	}
+}
+
+async function init() {
+	await fetchRooms();
+}
 </script>
 
 <style lang="scss" scoped>
