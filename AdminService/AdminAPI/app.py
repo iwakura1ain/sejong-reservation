@@ -11,10 +11,6 @@ try:
 except OSError:
     pass
 
-<<<<<<< HEAD
-=======
-# app.add_url_rule("/upload/<name>", endpoint="download_file", build_only=True)
->>>>>>> 09dad8734fb9b4d80e172b6bc806f90fcdb514f6
 api.add_namespace(adminservice.admin, '/admin/rooms')
 
 if __name__=="__main__":
