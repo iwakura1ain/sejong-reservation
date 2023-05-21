@@ -3,6 +3,8 @@ from flask_restx import Resource, Namespace
 
 from sqlalchemy import select, insert, update, delete, func
 
+from nanoid import generate
+
 from config import model_config, api_config, MINIMIZED_COLS
 from service import Service
 
@@ -39,6 +41,7 @@ class ReservationList(Resource, Service):
         try:
             # get token info
             auth_info = self.query_api("get_auth_info", "get", headers=request.headers)
+            print(auth_info,"/////////////////////////////////////////////////////////////////",flush=True)
             if not is_valid_token(auth_info):
                 return {
                     "status": False,
@@ -110,10 +113,10 @@ class ReservationList(Resource, Service):
             reservations = request.json.get("reservations", [])
             valid_reservaiton, invalid_reservaiton = [], []
 
-            # make regular reservation uuid
-            regular_reservation_uuid = None
+            # make regular reservation code
+            reservation_type = None
             if len(reservations) > 1:
-                regular_reservation_uuid = uuid.uuid4()
+                reservation_type = generate(size=12)
 
             with self.query_model("Reservation") as (conn, Reservation):
                 for reservation in reservations:
@@ -157,8 +160,8 @@ class ReservationList(Resource, Service):
                         "reservations":invalid_reservaiton
                     }
 
-                # use regular_reservation_uuid for valid reservation
-                valid["reservation_type"] = regular_reservation_uuid
+                valid["reservation_code"] = generate(size=8)
+                valid["reservation_type"] = reservation_type
                 valid_reservaiton.append(valid)
                 # print(f"valid_reservation: {valid_reservaiton}", type(valid_reservaiton), flush=True)
                             
@@ -166,7 +169,7 @@ class ReservationList(Resource, Service):
                 print(f"ret: {valid_reservaiton[0]}", flush=True)
                 ret = conn.execute(
                     # insert(Reservation).values(valid_reservaiton[0])
-                    insert(Reservation), {**valid_reservaiton[0]}
+                    insert(Reservation), {**valid_reservaiton}
                 )
                 print(f"ret: {ret.is_insert}", flush=True)
 

@@ -16,6 +16,7 @@ mariadb==1.1.6
 MarkupSafe==2.1.2
 mysql==0.0.3
 mysqlclient==2.1.1
+nanoid==2.0.0
 packaging==23.0
 PyJWT==2.6.0
 pyrsistent==0.19.3
