@@ -59,8 +59,8 @@ class Register(Service, Resource):
         try:
             with self.query_model("User") as (conn, User):
                 # validate request body arguments
-                req, status = User.validate(request.json)
-                if not status:
+                req, invalidated = User.validate(request.json)
+                if len(invalidated) != 0:
                     return {
                         "status": False,
                         "msg": "key:value pair wrong"
@@ -97,7 +97,7 @@ class Register(Service, Resource):
                     "User": serialize(res, exclude=exclude)
                 }, 200
 
-        except Exception as e:
+        except OSError as e:
             print(e)
             return {
                 "status": False,
@@ -124,8 +124,8 @@ class Login(Service, Resource):
         try:
             with self.query_model("User") as (conn, User):
                 # validate request body
-                req, status = User.validate(request.json)
-                if not status:
+                req, invalidated = User.validate(request.json)
+                if len(invalidated) != 0:
                     return {
                         "status": False,
                         "msg": "key:value pair wrong"
