@@ -7,8 +7,15 @@ model_config = {
     "host": getenv("DB_URL"),
     "port": getenv("DB_PORT"),
     "database": getenv("DB_NAME")
+    
+    # local setting
+    # "host": "127.0.0.1",
+    # "database": "sejong",
+    # "port": 3306,
+    # "username": "development",
+    # "password": 1234
 }
 
 api_config = {
-    "jwt_status": "http://userservice:5000/auth/jwt-status",
+    "jwt_status": "http://127.0.0.1:5001/auth/jwt-status",
 }

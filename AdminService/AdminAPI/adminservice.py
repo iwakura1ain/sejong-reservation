@@ -1,11 +1,11 @@
-from flask import request
+from flask import request, send_from_directory, current_app
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
 from service import Service
 from config import model_config, api_config
 from utils import serialization, check_jwt_exists, check_if_room_identical
 from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
-
+import os
 
 # namespace for handy routing
 admin = namespace.Namespace(
@@ -293,12 +293,13 @@ class ConferenceRoomById(Resource, Service):
                 "msg": "Room Update Failed"
             }, 500
 
-@admin.route('/upload/<int:id>')
+@admin.route('/upload')
 class PreviewImageUpload(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
+    @staticmethod
     def allowed_file(filename):
         allowed_extensions = {'png', 'jpg', 'jpeg'}
 
@@ -306,45 +307,66 @@ class PreviewImageUpload(Resource, Service):
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
     
     # insert preview_image into a room found by id
-    def post(self, id):
+    def post(self):
+        uploaded_image = request.files['image']
+
+        base_path = "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static"
+        max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
+        
         # check user if has authorization.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
                 "msg": "No authorization"
             }, 200
-        
-        uploaded_image = request.files['image']
-        # print(uploaded_image.filename, flush=True)
 
-        # validate uploaded image
-        # check extension
-        # Not working... upload_image.filename
-        # if (not uploaded_image 
-        #     or not self.allowed_file(uploaded_image.filename)):
-        #     return {
-        #         "status": False,
-        #         "msg": "image invalid",
-        #         "invalid": uploaded_image
-        #     }, 200
+        # error checking 1: does file exists
+        if uploaded_image.filename == '':
+            return{
+                "status": False,
+                "msg": "No selected file"
+            }, 200
+        
+        # error checking 2: is file in allowed extensions
+        if not self.allowed_file(uploaded_image.filename):
+            file_extension = uploaded_image.filename.rsplit('.', 1)[1].lower()
+            return{
+                "status": False,
+                "msg": f"File with wrong extension, your file is a {file_extension} file. allowed file extensions are 'png', 'jpg', 'jpeg'"
+            }
+
+        # check file size
+        if ('Content-Length' in request.headers 
+            and int(request.headers['Content-Length']) > max_file_size):
+            return{
+                "status": False,
+                "msg": f"File size exceeds the maximum limit of {max_file_size}bytes"
+            }, 200
 
         try:
             with self.query_model("Room") as (conn, Room):
-                # The above code is reading the contents of an uploaded image file and storing it in
-                # the variable `preview_image`.
-                preview_image = uploaded_image.read()
+                # # The above code is reading the contents of an uploaded image file and storing it in
+                # # the variable `preview_image`.
+                # preview_image = uploaded_image.read()
 
-                # insert image into the room                
-                conn.execute(
-                    update(Room).where(Room.id == id), {
-                        "preview_image": preview_image
-                    }
-                )
+                # # insert image into the room                
+                # conn.execute(
+                #     update(Room).where(Room.id == id), {
+                #         "preview_image": preview_image
+                #     }
+                # )
+
+                # print(self.allowed_file(uploaded_image), flush=True)
+
+                if uploaded_image:
+                    filename = uploaded_image.filename
+                    print(filename, flush=True)
+                    print(uploaded_image.save(os.path.join(base_path, filename)), flush=True)
+                    # base_path/filename
 
                 # insert image done
                 return {
@@ -358,3 +380,23 @@ class PreviewImageUpload(Resource, Service):
                 "status": False,
                 "msg": "Uploading image failed"
             }, 500
+    
+@admin.route('/download/<string:filename>')
+class DownloadImage(Resource):
+    def get(self, filename):
+        base_path = "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static"
+        return send_from_directory(base_path, filename)
+
+# error checking, check login & authorization, check file size
+
+# upload/download in docker env
+
+# when uploading, check file's name: cd .. >> if image name is '../.png' >> base_path + '../.png' 
+# "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static/../.png"
+# "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/.png"
+# so, check for file name to not interrupt directory >> search internet for good case
+
+# insert file path into room['preview_image']
+
+# if room["is_usable"] has been changed to False from True, send request to reservation API
+# to cancel all the reserved conference for the room
