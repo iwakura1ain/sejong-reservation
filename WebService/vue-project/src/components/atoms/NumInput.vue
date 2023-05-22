@@ -6,7 +6,7 @@
 const props = defineProps({
 	modelValue: {
 		require: false,
-		type: Number,
+		type: [Number, null],
 		default: -1,
 	},
 	noZero: {
@@ -26,6 +26,7 @@ function update(event) {
 	if (props.noZero && (!replaced || replaced === '0')) {
 		event.target.value = '1';
 	}
+
 	emits('update:modelValue', parseInt(event.target.value));
 }
 </script>

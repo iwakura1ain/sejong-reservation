@@ -25,6 +25,7 @@ import TESTDATA from '@/assets/scripts/requests/TESTDATA.js';
 
 import convertReservationRes from '@/assets/scripts/requests/responseConverters/convertReservationRes.js';
 import convertRoomRes from '@/assets/scripts/requests/responseConverters/convertRoomRes.js';
+import convertUserRes from '@/assets/scripts/requests/responseConverters/convertUserRes.js';
 
 // --------------------------------------
 // admin service
@@ -75,7 +76,6 @@ const adminService = {
 				return {
 					status: true,
 					data: converted,
-					msg: 'nice',
 				};
 			} else {
 				if (data.msg === 'Not logged in') {
@@ -120,16 +120,141 @@ const adminService = {
 // - getAll()
 // --------------------------------------
 const userService = {
-	login: async function () {},
+	login: async function (reqBody) {
+		try {
+			// 통신
+			const res = await axios.post(
+				`${BASE_URL.USER_SERVICE}/auth/login`,
+				reqBody,
+			);
+			/*
+				res schema = {
+					status : int, // axios의 http status code
+					data : {
+						status : Boolean, // response body의 status field
+						access_token : String, // status===true일 때 있음
+						refresh_token : String, // status===true일 때 있음
+						User : {}, // status===true일 때 있음
+						msg : String , // status===false일 때 있음
+					}
+				}
+			*/
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 데이터 컨버팅
+			const data = res.data;
+			const converted = convertUserRes(data);
+			return {
+				status: true,
+				data: converted,
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
-	getAuthInfo: async function () {},
+	getAuthInfo: async function (accessToken) {
+		try {
+			// 통신
+			const res = await axios.get(`${BASE_URL.USER_SERVICE}/auth/jwt-status`, {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 데이터 컨버팅
+			const data = res.data;
+			const converted = convertUserRes(data);
+			return {
+				status: true,
+				data: converted,
+				msg: 'authenticated',
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
 	refreshAuth: async function () {},
 	// --------------------------------------------------------------------------
-	logout: async function () {},
+	logout: async function (accessToken) {
+		try {
+			// 통신
+			const res = await axios.delete(`${BASE_URL.USER_SERVICE}/auth/logout`, {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 반환
+			return {
+				status: true,
+				msg: res.data.msg,
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
 	// --------------------------------------------------------------------------
-	register: async function () {},
+	register: async function (reqBody) {
+		try {
+			// 통신
+			const res = await axios.post(
+				`${BASE_URL.USER_SERVICE}/auth/register`,
+				reqBody,
+			);
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 데이터 컨버팅
+			const data = res.data;
+			const converted = convertUserRes(data);
+			return {
+				status: true,
+				data: converted,
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
 	registerFromExcel: async function () {},
 	// --------------------------------------------------------------------------
@@ -172,7 +297,7 @@ const reservationService = {
 		// }
 
 		try {
-			// inspect options object & determine request url.
+			// options객체 분석 & 요청URL만들기
 			let reqUrl = `${BASE_URL.RESERVATION_SERVICE}/reservation`;
 			let queryStr = '';
 			if (options.before) {
@@ -191,14 +316,14 @@ const reservationService = {
 				queryStr += `&reservation_type=${options.reservationType}`;
 			}
 
-			// combine reqest base url & query tring
+			// BASE URL과 쿼리스트링 결합
 			if (queryStr !== '') {
 				queryStr = queryStr.slice(1);
 				queryStr = '?' + queryStr;
 			}
 			reqUrl = reqUrl + queryStr;
 
-			// fetch data
+			// 데이터 불러오기 fetch data
 			// const res = await axios.get(reqUrl);
 			/*
 			res schema = {
@@ -220,13 +345,13 @@ const reservationService = {
 				},
 			};
 
-			// check response's status & body's status
-			if (res.status !== 200 && res.data.status) {
-				return {
-					status: false,
-					data: res.status,
-					msg: 'INVALID_STATUS',
-				};
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
 			}
 
 			// get res body (axios's data property)
@@ -256,7 +381,7 @@ const reservationService = {
 	// --------------------------------------------------------------------------
 	getById: function (id) {
 		try {
-			// fetch data
+			// 데이터 불러오기 fetch data
 			// const res = await axios.get(`${BASE_URL.RESERVATION_SERVICE}/reservation/${id}}`);
 			/*
 			res schema = {
@@ -278,20 +403,13 @@ const reservationService = {
 				},
 			};
 
-			// check response's status & body's status
-			if (res.status !== 200) {
-				return {
-					status: false,
-					data: res.status,
-					msg: 'INVALID_STATUS',
-				};
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_STATUS:${res.status}:${res}`);
 			}
 			if (!res.data.status) {
-				return {
-					status: false,
-					data: res.data.status,
-					msg: res.data.msg,
-				};
+				console.error(res.data);
+				return res.data;
 			}
 
 			// get res body (axios's data property)
@@ -299,11 +417,9 @@ const reservationService = {
 
 			// convert raw data to frontend-format data
 			const converted = convertReservationRes(data.reservation, 'max');
-			// console.log(converted);
 			return {
 				status: true,
 				data: converted,
-				msg: '',
 			};
 		} catch (err) {
 			console.error(err);
@@ -317,7 +433,8 @@ const reservationService = {
 			// 내가 생성한 예약들의 최소정보 예약객체 불러오기
 			const resGet = await reservationService.get(options);
 			if (!resGet.status) {
-				throw new Error('INVALID_STATUS', resGet.status);
+				console.error(resGet.data);
+				return resGet.data;
 			}
 
 			// 각 최소정보 예약객체의 id로 최대정보 예약객체 불러오기
@@ -328,7 +445,8 @@ const reservationService = {
 			await Promise.all(getByIdPromises).then(responses => {
 				for (let res of responses) {
 					if (!res.status) {
-						throw new Error('INVALID_STATUS', res.status);
+						console.error(res.data);
+						resData.push(null);
 					}
 					resData.push(res.data);
 				}

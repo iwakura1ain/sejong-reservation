@@ -1,5 +1,5 @@
 <template>
-	<input class="text-input" type="text" :value="modelValue" @input="update" />
+	<input class="digit-input" type="text" :value="modelValue" @input="update" />
 </template>
 
 <script setup>
@@ -13,12 +13,13 @@ defineProps({
 const emits = defineEmits(['update:modelValue']);
 
 function update(event) {
+	event.target.value = event.target.value.replace(/\D/g, '');
 	emits('update:modelValue', event.target.value);
 }
 </script>
 
 <style lang="scss" scoped>
-.text-input {
+.digit-input {
 	padding: 8px;
 	font-size: 1rem;
 	border-radius: 0.5rem;

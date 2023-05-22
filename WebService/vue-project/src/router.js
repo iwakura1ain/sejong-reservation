@@ -2,6 +2,8 @@
 // https://www.notion.so/sogeumguideopbap/Web-Service-193dca19bff94c64a5673b7a0f116fbe?pvs=4#55d729ed74cd460b89a4090fa9bf6eb5
 
 import { createRouter, createWebHistory } from 'vue-router';
+// import { userStore } from '@/stores/user.js';
+// import { userService } from '@/assets/scripts/requests/request.js';
 
 // 뷰 불러오기 ------------------------------------
 // 공통 뷰
@@ -158,6 +160,15 @@ const routes = [
 const router = createRouter({
 	history: createWebHistory(),
 	routes,
+	scrollBehavior(/*to, from, savedPosition*/) {
+		return { top: 0 };
+	},
 });
+
+// 네이게이션 가드 설정
+// const needlogin = [];
+// router.beforeEach(async (to, from, next) => {
+
+// });
 
 export default router;

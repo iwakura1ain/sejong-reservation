@@ -31,7 +31,9 @@
 				<router-link :to="{ name: 'ManageMain' }">
 					<filled-button color="white">관리</filled-button>
 				</router-link>
-				<filled-button color="red">로그아웃</filled-button>
+				<filled-button color="red" @click="handleLogout"
+					>로그아웃</filled-button
+				>
 			</div>
 		</div>
 		<div v-else class="r-container">로그인안함</div>
@@ -39,11 +41,19 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+
 import sejongLogo from '@/assets/images/logo_white.png';
 import TextButton from '@/components/atoms/TextButton.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
-import { computed } from 'vue';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
 
+import { userService } from '@/assets/scripts/requests/request.js';
+import { userStore } from '@/stores/user.js';
+import { loadingStore } from '@/stores/loading.js';
+
+// ----------------------------------
 const props = defineProps({
 	isLogin: {
 		required: true,
@@ -61,12 +71,40 @@ const props = defineProps({
 	},
 });
 
-console.log(props.userInfo);
-
+// 상태 ----------------------------------
 const userinfoString = computed(() => {
 	const { username, level, isAdmin, noShowCount, isBanned } = props.userInfo;
 	return `(${username} | ${level})`;
 });
+
+// 초기화 ----------------------------
+const router = useRouter();
+
+// 이벤트 핸들러 ----------------------
+async function handleLogout() {
+	try {
+		loadingStore.start();
+
+		const res = await userService.logout(userStore.getToken().accessToken);
+		if (!res.status) {
+			if (res.msg) throw new Error(res.msg);
+			else throw new Error(res);
+		}
+	} catch (err) {
+		const msg = err.message;
+		console.error(err, msg);
+
+		if (msg === 'Token has been revoked') {
+			makeToast('이미 로그아웃 되었습니다.', 'error');
+		} else {
+			makeToast('예기치 못한 오류가 발생했습니다.', 'error');
+		}
+	} finally {
+		userStore.init();
+		router.push({ name: 'Login' });
+		loadingStore.stop();
+	}
+}
 </script>
 
 <style lang="scss" scoped>

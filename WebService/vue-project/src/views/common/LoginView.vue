@@ -24,7 +24,9 @@
 					</router-link>
 				</div>
 				<div>
-					<filled-button class="btn signin">로그인</filled-button>
+					<filled-button class="btn signin" @click="handleLogin">
+						로그인
+					</filled-button>
 				</div>
 			</div>
 		</form>
@@ -33,30 +35,63 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import LogoImgRed from '@/assets/images/logo_red.png';
 import TextInput from '@/components/atoms/TextInput.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
+import { userService } from '@/assets/scripts/requests/request.js';
 import { userStore } from '@/stores/user.js';
+import { loadingStore } from '@/stores/loading.js';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
 
+// 상태 -------------------------
 const id = ref('');
 const pw = ref('');
 
-// 사용자 정보
-const RES_TEST = {
-	status: true,
-	access_token: 'ACCESSTEST',
-	refresh_token: 'REFRESHTEST',
-	User: {
-		id: 17011506,
-		name: '안창언2',
-		dept: 1,
-		phone: null,
-		email: 'wonjinlee@sejong.ac.kr',
-		type: 2,
-		no_show: 0,
-	},
-};
-userStore.value.set(RES_TEST);
+// 초기화 -----------------------
+const router = useRouter();
+
+// 이벤트 핸들러 -----------------
+async function handleLogin() {
+	try {
+		loadingStore.start();
+
+		// 입력값 검증
+		const req = {
+			id: id.value,
+			password: pw.value,
+		};
+		if (!req.id || !req.password) {
+			makeToast('계정 또는 비밀번호가 비어있습니다.', 'warning');
+			return;
+		}
+
+		// 통신
+		const res = await userService.login(req);
+		if (!res.status) {
+			if (res.msg) throw new Error(res.msg);
+			else throw new Error(res);
+		}
+
+		// 완료
+		userStore.set(res.data);
+		router.push({ name: 'UserMain' });
+		// ------------------------------
+	} catch (err) {
+		const msg = err.message;
+		console.error(err, msg);
+
+		if (msg === 'User Not Found') {
+			makeToast('존재하지 않는 계정입니다.', 'error');
+		} else if (msg === 'Wrong Password') {
+			makeToast('비밀번호가 틀렸습니다.', 'error');
+		} else {
+			makeToast('예기치 못한 오류가 발생했습니다.', 'error');
+		}
+	} finally {
+		loadingStore.stop();
+	}
+}
 </script>
 
 <style lang="scss" scoped>
