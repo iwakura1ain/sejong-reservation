@@ -167,8 +167,9 @@ class ReservationList(Resource, Service):
                         headers=request.headers,
                         request_params={"id": valid["room_id"]}
                     )
+
                     print(room)
-                    if not room["status"]:
+                    if "status" not in room.keys(): #or not room["status"]:
                         return {
                             "status": False,
                             "msg": "Invalid room ID"
@@ -201,9 +202,9 @@ class ReservationList(Resource, Service):
                 for v in valid_reservaitons:
                     res = conn.execute(
                         select(Reservation)
-                        .where(Reservation.reservation_code == v["reservaiton_code"])
+                        .where(Reservation.reservation_code == v["reservation_code"])
                     ).mappings().fetchone()
-                    retval.append(res)
+                    retval.append(serialize(res))
 
             return {
                 "status": True,

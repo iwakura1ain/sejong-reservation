@@ -32,9 +32,12 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
-        if(check_jwt_exists(user_status) 
-           and (user_status['User']['type'] != 2)):
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        # if(check_jwt_exists(user_status) 
+        #    and (user_status['User']['type'] != 2)):
+
+        print(user_status, flush=True)
+        if "status" in user_status.keys() and user_status["User"]["type"] != 2:
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -155,7 +158,7 @@ class ConferenceRoomById(Resource, Service):
                 res = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
 
                 # if there's no room by given id
-                if res == None:
+                if res is None:
                     return {
                         "status": False,
                         "msg": f"Room id:{id} not found"
