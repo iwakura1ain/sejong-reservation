@@ -3,7 +3,7 @@
 		<section-header>예정된 회의</section-header>
 		<div class="reservation-card-container">
 			<reservation-card
-				v-for="item in reservations"
+				v-for="item in reservationList"
 				:key="item.id"
 				:rsv-data="item"
 				:room-data="fetchedRoomStore.getById(item.roomId)"
@@ -11,19 +11,24 @@
 			/>
 		</div>
 
-		<section-header>모든 예약 내역</section-header>
-		<month-calendar />
+		<!-- <section-header>예정된 회의</section-header> -->
+		<!-- <div style="width: fit-content">
+			<month-calendar
+				v-model="targetDate"
+				:reservation-list="reservationList"
+				:show-room-name="true"
+			/>
+		</div> -->
 	</div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref /*, watch*/ } from 'vue';
 import { useRouter } from 'vue-router';
 
-// import FilledButton from '@/components/atoms/FilledButton.vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import ReservationCard from '@/components/atoms/ReservationCard.vue';
-import MonthCalendar from '@/components/MonthCalendar.vue';
+// import MonthCalendar from '@/components/MonthCalendar.vue';
 
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
 import { userStore } from '@/stores/user.js';
@@ -31,16 +36,31 @@ import { reservationService } from '@/assets/scripts/requests/request.js';
 import getDateStringInThreeDays from '@/assets/scripts/utils/getDateStringInThreeDays';
 
 // 상태 ----------------------------------------
-const reservations = ref([]);
+// const nowDateObj = new Date();
+// const targetDate = ref({
+// 	year: nowDateObj.getFullYear(),
+// 	month: nowDateObj.getMonth() + 1,
+// 	day: nowDateObj.getDate(),
+// });
+
+const reservationList = ref([]);
 
 // 초기화 --------------------------------------
 const router = useRouter();
 init();
 
-// 일반 함수 ----------------------------------------
+// 상태 감시 -----------------------------------
+// watch(
+// 	targetDate,
+// 	() => {
+// 		fetchReservationsInThreeDays();
+// 	},
+// 	{ deep: true },
+// );
 
-// 예정된 회의 (오늘, 내일, 모레의 내가 생성한 예약)를 불러오는 함수
+// 일반 함수 -----------------------------------
 async function fetchReservationsInThreeDays() {
+	// 예정된 회의 (오늘, 내일, 모레의 내가 생성한 예약)를 불러오는 함수
 	try {
 		const { today, afterTomorrow } = getDateStringInThreeDays();
 		const res = await reservationService.getMyFullData({
@@ -53,7 +73,7 @@ async function fetchReservationsInThreeDays() {
 			throw new Error('INVALID_STATUS', res.status);
 		}
 
-		reservations.value = res.data;
+		reservationList.value = res.data;
 	} catch (err) {
 		alert('예약내역을 불러오는 중 문제가 생겼습니다.');
 		console.error(err);
