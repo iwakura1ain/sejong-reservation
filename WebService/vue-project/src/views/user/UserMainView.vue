@@ -26,26 +26,34 @@ import ReservationCard from '@/components/atoms/ReservationCard.vue';
 import MonthCalendar from '@/components/MonthCalendar.vue';
 
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
+import { userStore } from '@/stores/user.js';
 import { reservationService } from '@/assets/scripts/requests/request.js';
+import getDateStringInThreeDays from '@/assets/scripts/utils/getDateStringInThreeDays';
+
+// 상태 ----------------------------------------
+const reservations = ref([]);
 
 // 초기화 --------------------------------------
 const router = useRouter();
 init();
 
-// 상태 ----------------------------------------
-const reservations = ref([]);
-
-// 함수 ----------------------------------------
+// 일반 함수 ----------------------------------------
 
 // 예정된 회의 (오늘, 내일, 모레의 내가 생성한 예약)를 불러오는 함수
 async function fetchReservationsInThreeDays() {
 	try {
-		const res = await reservationService.get({
-			mine: true,
+		const { today, afterTomorrow } = getDateStringInThreeDays();
+		const res = await reservationService.getMyFullData({
+			after: today,
+			before: afterTomorrow,
+			creator: userStore.value.getInfo().id,
 		});
-		if (res.status) {
-			reservations.value = res.data;
+
+		if (!res.status) {
+			throw new Error('INVALID_STATUS', res.status);
 		}
+
+		reservations.value = res.data;
 	} catch (err) {
 		alert('예약내역을 불러오는 중 문제가 생겼습니다.');
 		console.error(err);
@@ -61,7 +69,7 @@ function goDetailPage(id, reservationType) {
 	console.log(id, reservationType);
 	router.push({
 		name: 'ReservationDetail',
-		query: {
+		state: {
 			id,
 			reservationType,
 		},

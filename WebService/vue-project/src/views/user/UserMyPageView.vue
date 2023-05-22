@@ -34,22 +34,6 @@ import FilledButton from '@/components/atoms/FilledButton.vue';
 // import Calendar from '@/components/Calendar.vue';
 import { userStore, userTypeStr, userDeptStr } from '@/stores/user.js';
 
-// 사용자 정보
-const RES_TEST = {
-	status: true,
-	access_token: 'ACCESSTEST',
-	refresh_token: 'REFRESHTEST',
-	User: {
-		id: 17011506,
-		name: '안창언2',
-		dept: 1,
-		phone: null,
-		email: 'wonjinlee@sejong.ac.kr',
-		type: 2,
-		no_show: 0,
-	},
-};
-userStore.value.set(RES_TEST);
 const userInfo = userStore.value.getInfo();
 
 // 내 예약 기록

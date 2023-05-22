@@ -36,9 +36,27 @@ import { ref } from 'vue';
 import LogoImgRed from '@/assets/images/logo_red.png';
 import TextInput from '@/components/atoms/TextInput.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
+import { userStore } from '@/stores/user.js';
 
 const id = ref('');
 const pw = ref('');
+
+// 사용자 정보
+const RES_TEST = {
+	status: true,
+	access_token: 'ACCESSTEST',
+	refresh_token: 'REFRESHTEST',
+	User: {
+		id: 17011506,
+		name: '안창언2',
+		dept: 1,
+		phone: null,
+		email: 'wonjinlee@sejong.ac.kr',
+		type: 2,
+		no_show: 0,
+	},
+};
+userStore.value.set(RES_TEST);
 </script>
 
 <style lang="scss" scoped>
