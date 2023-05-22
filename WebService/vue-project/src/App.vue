@@ -22,20 +22,12 @@ import { loadingStore } from '@/stores/loading.js';
 init();
 
 // 상태 (state) -----------------------
-// test data
-const userinfo = ref({
-	username: '이원진',
-	email: '',
-	level: '학부생',
-	isAdmin: false,
-	noShowCount: 0,
-	isBanned: false,
-});
+//
 
 // 일반 함수 --------------------------
 
-// 모든 회의실을 불러오는 함수
 async function fetchRooms() {
+	// 모든 회의실을 불러오는 함수
 	try {
 		const res = await adminService.getAllRooms();
 		if (res.status) {

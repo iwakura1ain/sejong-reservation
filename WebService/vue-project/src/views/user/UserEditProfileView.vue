@@ -73,7 +73,7 @@ import RadioGroup from '@/components/RadioGroup.vue';
 import { userStore } from '@/stores/user.js';
 
 // shared state
-const userInfo = userStore.value.getInfo();
+const userInfo = userStore.getInfo();
 
 // local states
 const name = ref(userInfo.name);

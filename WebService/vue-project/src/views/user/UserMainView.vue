@@ -66,7 +66,7 @@ async function fetchReservationsInThreeDays() {
 		const res = await reservationService.getMyFullData({
 			after: today,
 			before: afterTomorrow,
-			creator: userStore.value.getInfo().id,
+			creator: userStore.getInfo().id,
 		});
 
 		if (!res.status) {

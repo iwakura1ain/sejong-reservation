@@ -34,7 +34,7 @@ import FilledButton from '@/components/atoms/FilledButton.vue';
 // import Calendar from '@/components/Calendar.vue';
 import { userStore, userTypeStr, userDeptStr } from '@/stores/user.js';
 
-const userInfo = userStore.value.getInfo();
+const userInfo = userStore.getInfo();
 
 // 내 예약 기록
 const filter = ref({
