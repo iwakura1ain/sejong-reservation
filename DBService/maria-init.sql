@@ -62,4 +62,3 @@ CREATE TABLE Token_Blocklist (
 CREATE USER 'development'@'%' IDENTIFIED BY '1234';
 
 GRANT ALL PRIVILEGES ON *.* TO 'development'@'%' IDENTIFIED BY '1234';
-

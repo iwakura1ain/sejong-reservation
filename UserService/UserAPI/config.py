@@ -18,4 +18,3 @@ ORM = {
     "port": getenv("DB_PORT"),
     "database": getenv("DB_NAME")
 }
-

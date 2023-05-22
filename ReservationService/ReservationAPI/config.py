@@ -1,30 +1,27 @@
 from os import getenv
 from datetime import timedelta
 
+# model_config = {
+#     "username": "development",
+#     "password": "1234",
+#     "host": "127.0.0.1",
+#     "port": 3306,
+#     "database": "sejong"
+# }
+
 model_config = {
-  "username": "development",
-  "password": "1234",
-  "database":"sejong",
-  "host": "127.0.0.1",
-  "port": 3306,
+    "username": getenv("DB_USERNAME"),
+    "password": getenv("DB_PASSWORD"),
+    "host": getenv("DB_URL"),
+    "port": getenv("DB_PORT"),
+    "database": getenv("DB_NAME")
 }
 
-# model_config = {
-#     "username": getenv("DB_USERNAME"),
-#     "password": getenv("DB_PASSWORD"),
-#     "host": getenv("DB_URL"),
-#     "port": getenv("DB_PORT"),
-#     "database": getenv("DB_NAME")
-# }
-
-# api_config = {
-#   "get_auth_info": "http://127.0.0.1:5001/auth/jwt-status",
-#   "get_rooms_info": "http://127.0.0.1:5002/admin/rooms/{id}",
-# }
-
 api_config = {
-  "get_auth_info": "http://127.0.0.1:5001/auth/jwt-status",
-  "get_rooms_info": "http://127.0.0.1:5002/admin/rooms/{id}",
+    "get_auth_info": "http://userservice:5000/auth/jwt-status",
+    "get_rooms_info": "http://adminservice:5000/admin/rooms/{id}",
+    # "get_auth_info": "http://127.0.0.1:5001/auth/jwt-status",
+    # "get_rooms_info": "http://127.0.0.1:5002/admin/rooms/{id}",
 }
 
 reservation_limit = {
@@ -35,8 +32,12 @@ reservation_limit = {
 }
 
 MINIMIZED_COLS = [
+    "id",
+    "is_valid",
+    "reservation_type",
+    "reservation_date",
     "start_time",
     "end_time",
-    "reservation_date",
-    "reservation_topic",
+    "room_id",
+    "room_used"
 ]
