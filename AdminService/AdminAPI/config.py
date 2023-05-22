@@ -20,4 +20,4 @@ api_config = {
     "jwt_status": "http://userservice:5000/auth/jwt-status",
 }
 
-filepath = "/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static"
+filepath = "/AdminAPI/static"
