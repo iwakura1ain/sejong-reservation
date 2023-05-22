@@ -14,7 +14,9 @@
 				>
 					{{ '<' }}
 				</div>
-				<div class="current-month-text">{{ year }}년 {{ month }}월</div>
+				<div class="current-month-text">
+					{{ modelValue.year }}년 {{ modelValue.month }}월
+				</div>
 				<div
 					class="month-btn next-month noselect"
 					@click="updateMonth(1, 'month')"
@@ -59,22 +61,18 @@
 								v-for="(item, index) in dayObj.reservations"
 								:key="index"
 								class="reservation"
+								:class="{
+									regular: item.reservationType,
+									single: !item.reservationType,
+								}"
 								@click="selectReservation(item.reservationId)"
 							>
-								<!-- <p v-if="showRoomName">{{ item.topic }}</p>
-								<p>{{ `${item.startTime}-${item.endTime}` }}</p> -->
-							</div>
-							<div class="reservation single">
-								<p v-if="showRoomName">대양AI센터 835aaa호</p>
-								<p>19:00-15:00</p>
-							</div>
-							<div class="reservation multi">
-								<p v-if="showRoomName">대양AI센터 835호</p>
-								<p>19:00-15:00</p>
-							</div>
-							<div class="reservation multi">
-								<p v-if="showRoomName">대asdfsadfsfasadf호</p>
-								<p>19:00-15:00</p>
+								<p v-if="showRoomName">{{ getRoomDescString(item.roomId) }}</p>
+								<p>
+									{{
+										`${item.meetingDatetime.startTime}-${item.meetingDatetime.endTime}`
+									}}
+								</p>
 							</div>
 						</div>
 					</div>
@@ -85,57 +83,103 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, unref } from 'vue';
 import { useRouter } from 'vue-router';
+import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
 import getCalendarArray from '@/assets/scripts/utils/getCalendarArray.js';
+import getWeekNumber from '@/assets/scripts/utils/getWeekNumber.js';
+import getTodayZeroHour from '@/assets/scripts/utils/getTodayZeroHour.js';
 
-defineProps({
+// props, emits -------------------------
+const props = defineProps({
 	showRoomName: {
 		required: false,
 		type: Boolean,
 		default: true,
 	},
+	reservationList: {
+		required: false,
+		type: Array,
+	},
+	modelValue: {
+		required: false,
+		type: Object,
+
+		default() {
+			const nowDateObj = new Date();
+			const now = {
+				year: nowDateObj.getFullYear(),
+				month: nowDateObj.getMonth() + 1,
+				day: nowDateObj.getDate(),
+			};
+			return now;
+		},
+	},
 });
 
-const router = useRouter();
+const emits = defineEmits(['update:modelValue']);
 
-const nowDateObj = new Date();
-const now = {
-	y: nowDateObj.getFullYear(),
-	m: nowDateObj.getMonth() + 1,
-	d: nowDateObj.getDate(),
-};
-const formattedMonth = now.m < 10 ? `0${now.m}` : now.m;
-const formattedDay = now.d < 10 ? `0${now.d}` : now.d;
-const todayStr = `${now.y}-${formattedMonth}-${formattedDay}`;
-
-const year = ref(now.y);
-const month = ref(now.m);
-function updateMonth(type, unit) {
-	// type : -1이면 prev, 1이면 next
-	if (unit === 'month') {
-		month.value += type;
-		if (month.value <= 0) {
-			month.value = 12;
-			year.value -= 1;
-		} else if (month.value >= 13) {
-			month.value = 1;
-			year.value += 1;
-		}
-	} else if (unit === 'year') {
-		year.value += type;
-	}
-}
+// state, computed
+const formattedMonth = computed(() =>
+	props.modelValue.month < 10
+		? `0${props.modelValue.month}`
+		: props.modelValue.month,
+);
+const formattedDay = computed(() =>
+	props.modelValue.day < 10 ? `0${props.modelValue.day}` : props.modelValue.day,
+);
 
 const calendarArr = computed(() => {
-	const arr = getCalendarArray(year.value, month.value);
+	const _year = props.modelValue.year;
+	const _month = props.modelValue.month;
+	const arr = getCalendarArray(_year, _month);
+	console.log(arr, 'changed');
 	// reservations객체 주입
-	// const thisMonthReservations = fetchedReservations.getThisMonth
-
+	props.reservationList.forEach(rsv => {
+		const dateObj = new Date(rsv.meetingDatetime.date);
+		const weekNum = getWeekNumber(rsv.meetingDatetime.date);
+		arr[weekNum - 1][dateObj.getDay()].reservations.push(rsv);
+	});
 	return arr;
 });
 
-// event handlers
+// 초기화 -------------------------------------
+const todayStr = getTodayZeroHour('STRING');
+const router = useRouter();
+
+// event handlers ----------------------
+function updateMonth(type, unit) {
+	let _year = unref(props.modelValue.year);
+	let _month = unref(props.modelValue.month);
+
+	// type : -1이면 prev, 1이면 next
+	if (unit === 'month') {
+		_month += type;
+		if (_month <= 0) {
+			_month = 12;
+			_year -= 1;
+		} else if (_month >= 13) {
+			_month = 1;
+			_year += 1;
+		}
+	} else if (unit === 'year') {
+		_year += type;
+	}
+
+	emits('update:modelValue', {
+		year: _year,
+		month: _month,
+		day: props.modelValue.day,
+	});
+}
+
+// 일반 함수 -------------------------
+function getRoomDescString(roomId) {
+	const info = fetchedRoomStore.value.getById(roomId);
+	return `${info.address1} ${info.address2} ${info.name}`;
+}
+
+// 이벤트 핸들러 ---------------------
 function selectDayNumber(dateStr) {
 	alert(dateStr);
 
@@ -146,6 +190,7 @@ function selectDayNumber(dateStr) {
 		},
 	});
 }
+
 function selectReservation(reservationId) {
 	alert(reservationId);
 }
@@ -273,18 +318,24 @@ function selectReservation(reservationId) {
 							color: white;
 							background-color: $sejong-grey-80;
 						}
-						.reservation.multi {
+						.reservation.regular {
 							background-color: white;
 							border: 1px solid $sejong-grey;
 						}
 					}
 				}
 				.today {
+					background-color: $almost-sejong-red;
+					transition: background-color 0.2s;
 					.day-number {
-						background-color: $sejong-red-30;
-						color: $sejong-red;
-						// &::after {
-						// 	content: '(오늘)';
+						background-color: transparent;
+						color: white;
+						font-weight: bold;
+					}
+					&:hover {
+						background-color: $sejong-red;
+						// .day-number {
+						// 	background-color: $sejong-red;
 						// }
 					}
 				}

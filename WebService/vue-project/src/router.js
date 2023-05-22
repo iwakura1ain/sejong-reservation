@@ -17,6 +17,7 @@ import MakeQuickReservationView from '@/views/user/MakeQuickReservationView.vue'
 import MakeReservationView from '@/views/user/MakeReservationView.vue';
 import ModifyReservationCommonDataView from '@/views/user/ModifyReservationCommonDataView.vue';
 import ModifyReservationTimeDataView from '@/views/user/ModifyReservationTimeDataView.vue';
+import AllReservationCalendarView from '@/views/user/AllReservationCalendarView.vue';
 import ReservationHistoryView from '@/views/user/ReservationHistoryView.vue';
 import UserMyPageView from '@/views/user/UserMyPageView.vue';
 import UserEditProfileView from '@/views/user/UserEditProfileView.vue';
@@ -95,6 +96,11 @@ const routes = [
 		name: 'ModifyReservationTimeData',
 		component: ModifyReservationTimeDataView,
 		// state push됨
+	},
+	{
+		path: '/reservation/all',
+		name: 'AllReservationCalendar',
+		component: AllReservationCalendarView,
 	},
 	{
 		path: '/reservation/history',
