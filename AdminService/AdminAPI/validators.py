@@ -9,7 +9,8 @@ from config import model_config, api_config
 
 @validator("Room.room_name")
 def room_name_validator(room_name):
-    if len(room_name ) >20:
+
+    if len(room_name) >20:
         return False
 
     return True

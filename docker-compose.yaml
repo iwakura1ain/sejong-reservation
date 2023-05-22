@@ -45,6 +45,8 @@ services:
       DB_PORT: 3306
       DB_USERNAME: development
       DB_PASSWORD: 1234
+    # volumes:
+    #   - adminStatic:/Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static:ro
     ports:
       - "5002:5000"
 
@@ -88,3 +90,12 @@ services:
       # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.crt:/etc/nginx/cert/star_xx_com.crt
     ports:
       - 8080:8080
+
+  
+# volumes:
+#   adminStatic:
+#     driver: local
+#     driver_opts:
+#       type: none
+#       o: bind
+#       device: /Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static
