@@ -1,10 +1,17 @@
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, and_
 
 import json
 from datetime import date, time
 
 def serialize(row):
-    return json.loads(json.dumps(dict(row), default=str))
+    row = dict(row)
+    ret = {}
+    for k,v in row.items():
+        if k=="members":
+            ret[k] = json.loads(v)
+        else:
+            ret[k] = str(v)
+    return ret
 
 def is_valid_token(auth_info):
     """
@@ -26,7 +33,7 @@ def is_authorized(auth_info, reservation):
     if user["id"] == reservation["creator_id"]:
         return True
     # user is admin
-    if user["type"] == 1:
+    if user["type"] == 2:
         return True
     return False
 
@@ -34,8 +41,7 @@ def is_admin(auth_info):
     """
     check if admin
     """
-    # TODO 관리자가 아니더라도 user가 관리하는 방이면 관리자급 조회가능하도록?
-    if auth_info["User"]["type"] == 1:
+    if auth_info["User"]["type"] == 2:
         return True
     return False
 
@@ -61,7 +67,7 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
     )
 
     rows = connection.execute(stmt).mappings().fetchall()
-    print(rows,flush=True)
+    print(rows, flush=True)
 
     # check if this function is called in PATCH
     # TODO: check for PATCH
@@ -93,7 +99,7 @@ def check_start_end_time(new_reservation):
     return None
 
 # check date constraints
-def check_date_constraints(auth_info, reservation_date):
+def check_date_constraints(user_type, reservation_date):
     """
     checks if user is allowed to make reservation for specified date.
     - returns None if allowed.
@@ -112,7 +118,6 @@ def check_date_constraints(auth_info, reservation_date):
 
     from config import reservation_limit
     
-    user_type = auth_info["User"]["type"]
     # reservation_date = new_reservation["reservation_date"]
     diff = date.fromisoformat(reservation_date) - date.today()
     return True if diff < reservation_limit[user_type] else False

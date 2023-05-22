@@ -62,15 +62,6 @@ def insert_into_dict(dest, keys, vals):
         if k not in dest.keys():
             dest[k] = v
 
-def default_validator(col_type, val):
-    check = lambda cond: True if cond else False
-    if col_type.python_type is str:
-        return check(type(val) is str and len(val) <= col_type.length)
-
-    if col_type.python_type is int:
-        return check(type(val) is int)
-
-    return True
 
 def validate(self, data):
     """
@@ -88,41 +79,28 @@ def validate(self, data):
     ---
     Returns dict of validated values mapped to model.
     """
-    print("Before: ", data, flush=True)
-    
-    # check if request data key in model schema
-    schema_match = {}
-    schema_mismatch = {}
+
+    # check if request data key in model schema 
+    schema_exists = {}
     for key, val in data.items():
         schema_key = f"{self.__name__}.{key}"
-        if (schema_key in self.columns.keys()
-            and default_validator(self.columns[schema_key].type, val)):
-            schema_match[key] = val
-        else:
-            schema_mismatch[key] = val
+        if schema_key in self.columns:
+            schema_exists[key] = val
 
     # check if validation function keys in model schema
-    for validator_keys in VALIDATORS.keys():
-        model_keys = set(self.columns.keys())
-        if not model_keys.issuperset(set(validator_keys)):
-            print("ERROR: validator function arguments wrong", flush=True)
-            raise KeyError
+    for keys in VALIDATORS.items():
+        self.columns.issuperset(set(keys))
 
     # check if valid
-    validated, invalidated = schema_match.copy(), schema_mismatch.copy()
+    validated, invalidated = schema_exists.copy(), {}
     for keys, validator in VALIDATORS.items():
         keys = [k.split(".")[-1] for k in keys]
 
-        validator_args = {k: schema_match.get(k) for k in keys}
-        if None in validator_args.values():
-            invalidated.update(validator_args)
-            
-        elif not validator(**validator_args):
+        validator_args = {k: schema_exists[k] for k in keys}
+        if not validator(**validator_args):
             popped = list(map(validated.pop, keys, repeat(None)))
             insert_into_dict(invalidated, keys, popped)
-
-    print("After:\n", validated, "\n", invalidated, flush=True)
-           
+            
     return validated, invalidated
 # inject validate function into sqlalchemy
 DeclarativeMeta.validate = validate
@@ -202,7 +180,6 @@ class Service:
     
     def init_model(self, tables):
         global VALIDATORS
-        import validators
         
         retval = {}
         for t in self.tables:
@@ -211,7 +188,7 @@ class Service:
                 setattr(
                     retval[t],
                     "columns",
-                    {str(c): c for c in retval[t].__table__.c}
+                    {str(c) for c in retval[t].__table__.c}
                 )
 
         return retval
