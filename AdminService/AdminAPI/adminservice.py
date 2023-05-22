@@ -218,7 +218,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        #print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
