@@ -8,15 +8,18 @@
 		</router-link>
 
 		<div class="l-container">
-			<router-link :to="{ name: 'MakeQuickReservation' }">
+			<!-- <router-link :to="{ name: 'MakeQuickReservation' }">
 				<text-button color="white">빠른예약</text-button>
-			</router-link>
+			</router-link> -->
 
 			<router-link :to="{ name: 'MakeReservation' }">
 				<text-button color="white">예약하기</text-button>
 			</router-link>
 			<router-link :to="{ name: 'ReservationHistory' }">
-				<text-button color="white">예약내역</text-button>
+				<text-button color="white">내 예약</text-button>
+			</router-link>
+			<router-link :to="{ name: 'AllReservationCalendar' }">
+				<text-button color="white">모든예약</text-button>
 			</router-link>
 		</div>
 
