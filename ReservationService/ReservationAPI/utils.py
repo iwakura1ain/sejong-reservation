@@ -61,7 +61,7 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
     )
 
     rows = connection.execute(stmt).mappings().fetchall()
-    print(rows,flush=True)
+    print(rows, flush=True)
 
     # check if this function is called in PATCH
     # TODO: check for PATCH
