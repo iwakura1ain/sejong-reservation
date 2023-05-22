@@ -14,6 +14,8 @@ except OSError:
 api.add_namespace(adminservice.admin, '/admin/rooms')
 
 if __name__=="__main__":
-    app.run(host="0.0.0.0", debug=True, port=5005) 
+    app.run(host="0.0.0.0", debug=True) 
+    # when running local
+    # app.run(host="0.0.0.0", debug=True, port=5005)    
 
 # /rooms/<id>: get <id> room

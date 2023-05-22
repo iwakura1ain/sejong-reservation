@@ -32,13 +32,23 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
                 "msg": "No authorization"
             }, 200
+        
+        # # get token info
+        #     auth_info = self.query_api(
+        #         "get_auth_info", "get", headers=request.headers)
+        #     if not is_valid_token(auth_info):
+        #         return {
+        #             "status": False,
+        #             "msg": "Unauthenticated"
+        #         }, 400
+
         
         try:
             with self.query_model("Room") as (conn, Room):
@@ -52,7 +62,7 @@ class ConferenceRoom(Resource, Service):
                     }, 200
                 
                 res = conn.execute(select(Room)).mappings().all()
-                print(valid_data, res)
+                # print(valid_data, res)
                 
                 # if validated data is already in table, 
                 # send message 'data already exists'
@@ -77,7 +87,7 @@ class ConferenceRoom(Resource, Service):
         
         # error
         except OSError as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Create Failed"
@@ -123,7 +133,7 @@ class ConferenceRoom(Resource, Service):
 
         # error
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Failed to get room data"
@@ -142,7 +152,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if not check_jwt_exists(user_status):
             return {
                 "status": False,
@@ -177,7 +187,7 @@ class ConferenceRoomById(Resource, Service):
 
         # error      
         except OSError as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "msg": "Room GET failed"
             }, 500
@@ -221,7 +231,7 @@ class ConferenceRoomById(Resource, Service):
 
         # error
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Delete Failed"
@@ -288,7 +298,7 @@ class ConferenceRoomById(Resource, Service):
 
         # error
         except OSError as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Update Failed"
@@ -383,7 +393,7 @@ class PreviewImageUpload(Resource, Service):
                     # "uploadedPath": joined_path
                 }
         except OSError as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Uploading image failed"
@@ -410,7 +420,7 @@ class DownloadImage(Resource, Service):
 
             return send_from_directory(filepath, filename)
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Download image failed"
