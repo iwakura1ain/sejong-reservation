@@ -44,9 +44,7 @@ init();
 watch(
 	targetDate,
 	() => {
-		console.log('hi');
 		fetchReservationsInMonth();
-		console.log(reservationList.value);
 	},
 	{ deep: true },
 );

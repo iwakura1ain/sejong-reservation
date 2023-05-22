@@ -120,20 +120,11 @@ const props = defineProps({
 const emits = defineEmits(['update:modelValue']);
 
 // state, computed
-const formattedMonth = computed(() =>
-	props.modelValue.month < 10
-		? `0${props.modelValue.month}`
-		: props.modelValue.month,
-);
-const formattedDay = computed(() =>
-	props.modelValue.day < 10 ? `0${props.modelValue.day}` : props.modelValue.day,
-);
-
 const calendarArr = computed(() => {
 	const _year = props.modelValue.year;
 	const _month = props.modelValue.month;
 	const arr = getCalendarArray(_year, _month);
-	console.log(arr, 'changed');
+
 	// reservations객체 주입
 	props.reservationList.forEach(rsv => {
 		const dateObj = new Date(rsv.meetingDatetime.date);
