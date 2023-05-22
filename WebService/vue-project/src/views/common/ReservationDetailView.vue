@@ -304,7 +304,7 @@ async function init() {
 	if (historyState.reservationType) {
 		// 정기예약이면
 		await fetchRegularReservation(historyState.reservationType);
-	} else if (historyState.id || props.id === 0) {
+	} else if (historyState.id || historyState.id === 0) {
 		// 단건예약이면
 		await fetchSingleReservation(historyState.id);
 	} else {
