@@ -4,6 +4,17 @@ import json
 from datetime import date, time
 
 def serialize(row):
+    """
+    The function serializes a row by converting it into a dictionary and then into a JSON object with
+    string representation of non-serializable values.
+
+    :param row: The parameter "row" is likely a dictionary or a row object from a database query result.
+
+    :return: The function `serialize` is returning a dictionary that is created by converting the input
+    `row` into a JSON string using `json.dumps`, and then converting that JSON string back into a
+    dictionary using `json.loads`. The `default=str` argument is used to ensure that any
+    non-serializable values in the `row` dictionary are converted to strings before being serialized.
+    """
     row = dict(row)
     ret = {}
     for k,v in row.items():
@@ -15,7 +26,15 @@ def serialize(row):
 
 def is_valid_token(auth_info):
     """
-    checks if token is valid.
+    The function checks if a token is valid by verifying if the "status" key is present in the
+    authentication information dictionary.
+
+    :param auth_info: The auth_info parameter is a dictionary that contains information about an
+    authentication token. 
+
+    :return: a boolean value. If the "status" key is not present in the input dictionary "auth_info", it
+    returns False. Otherwise, it returns the value associated with the "status" key, which is expected
+    to be a boolean value indicating whether the token is valid or not.
     """
     if ("status" not in auth_info.keys()
         or not auth_info["status"]):
@@ -39,7 +58,14 @@ def is_authorized(auth_info, reservation):
 
 def is_admin(auth_info):
     """
-    check if admin
+    The function checks if the user is an admin based on their authentication information.
+
+    :param auth_info: It is a dictionary containing information about the user's authentication status.
+    It includes information such as the user's ID, username, and the type of account (e.g. regular
+    user or administrator).
+
+    :return: a boolean value indicating whether the user is an admin or not. If the user is an admin,
+    the function returns True, otherwise it returns False.
     """
     if auth_info["User"]["type"] == 2:
         return True
@@ -47,8 +73,12 @@ def is_admin(auth_info):
 
 def check_time_conflict(reservation_dict, connection=None, model=None, reservation_id=None):
     """
-    checks time conflict by checking for date, room, 
-    and start_time or end_time in between new_reservation
+    This function checks for time conflicts between a new reservation and existing reservations in a
+    database.
+
+    checks time conflict by checking for date, room, and start_time or end_time
+    in between new_reservation
+    
     - reservation_id is only used with PATCH
     returns true if confilts exist, else false.
     """
@@ -85,9 +115,15 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
 
 def check_start_end_time(new_reservation):
     """
-    checks validity of reservation's start_time and end_time 
-    - start_time should be earlier than end_time.
-    - reservation should be within open hours.
+    This function checks the validity of a reservation's start and end times, ensuring they are within
+    open hours and the start time is earlier than the end time.
+
+    :param new_reservation: A dictionary containing information about a new reservation, including the
+    start time and end time.
+
+    :return: either a string indicating an error message if the reservation's start_time is later than
+    the end_time or if the reservation is not within the open hours, or it returns None if the
+    reservation's start_time and end_time are valid and within the open hours.
     """
     # check if start < end
     if new_reservation["start_time"] > new_reservation["end_time"]:
@@ -101,20 +137,13 @@ def check_start_end_time(new_reservation):
 # check date constraints
 def check_date_constraints(user_type, reservation_date):
     """
-    checks if user is allowed to make reservation for specified date.
-    - returns None if allowed.
-    - returns a message string if not allowed.
-    """
-    # diff = date.today() - date.fromisoformat(new_reservation["reservation_date"])
-    # if auth_info["User"]["type"] == 1 or auth_info["User"]["type"] == 2:
-    #     pass
-    # elif auth_info["User"]["type"] == 3 and diff > timedelta(weeks=1):
-    #     return "User(grad) cannot make reservation for this date"
-    # elif auth_info["User"]["type"] == 4 and diff > timedelta(days=2):
-    #     return "User(undergrad) cannot make reservation for this date"
-    # return None
+    This function checks if a user is authorized to make a reservation based on their user type and the
+    reservation date constraints.
 
-    # how far a user type can reserve ahead of time
+
+    :return: False if the date constraints are not met based on the user type, otherwise it
+    returns True.
+    """
 
     from config import reservation_limit
     

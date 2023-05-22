@@ -23,9 +23,19 @@ ns = Namespace(
     prefix="/reservation"
 )
 
+
 @ns.route("")
 class ReservationList(Resource, Service):
+    """
+    The ReservationList class defines methods for getting a list of reservations and making a new
+    reservation, with various filtering and validation checks.
+    """
+    
     def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, passing arguments to their respective initialization functions.
+        """
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
@@ -37,13 +47,19 @@ class ReservationList(Resource, Service):
 
     def get(self):
         """
-        Get a list of reservations
-        - GET /reseration: 전체 예약 조회
-        - GET /reservation?before=2023-05-01: 2023-05-01 이전 예약 조회
-        - GET /reservation?after=2023-05-01: 2023-05-01 이후 예약 조회
-        - GET /reservation?rooom=1: ID가 1인 회의실의 예약들 조회
-        - GET /reservation?creator=12345678: 학번이 12345678인 이용자의 예약들 조회  
-        - GET /reservation?reservation_type=abcdef123456 : 정기예약들 조회 
+        This function retrieves a list of reservations based on various filters such as date range and
+        room name.
+
+        :return: a JSON object with a "status" key indicating whether the request was successful or not,
+        and a "reservations" key containing a list of reservation objects. The HTTP status code returned
+        is either 200 for a successful request or 400 for a failed request.
+        ---
+        # Get a list of reservations
+        # - GET /reseration: 전체 예약 조회
+        # - GET /reservation?before=2023-05-01: 2023-05-01 이전 예약 조회
+        # - GET /reservation?after=2023-05-01: 2023-05-01 이후 예약 조회
+        # - GET /reservation?room=센835: room_name이 "센835"인 회의실의 예약 조회
+        # - GET /reservation?from=2023-03-01&to=2023-06-01: 2023-03-01부터 2023-06-01까지 예약 조회. inclusive.
         """
 
         try:
@@ -70,20 +86,8 @@ class ReservationList(Resource, Service):
                     }
                     stmt = select(*select_cols)
 
-                    
-                # filters = {
-                #     "type": lambda v: Reservation.reservation_type == v,
-                #     "code": lambda v: Reservation.reservation_code == v,
-                #     "room": lambda v: Reservation.room_id == v,
-                #     "creator": lambda v: Reservation.creator_id == v,
-                #     "before": lambda v: Reservation.reservation_date <= v,
-                #     "after": lambda v: Reservation.reservation_date >= v
-                # }
-                # stmt = self.filter(stmt, request.args, filters)
-
                 #query parameters
                 params = request.args
-                
                     
                 # filter by reservation_code (noshow code)
                 if reservation_code := params.get("reservation_code"):
@@ -127,8 +131,14 @@ class ReservationList(Resource, Service):
 
     def post(self):
         """
-        Make a new reservation
-        - POST /reservation: New reservation with data
+        This function creates a new reservation and checks for conflicts and constraints before
+        inserting it into the database.
+
+        :return: a JSON object with a "status" key and a corresponding boolean value, as well as a "msg"
+        key with a corresponding string value. The HTTP status code is also included in the return
+        statement. If the reservation is successfully created, the function also includes a
+        "reservation" key with a corresponding dictionary value containing information about the new
+        reservation.
         """
 
         try:
@@ -224,17 +234,39 @@ class ReservationList(Resource, Service):
 
 @ns.route("/<int:id>")
 class ReservationByID(Resource, Service):
+    """
+    The above code defines a Flask RESTful API endpoint for managing reservations. It includes methods
+    for retrieving, updating, and deleting a reservation by its ID. The `get` method retrieves a
+    reservation by its ID, the `patch` method updates a reservation by its ID, and the `delete` method
+    deletes a reservation by its ID. The code also includes authorization checks to ensure that only
+    authorized users can perform certain actions.
+    """
+
     def __init__(self, *args, **kwargs):
-        Service.__init__(self, model_config=model_config,
-                         api_config=api_config)
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, and takes in arguments for model and API configurations.
+        """
+        Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
     def get(self, id: int):
         """
-        Read a reservation by reservation ID
-        - GET /reservation/1:
-            - id==1인 예약을 조회
+        This function retrieves a reservation by its ID and checks for authentication before returning
+        the result.
+        
+        :param id: The parameter "id" is an integer that represents the ID of a reservation that needs
+        to be retrieved.
+
+        :return: a JSON object with the status of the request and either the reservation information or
+        an error message. If the authentication token is invalid, it will return a status of False and
+        an "Unauthenticated" error message. If the reservation ID is invalid, it will return a status of
+        False and an "Invalid ID" error message. If the reservation is found, it will return a status of
+        True and the found reservation data.
         """
+        # Read a reservation by reservation ID
+        # - GET /reservation/1:
+        #     - id==1인 예약을 조회
 
         try:
             # get token info
@@ -284,8 +316,16 @@ class ReservationByID(Resource, Service):
         
     def patch(self, id: int):
         """
-        Update a reservation
-        - PATCH /reservation/1: id==1인 예약을 변경
+        This function updates a reservation with the given ID, checking for conflicts and validating the
+        input data.
+        
+        :param id: The id parameter is an integer that represents the unique identifier of a reservation
+        that needs to be updated.
+
+        :return: a dictionary with two keys: "status" and "reservation". The value of "status" is a
+        boolean indicating whether the update was successful or not, and the value of "reservation" is a
+        serialized row of the updated reservation. If there is an error, the function returns a
+        dictionary with "status" set to False and a message indicating the error.
         """
 
         try:
@@ -371,9 +411,17 @@ class ReservationByID(Resource, Service):
 
     def delete(self, id: int):
         """
-        Delete a reservation
-        - DELETE /reservation/1: id==1인 예약을 삭제
+        This function deletes a reservation with a given ID if the user is authorized to do so.
+        
+        :param id: The id parameter is an integer that represents the unique identifier of the
+        reservation that needs to be deleted.
+
+        :return: a dictionary with keys "status" and "msg". The value of "status" indicates whether the
+        deletion was successful or not, and the value of "msg" provides additional information about the
+        status. The HTTP status code is also included in the return statement.
         """
+        # Delete a reservation
+        # - DELETE /reservation/1: id==1인 예약을 삭제
 
         # get token info
         auth_info = self.query_api(
@@ -414,6 +462,7 @@ class ReservationByID(Resource, Service):
             }, 200
 
         except Exception as e:
+
             return {
                 "status": False,
                 "msg": "Server error"
