@@ -5,6 +5,8 @@ from sqlalchemy import select, insert, update, delete
 
 from nanoid import generate
 
+import json
+
 from config import model_config, api_config, MINIMIZED_COLS
 from service import Service
 
@@ -35,7 +37,9 @@ class ReservationList(Resource, Service):
         - GET /reseration: 전체 예약 조회
         - GET /reservation?before=2023-05-01: 2023-05-01 이전 예약 조회
         - GET /reservation?after=2023-05-01: 2023-05-01 이후 예약 조회
-        - GET /reservation?room=센835: room_name이 "센835"인 회의실의 예약 조회
+        - GET /reservation?rooom=1: ID가 1인 회의실의 예약들 조회
+        - GET /reservation?creator=12345678: 학번이 12345678인 이용자의 예약들 조회  
+        - GET /reservation?reservation_type=abcdef123456 : 정기예약들 조회 
         """
 
         try:
@@ -72,6 +76,11 @@ class ReservationList(Resource, Service):
                 if creator := params.get("creator"):
                     stmt = stmt.where(Reservation.creator_id == creator)
 
+                # filter by reservation_type
+                if reservation_type_ := params.get("reservation_type"):
+                    stmt = stmt.where(
+                        Reservation.reservation_type == reservation_type_)
+
                 # filter by before date
                 if before := params.get("before"):
                     stmt = stmt.where(Reservation.reservation_date <= before)
@@ -90,7 +99,7 @@ class ReservationList(Resource, Service):
         except Exception as e:
             return {
                 "status": False,
-                "msg": "Get reservation list failed."
+                "msg": "Get reservation list failed"
             }, 400
 
     def post(self):
@@ -110,7 +119,7 @@ class ReservationList(Resource, Service):
                 }, 400
 
             reservations = request.json.get("reservations", [])
-            valid_reservaiton, invalid_reservaiton = [], []
+            valid_reservaitons, invalid_reservaitons = [], []
 
             # make regular reservation code
             reservation_type = None
@@ -124,7 +133,7 @@ class ReservationList(Resource, Service):
                     if invalid != {}:
                         return {
                             "status": False,
-                            "msg": "Invalid reservation.",
+                            "msg": "Invalid reservation",
                             "invalid": invalid
                         }, 400
 
@@ -149,36 +158,39 @@ class ReservationList(Resource, Service):
                             "msg": "Invalid room ID"
                         }, 400
 
-                    if check_time_conflict(valid, connection=conn, model=Reservation):
-                        invalid_reservaiton.append(valid)
+                    # add new reservation_code for every new reservation
+                    valid["reservation_code"] = generate(size=8)
+                    valid["reservation_type"] = reservation_type
 
-                if len(invalid_reservaiton) > 0:
+                    # convert members to str for db
+                    reservation["members"] = json.dumps(reservation["members"])
+
+                    if check_time_conflict(valid, connection=conn, model=Reservation):
+                        invalid_reservaitons.append(valid)
+
+                valid_reservaitons.append(valid)
+
+                if len(invalid_reservaitons) > 0:
                     return {
                         "status": False,
                         "msg": "Conflict in reservations",
-                        "reservations": invalid_reservaiton
+                        "reservations": invalid_reservaitons
                     }
 
-                valid["reservation_code"] = generate(size=8)
-                valid["reservation_type"] = reservation_type
-                valid_reservaiton.append(valid)
-
                 # insert
-                print(f"ret: {valid_reservaiton[0]}", flush=True)
                 ret = conn.execute(
-                    insert(Reservation), valid_reservaiton
+                    insert(Reservation), valid_reservaitons
                 )
-                print(f"ret: {ret.is_insert}", flush=True)
 
             return {
                 "status": True,
-                "reservations": valid_reservaiton,
+                "reservations": valid_reservaitons,
             }, 200
 
-        except Exception as e:
+        except OSError as e:
             return {
                 "status": False,
-                "msg": "Reservation failed."
+                "msg": "Reservation failed"
             }, 400
 
 
@@ -235,7 +247,7 @@ class ReservationByID(Resource, Service):
                 "reservation": serialize(row)
             }, 200
 
-        except Exception as e:
+        except OSError as e:
             return {
                 "status": False,
                 "msg": "Get reservation by ID failed."
@@ -263,7 +275,7 @@ class ReservationByID(Resource, Service):
                 if invalid != {}:
                     return {
                         "status": False,
-                        "msg": "Invalid reservation.",
+                        "msg": "Invalid reservation",
                         "invalid": invalid
                     }, 400
 
@@ -326,7 +338,7 @@ class ReservationByID(Resource, Service):
         except Exception as e:
             return {
                 "status": False,
-                "msg": "Reservation edit failed."
+                "msg": "Reservation edit failed"
             }, 400
 
     def delete(self, id: int):
@@ -352,7 +364,7 @@ class ReservationByID(Resource, Service):
                 if len(rows) < 1:
                     return {
                         "status": False,
-                        "msg": "room not found"
+                        "msg": "Reservation not found"
                     }, 400
 
                 # authorized: creator, admin
@@ -376,5 +388,5 @@ class ReservationByID(Resource, Service):
         except Exception as e:
             return {
                 "status": False,
-                "msg": "server error"
+                "msg": "Server error"
             }, 400

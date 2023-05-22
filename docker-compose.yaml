@@ -52,7 +52,7 @@ services:
     build:
       context: .
       dockerfile: ./AlertService/dockerfile
-    restart: always
+    restart: on-failure
     ports:
       - "5003:5000"
 
