@@ -149,7 +149,7 @@ const now = {
 	m: nowDateObj.getMonth() + 1,
 	d: nowDateObj.getDate(),
 };
-now.w = getWeekNumber(now.y, now.m, now.d);
+now.w = getWeekNumber(`${now.y}-${now.m}-${now.d}`);
 
 const formattedMonth = now.m < 10 ? `0${now.m}` : now.m;
 const formattedDay = now.d < 10 ? `0${now.d}` : now.d;
