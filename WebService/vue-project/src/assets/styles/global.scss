@@ -13,7 +13,9 @@
   }
 }
 
-// @import "bootstrap/scss/bootstrap.scss";
+html {
+  scroll-behavior: smooth;
+}
 
 // colors
 $sejong-red : rgb(195, 0, 47);
