@@ -40,7 +40,8 @@ const TESTDATA = {
 			start_time: '10:00:00',
 			end_time: '18:00:00',
 			room_id: 0,
-			// is_valid: 1,
+			room_used: 0,
+			is_valid: 1,
 		},
 		{
 			id: 1,
@@ -49,7 +50,8 @@ const TESTDATA = {
 			start_time: '13:00:00',
 			end_time: '18:32:00',
 			room_id: 1,
-			// is_valid: 1,
+			room_used: 0,
+			is_valid: 1,
 		},
 		{
 			id: 2,
@@ -58,7 +60,8 @@ const TESTDATA = {
 			start_time: '13:00:00',
 			end_time: '15:00:00',
 			room_id: 1,
-			// is_valid: 1,
+			is_valid: 1,
+			room_used: 0,
 		},
 		{
 			id: 3,
@@ -67,7 +70,8 @@ const TESTDATA = {
 			start_time: '13:00:00',
 			end_time: '15:00:00',
 			room_id: 1,
-			// is_valid: 1,
+			room_used: 0,
+			is_valid: 1,
 		},
 	],
 	reservations_max_1: [

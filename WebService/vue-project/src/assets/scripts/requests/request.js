@@ -237,7 +237,7 @@ const reservationService = {
 				data.reservations.length === 0
 					? 0
 					: Object.keys(data.reservations[0]).length;
-			const minmaxType = fieldNum <= 6 ? 'min' : 'max';
+			const minmaxType = fieldNum <= 8 ? 'min' : 'max';
 
 			const converted = data.reservations.map(item =>
 				convertReservationRes(item, minmaxType),

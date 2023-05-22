@@ -10,12 +10,7 @@
 export default function convertReservationRes(res, minmaxType) {
 	// res : 응답받은 rerservation 단일 객체
 	// minmaxType : 최소정보인지, 최대정보인지. : "min" 또는 "max"
-
-	let splitted = {
-		created_at: res.created_at.split(' '),
-		start_time: res.start_time.split(':'),
-		end_time: res.end_time.split(':'),
-	};
+	let splitted;
 	let convertedObj = {}; // res를 변환한 객체가 convertedObj에 담겨 리턴됨.
 
 	// IF : minmaxType === 'min' (최소정보)
@@ -36,13 +31,16 @@ export default function convertReservationRes(res, minmaxType) {
 
 			roomId: res.room_id, // 0, 1, 2, 3,...
 			isValid: res.is_valid, // 0, 1
-			createdAt: res.created_at, // YYYY-MM-DD HH:mm:ss
-			code: res.reservation_code, // String(8)
 			roomUsed: res.room_used, // 0, 1
 		};
 	}
 	// IF : minmaxType === 'max' (최대정보)
 	else if (minmaxType === 'max') {
+		splitted = {
+			created_at: res.created_at.split(' '),
+			start_time: res.start_time.split(':'),
+			end_time: res.end_time.split(':'),
+		};
 		convertedObj = {
 			id: res.id, // 0, 1, 2, ...
 			reservationType: res.reservation_type, // null, "String"
@@ -82,16 +80,14 @@ export default function convertReservationRes(res, minmaxType) {
 /*
 {
 	id: Int,
-	reservation_type: String | null,
-	room_id: Int, 
+	is_valid : int, // 0, 1,
 	reservation_date: String, // YYYY-DD-MM
 	startTime: String, // HH:mm:ss
 	endTime: String, // HH:mm:ss
-	
+	room_id: Int, 
 	room_used: Int, // 0, 1
-	reservation_code: String(8),
-	is_valid : int, // 0, 1,
-	created_at : String, // YYYY-MM-DD HH:mm:ss
+
+	reservation_type: String | null,
 }
 */
 
@@ -134,9 +130,7 @@ export default function convertReservationRes(res, minmaxType) {
 	},
 	roomId: Int, // 0, 1, 2, ...
 	isValid: Boolean, // true, false
-	createdAt: String, // YYYY-MM-DD HH:mm:ss
 	roomUsed: Int, // 0(인증안됨), 1(인증됨)
-	code: String, // "string"
 }
 */
 
@@ -186,9 +180,7 @@ export default function convertReservationRes(res, minmaxType) {
 	},
 	roomId: 0,
 	isValid: true
-	createdAt: '2023-05-07 12:30:00',
 	roomUsed: 0,
-	code: 'aaaaaaaaaaaa',
 }
 */
 
