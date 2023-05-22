@@ -1,6 +1,8 @@
 from flask import Flask
 from flask_restx import Api
 
+from flask_cors import CORS
+
 import os
 from datetime import timedelta
 
@@ -8,6 +10,7 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     api = Api(app)
+    CORS(app)
 
     try:
         os.makedirs(app.instance_path)
