@@ -1,11 +1,12 @@
-from flask import request
+from flask import request, send_from_directory, current_app
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
 from service import Service
-from config import model_config, api_config
+from config import model_config, api_config, filepath
 from utils import serialization, check_jwt_exists, check_if_room_identical
 from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
-
+from werkzeug.utils import secure_filename
+import os
 
 # namespace for handy routing
 admin = namespace.Namespace(
@@ -31,9 +32,12 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
-        if(check_jwt_exists(user_status) 
-           and (user_status['User']['type'] != 2)):
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        # if(check_jwt_exists(user_status) 
+        #    and (user_status['User']['type'] != 2)):
+
+        print(user_status, flush=True)
+        if "status" in user_status.keys() and user_status["User"]["type"] != 2:
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -154,7 +158,7 @@ class ConferenceRoomById(Resource, Service):
                 res = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
 
                 # if there's no room by given id
-                if res == None:
+                if res is None:
                     return {
                         "status": False,
                         "msg": f"Room id:{id} not found"
@@ -293,64 +297,93 @@ class ConferenceRoomById(Resource, Service):
                 "msg": "Room Update Failed"
             }, 500
 
-@admin.route('/upload/<int:id>')
+@admin.route('/upload/<int:id>') # adminservice/admin/rooms/upload
 class PreviewImageUpload(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
+    @staticmethod
     def allowed_file(filename):
         allowed_extensions = {'png', 'jpg', 'jpeg'}
 
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+    @staticmethod
+    def check_if_file_unique(joined_path):
+        if os.path.exists(joined_path):
+            return False
+        return True
     
     # insert preview_image into a room found by id
     def post(self, id):
+        print(os.getcwd())
+        max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
+        uploaded_image = request.files['image']
+    
+        filename = secure_filename(uploaded_image.filename)
+        joined_path = os.path.join(filepath, filename)
+        
         # check user if has authorization.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
                 "msg": "No authorization"
             }, 200
-        
-        uploaded_image = request.files['image']
-        # print(uploaded_image.filename, flush=True)
 
-        # validate uploaded image
-        # check extension
-        # Not working... upload_image.filename
-        # if (not uploaded_image 
-        #     or not self.allowed_file(uploaded_image.filename)):
-        #     return {
-        #         "status": False,
-        #         "msg": "image invalid",
-        #         "invalid": uploaded_image
-        #     }, 200
+        # error checking : does file exists
+        if filename == '':
+            return{
+                "status": False,
+                "msg": "No selected file"
+            }, 200
+        
+        # error checking : is file in allowed extensions
+        if not self.allowed_file(filename):
+            return{
+                "status": False,
+                "msg": "Invalid file extension",
+                "filename": filename
+            }
+
+        # error checking: is file unique
+        if not self.check_if_file_unique(joined_path):
+            return {
+                "status": False,
+                "msg": "File already exists"
+            }, 200
+
+        # check file size
+        if ('Content-Length' in request.headers 
+            and int(request.headers['Content-Length']) > max_file_size):
+            return{
+                "status": False,
+                "msg": f"File size exceeds the maximum limit of {max_file_size}bytes"
+            }, 200
 
         try:
             with self.query_model("Room") as (conn, Room):
-                # The above code is reading the contents of an uploaded image file and storing it in
-                # the variable `preview_image`.
-                preview_image = uploaded_image.read()
-
-                # insert image into the room                
+                # insert file path into the data
                 conn.execute(
-                    update(Room).where(Room.id == id), {
-                        "preview_image": preview_image
+                    update(Room).where(Room.id == id),{
+                        "preview_image_name": f'/adminservice/admin/rooms/download/{filename}'
                     }
                 )
 
-                # insert image done
+                # save image
+                uploaded_image.save(joined_path)
+
+                # insert image
                 return {
                     "status": True,
                     "msg": "Image uploaded",
-                    "uploadedImage": uploaded_image.filename,
+                    "uploadedImage": filename,
+                    # "uploadedPath": joined_path
                 }
         except OSError as e:
             print(e)
@@ -358,3 +391,35 @@ class PreviewImageUpload(Resource, Service):
                 "status": False,
                 "msg": "Uploading image failed"
             }, 500
+    
+@admin.route('/download/<string:filename>')
+class DownloadImage(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, model_config=model_config, api_config=api_config)
+        Resource.__init__(self, *args, **kwargs)
+
+    def get(self, filename):
+        try:
+            # with self.query_model("Room") as (conn, Room):
+            #     room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+
+            #     if len(room) == 0:
+            #         return{
+            #             "status": False,
+            #             "msg": "Room not found"
+            #         }, 200
+                
+            # print(filepath, flush=True)
+
+            return send_from_directory(filepath, filename)
+        except Exception as e:
+            print(e)
+            return {
+                "status": False,
+                "msg": "Download image failed"
+            }, 500
+    
+# upload/download in docker env done?
+
+# if room["is_usable"] has been changed to False from True, send request to reservation API
+# to cancel all the reserved conference for the room

@@ -4,10 +4,9 @@ from datetime import timedelta
 model_config = {
     "username": "development",
     "password": "1234",
-    "database": "sejong",
-    # "host": "127.0.0.1",
-    "host": "dbservice",
+    "host": "127.0.0.1",
     "port": 3306,
+    "database": "sejong"
 }
 
 # model_config = {
@@ -19,10 +18,10 @@ model_config = {
 # }
 
 api_config = {
-    "get_auth_info": "http://userservice:5000/auth/jwt-status",
-    "get_rooms_info": "http://adminservice:5000/admin/rooms/{id}",
-    # "get_auth_info": "http://127.0.0.1:5001/auth/jwt-status",
-    # "get_rooms_info": "http://127.0.0.1:5002/admin/rooms/{id}",
+    # "get_auth_info": "http://userservice:5000/auth/jwt-status",
+    # "get_rooms_info": "http://adminservice:5000/admin/rooms/{id}",
+    "get_auth_info": "http://127.0.0.1:5001/auth/jwt-status",
+    "get_rooms_info": "http://127.0.0.1:5002/admin/rooms/{id}",
 }
 
 reservation_limit = {

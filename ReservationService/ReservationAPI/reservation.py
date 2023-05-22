@@ -23,13 +23,17 @@ ns = Namespace(
     prefix="/reservation"
 )
 
-
 @ns.route("")
 class ReservationList(Resource, Service):
     def __init__(self, *args, **kwargs):
-        Service.__init__(self, model_config=model_config,
-                         api_config=api_config)
+        Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
+
+    @staticmethod
+    def filter(stmt, request_params, filters):
+        for key, cond in filters.items():
+            if val := request_params.get(key):
+                stmt = stmt.where(cond(val))
 
     def get(self):
         """
@@ -52,9 +56,7 @@ class ReservationList(Resource, Service):
                     "msg": "Unauthenticated"
                 }, 400
 
-            # query parameters
-            params = request.args
-
+            
             with self.query_model("Reservation") as (conn, Reservation):
                 stmt = None
 
@@ -68,6 +70,32 @@ class ReservationList(Resource, Service):
                     }
                     stmt = select(*select_cols)
 
+                    
+                # filters = {
+                #     "type": lambda v: Reservation.reservation_type == v,
+                #     "code": lambda v: Reservation.reservation_code == v,
+                #     "room": lambda v: Reservation.room_id == v,
+                #     "creator": lambda v: Reservation.creator_id == v,
+                #     "before": lambda v: Reservation.reservation_date <= v,
+                #     "after": lambda v: Reservation.reservation_date >= v
+                # }
+                # stmt = self.filter(stmt, request.args, filters)
+
+                #query parameters
+                params = request.args
+                
+                    
+                # filter by reservation_code (noshow code)
+                if reservation_code := params.get("reservation_code"):
+                    stmt = stmt.where(
+                        Reservation.reservation_code == reservation_code
+                    )
+
+                # filter by reservation_type
+                if reservation_type_ := params.get("reservation_type"):
+                    stmt = stmt.where(
+                        Reservation.reservation_type == reservation_type_)
+
                 # filter by room id
                 if room := params.get("room"):
                     stmt = stmt.where(Reservation.room_id == room)
@@ -75,11 +103,6 @@ class ReservationList(Resource, Service):
                 # filter by creator id
                 if creator := params.get("creator"):
                     stmt = stmt.where(Reservation.creator_id == creator)
-
-                # filter by reservation_type
-                if reservation_type_ := params.get("reservation_type"):
-                    stmt = stmt.where(
-                        Reservation.reservation_type == reservation_type_)
 
                 # filter by before date
                 if before := params.get("before"):
@@ -119,13 +142,10 @@ class ReservationList(Resource, Service):
                 }, 400
 
             reservations = request.json.get("reservations", [])
-            valid_reservaitons, invalid_reservaitons = [], []
 
             # make regular reservation code
-            reservation_type = None
-            if len(reservations) > 1:
-                reservation_type = generate(size=12)
-
+            reservation_type = generate(size=12) if len(reservations) > 1 else None
+            valid_reservaitons, invalid_reservaitons = [], []
             with self.query_model("Reservation") as (conn, Reservation):
                 for reservation in reservations:
                     # validate model
@@ -137,38 +157,39 @@ class ReservationList(Resource, Service):
                             "invalid": invalid
                         }, 400
 
-                    user_type = auth_info["User"]["type"]
+                    # check reservation date
                     reservation_date = valid["reservation_date"]
-                    if not check_date_constraints(user_type, reservation_date):
+                    if not check_date_constraints(auth_info, reservation_date):
                         return {
                             "status": False,
                             "msg": "User cannot reserve that far into future"
                         }, 400
 
-                    # check rooms
-                    room_id = valid["room_id"]
+                    # check room exists
                     room = self.query_api(
                         "get_rooms_info", "get",
                         headers=request.headers,
-                        request_params={"id": room_id}
+                        request_params={"id": valid["room_id"]}
                     )
-                    if not room["status"]:
+
+                    print(room)
+                    if "status" not in room.keys(): #or not room["status"]:
                         return {
                             "status": False,
                             "msg": "Invalid room ID"
                         }, 400
 
-                    # add new reservation_code for every new reservation
-                    valid["reservation_code"] = generate(size=8)
-                    valid["reservation_type"] = reservation_type
-
-                    # convert members to str for db
-                    reservation["members"] = json.dumps(reservation["members"])
-
+                    # check time conflict
                     if check_time_conflict(valid, connection=conn, model=Reservation):
+                        #insert into invalid reservation list
                         invalid_reservaitons.append(valid)
 
-                valid_reservaitons.append(valid)
+                    else:
+                        # insert reservation_type and reservation_code
+                        valid["reservation_type"] = reservation_type
+                        valid["reservation_code"] = generate(size=8)
+                        # insert into valid reservation list
+                        valid_reservaitons.append(valid)
 
                 if len(invalid_reservaitons) > 0:
                     return {
@@ -178,16 +199,23 @@ class ReservationList(Resource, Service):
                     }
 
                 # insert
-                ret = conn.execute(
-                    insert(Reservation), valid_reservaitons
-                )
+                conn.execute(insert(Reservation), valid_reservaitons)
+
+                # TODO: get inserted values from insert statement instead of selecting again
+                retval = []
+                for v in valid_reservaitons:
+                    res = conn.execute(
+                        select(Reservation)
+                        .where(Reservation.reservation_code == v["reservation_code"])
+                    ).mappings().fetchone()
+                    retval.append(serialize(res))
 
             return {
                 "status": True,
-                "reservations": valid_reservaitons,
+                "reservations": retval,
             }, 200
 
-        except OSError as e:
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Reservation failed"
@@ -247,12 +275,13 @@ class ReservationByID(Resource, Service):
                 "reservation": serialize(row)
             }, 200
 
-        except OSError as e:
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Get reservation by ID failed."
             }, 400
 
+        
     def patch(self, id: int):
         """
         Update a reservation
@@ -288,10 +317,9 @@ class ReservationByID(Resource, Service):
                 row = serialize(row)
                 row.update(**valid)
 
-                user_type = auth_info["User"]["type"]
                 reservation_date = row["reservation_date"]
                 if ("reservation_date" in valid.keys()
-                        and not check_date_constraints(user_type, reservation_date)):
+                        and not check_date_constraints(auth_info, reservation_date)):
                     return {
                         "status": False,
                         "msg": "User cannot reserve that far into future"
