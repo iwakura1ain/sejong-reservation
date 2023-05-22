@@ -15,6 +15,8 @@ import ReservationDetailView from '@/views/common/ReservationDetailView.vue';
 import UserMainView from '@/views/user/UserMainView.vue';
 import MakeQuickReservationView from '@/views/user/MakeQuickReservationView.vue';
 import MakeReservationView from '@/views/user/MakeReservationView.vue';
+import ModifyReservationCommonDataView from '@/views/user/ModifyReservationCommonDataView.vue';
+import ModifyReservationTimeDataView from '@/views/user/ModifyReservationTimeDataView.vue';
 import ReservationHistoryView from '@/views/user/ReservationHistoryView.vue';
 import UserMyPageView from '@/views/user/UserMyPageView.vue';
 import UserEditProfileView from '@/views/user/UserEditProfileView.vue';
@@ -54,10 +56,10 @@ const routes = [
 		component: RegisterView,
 	},
 	{
-		path: '/reservation/detail/:id',
+		path: '/reservation/detail',
 		name: 'ReservationDetail',
 		component: ReservationDetailView,
-		props: true, // id값 : 백엔드 Reservation테이블의 id값과 동일(예약 식별자)
+		// state(id, reservationType) : 백엔드 Reservation테이블의 id값과 동일(예약 식별자)
 	},
 
 	// 사용자 뷰
@@ -75,12 +77,24 @@ const routes = [
 		path: '/reservation/make',
 		name: 'MakeReservation',
 		component: MakeReservationView,
-		props: true, // "UserMainView" passes "startDateProp"
+		props: true, // "startDateProp" query
 	},
 	{
 		path: '/reservation/done',
 		name: 'SuccessfullyReserved',
 		component: SuccessfullyReservedView,
+	},
+	{
+		path: '/reservation/modify/common',
+		name: 'ModifyReservationCommonData',
+		component: ModifyReservationCommonDataView,
+		// state push됨
+	},
+	{
+		path: '/reservation/modify/time',
+		name: 'ModifyReservationTimeData',
+		component: ModifyReservationTimeDataView,
+		// state push됨
 	},
 	{
 		path: '/reservation/history',
