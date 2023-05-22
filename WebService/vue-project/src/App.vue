@@ -4,15 +4,19 @@
 		<router-view class="app-router-view"></router-view>
 	</Transition>
 	<app-footer> </app-footer>
+
+	<loading-overay :loading="loadingStore.data" />
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import AppHeader from '@/layouts/AppHeader.vue';
 import AppFooter from '@/layouts/AppFooter.vue';
-import { ref } from 'vue';
+import LoadingOveray from '@/components/atoms/LoadingOveray.vue';
 
 import { adminService } from '@/assets/scripts/requests/request.js';
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
+import { loadingStore } from '@/stores/loading.js';
 
 // 초기화 -----------------------------
 init();
