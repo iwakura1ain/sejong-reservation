@@ -21,7 +21,9 @@
 			</div>
 			<div class="field-set reservation-type">
 				<p class="label">예약 유형</p>
-				<p class="content">{{ !reservationType ? '단건예약' : '정기예약' }}</p>
+				<p class="content">
+					{{ !historyState.reservationType ? '단건예약' : '정기예약' }}
+				</p>
 			</div>
 			<div class="field-set meeting-room">
 				<p class="label">회의실</p>
