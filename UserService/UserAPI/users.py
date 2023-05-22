@@ -160,12 +160,19 @@ class UserDetail(Service, Resource):
         """
         try:
             with self.query_model("User") as (conn, User):
-
                 req, invalidated = User.validate(request.json)
                 if len(invalidated) != 0:
                     return {
                         "status": False,
                         "msg": "key:value pair wrong"
+                    }, 200
+                res = conn.execute(
+                    select(User).where(User.id == id)
+                ).mappings().fetchone
+                if len(res) == 0:
+                    return {
+                        "status": False,
+                        "msg": "user not found"
                     }, 200
 
                 conn.execute(
@@ -204,6 +211,15 @@ class UserDetail(Service, Resource):
         """
         try:
             with self.query_model("User") as (conn, User):
+                res = conn.execute(
+                    select(User).where(User.id == id)
+                ).mappings().fetchone
+                if len(res) == 0:
+                    return {
+                        "status": False,
+                        "msg": "user not found"
+                    }, 200
+                
                 conn.execute(
                     remove(User).where(User.id == id)
                 )

@@ -39,12 +39,6 @@ class ReservationList(Resource, Service):
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
-    @staticmethod
-    def filter(stmt, request_params, filters):
-        for key, cond in filters.items():
-            if val := request_params.get(key):
-                stmt = stmt.where(cond(val))
-
     def get(self):
         """
         This function retrieves a list of reservations based on various filters such as date range and
@@ -183,7 +177,7 @@ class ReservationList(Resource, Service):
                     )
 
                     print(room)
-                    if "status" not in room.keys(): #or not room["status"]:
+                    if "status" not in room.keys() or not room["status"]:
                         return {
                             "status": False,
                             "msg": "Invalid room ID"
