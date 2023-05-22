@@ -123,7 +123,7 @@ class EmailSender(Resource):
                 "msg": "sucess"
             }
 
-        except OSError:
+        except Exception:
             return {
                 "status": False,
                 "msg": "error sending mail"

@@ -1,13 +1,11 @@
 from flask import Flask
 from flask_restx import Resource, Api, Namespace
 
-# from auth import auth
-# from users import users
+from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 import os
 from datetime import timedelta
-
-from flask_jwt_extended import JWTManager
 
 import auth
 import users
@@ -19,6 +17,7 @@ def create_app(test_config=None):
     app.config["JWT_SECRET_KEY"] = "DEVELOPMENT-KEY-MUST-CHANGE"
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+    CORS(app)
 
     # if test_config is None:
     #     # load the instance config, if it exists, when not testing
