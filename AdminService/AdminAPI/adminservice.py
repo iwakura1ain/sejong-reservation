@@ -20,7 +20,7 @@ admin = namespace.Namespace(
 )
 
 # keys to be excluded when serializing data to GET all rooms
-exclude = ['created_at', 'updated_at']
+exclude = ['created_at']
 
 @admin.route('')
 class ConferenceRoom(Resource, Service):
@@ -61,26 +61,33 @@ class ConferenceRoom(Resource, Service):
         """
         
         # request body data, need to be validated
-        req = request.json  
-
+        req = request.json
+        
         # check user if has authorization.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
         # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
-        # if(check_jwt_exists(user_status) 
-        #    and (user_status['User']['type'] != 2)):
 
-        print(user_status, flush=True)
-        if "status" in user_status.keys() and user_status["User"]["type"] != 2:
+        if(check_jwt_exists(user_status) 
+           and (user_status['User']['type'] != 2)):
             return {
                 "status": False,
                 "msg": "No authorization"
             }, 200
         
+        # # get token info
+        #     auth_info = self.query_api(
+        #         "get_auth_info", "get", headers=request.headers)
+        #     if not is_valid_token(auth_info):
+        #         return {
+        #             "status": False,
+        #             "msg": "Unauthenticated"
+        #         }, 400
+
         try:
             with self.query_model("Room") as (conn, Room):
-                valid_data, invalid_data = Room.validate(req)
+                valid_data, invalid_data = Room.validate(request.json)
 
                 if len(invalid_data) > 0:
                     return {
@@ -90,7 +97,7 @@ class ConferenceRoom(Resource, Service):
                     }, 200
                 
                 res = conn.execute(select(Room)).mappings().all()
-                print(valid_data, res)
+                # print(valid_data, res)
                 
                 # if validated data is already in table, 
                 # send message 'data already exists'
@@ -115,7 +122,7 @@ class ConferenceRoom(Resource, Service):
         
         # error
         except OSError as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Create Failed"
@@ -134,15 +141,15 @@ class ConferenceRoom(Resource, Service):
         """
 
         # check if user is logged in.
-        user_status = self.query_api( 
-            "jwt_status", "get", headers=request.headers
-        )
-        
-        if not check_jwt_exists(user_status):
-            return {
-                "status": False,
-                "msg": "Not logged in",
-            }, 200
+        # user_status = self.query_api( 
+        #     "jwt_status", "get", headers=request.headers
+        # )
+        # # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        # if not check_jwt_exists(user_status):
+        #     return {
+        #         "status": False,
+        #         "msg": "Not logged in",
+        #     }, 200
         
         try:
             with self.query_model("Room") as (conn, Room):
@@ -171,7 +178,7 @@ class ConferenceRoom(Resource, Service):
 
         # error
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Failed to get room data"
@@ -179,6 +186,7 @@ class ConferenceRoom(Resource, Service):
         
         
 # GET, DELETE, UPDATE by room id
+
 @admin.route('/<int:id>')
 class ConferenceRoomById(Resource, Service):
     """
@@ -213,17 +221,18 @@ class ConferenceRoomById(Resource, Service):
         returns a message indicating that the room was not found. If there is an error while executing
         the code,
         """
-        
-        # check if user is logged in.
-        user_status = self.query_api( 
-            "jwt_status", "get", headers=request.headers
-        )
-        #print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
-        if not check_jwt_exists(user_status):
-            return {
-                "status": False,
-                "msg": "Not logged in"
-            }, 200
+
+        # # check if user is logged in.
+        # user_status = self.query_api( 
+        #     "jwt_status", "get", headers=request.headers
+        # )
+        # # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        # if not check_jwt_exists(user_status):
+        #     return {
+        #         "status": False,
+        #         "msg": "Not logged in"
+        #     }, 200
+
         
         try:
             with self.query_model("Room") as (conn, Room):
@@ -248,7 +257,7 @@ class ConferenceRoomById(Resource, Service):
 
         # error      
         except OSError as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "msg": "Room GET failed"
             }, 500
@@ -303,7 +312,7 @@ class ConferenceRoomById(Resource, Service):
 
         # error
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Delete Failed"
@@ -378,15 +387,16 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error
-        except OSError as e:
-            print(e)
+        except Exception as e:
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Update Failed"
             }, 500
 
-@admin.route('/upload/<int:id>') # adminservice/admin/rooms/upload
-class PreviewImageUpload(Resource, Service):
+
+@admin.route('/<int:id>/image')
+class ConferenceRoomImage(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
@@ -394,7 +404,7 @@ class PreviewImageUpload(Resource, Service):
     @staticmethod
     def allowed_file(filename):
         allowed_extensions = {'png', 'jpg', 'jpeg'}
-
+        
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
@@ -403,10 +413,30 @@ class PreviewImageUpload(Resource, Service):
         if os.path.exists(joined_path):
             return False
         return True
+
+    def get(self, id):
+        try:
+            with self.query_model("Room") as (conn, Room):
+                room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+                if len(room) == 0:
+                    return {
+                        "status": False,
+                        "msg": "Room not found"
+                    }, 200
+                
+                return send_from_directory(
+                    filepath, room["preview_image_name"]
+                )
+            
+        except Exception as e:
+            print(e, flush=True)
+            return {
+                "status": False,
+                "msg": "Download image failed"
+            }, 500
     
     # insert preview_image into a room found by id
     def post(self, id):
-        print(os.getcwd())
         max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
         uploaded_image = request.files['image']
     
@@ -426,14 +456,14 @@ class PreviewImageUpload(Resource, Service):
 
         # error checking : does file exists
         if filename == '':
-            return{
+            return {
                 "status": False,
                 "msg": "No selected file"
             }, 200
         
         # error checking : is file in allowed extensions
         if not self.allowed_file(filename):
-            return{
+            return {
                 "status": False,
                 "msg": "Invalid file extension",
                 "filename": filename
@@ -449,7 +479,7 @@ class PreviewImageUpload(Resource, Service):
         # check file size
         if ('Content-Length' in request.headers 
             and int(request.headers['Content-Length']) > max_file_size):
-            return{
+            return {
                 "status": False,
                 "msg": f"File size exceeds the maximum limit of {max_file_size}bytes"
             }, 200
@@ -458,8 +488,8 @@ class PreviewImageUpload(Resource, Service):
             with self.query_model("Room") as (conn, Room):
                 # insert file path into the data
                 conn.execute(
-                    update(Room).where(Room.id == id),{
-                        "preview_image_name": f'/adminservice/admin/rooms/download/{filename}'
+                    update(Room).where(Room.id == id), {
+                        "preview_image_name": filename
                     }
                 )
 
@@ -470,44 +500,18 @@ class PreviewImageUpload(Resource, Service):
                 return {
                     "status": True,
                     "msg": "Image uploaded",
-                    "uploadedImage": filename,
+                    #"uploaded": filename,
                     # "uploadedPath": joined_path
                 }
-        except OSError as e:
-            print(e)
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Uploading image failed"
             }, 500
-    
-@admin.route('/download/<string:filename>')
-class DownloadImage(Resource, Service):
-    def __init__(self, *args, **kwargs):
-        Service.__init__(self, model_config=model_config, api_config=api_config)
-        Resource.__init__(self, *args, **kwargs)
 
-    def get(self, filename):
-        try:
-            # with self.query_model("Room") as (conn, Room):
-            #     room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+        
 
-            #     if len(room) == 0:
-            #         return{
-            #             "status": False,
-            #             "msg": "Room not found"
-            #         }, 200
-                
-            # print(filepath, flush=True)
 
-            return send_from_directory(filepath, filename)
-        except Exception as e:
-            print(e)
-            return {
-                "status": False,
-                "msg": "Download image failed"
-            }, 500
-    
-# upload/download in docker env done?
 
-# if room["is_usable"] has been changed to False from True, send request to reservation API
-# to cancel all the reserved conference for the room
+
+
