@@ -32,9 +32,8 @@ reservation_limit = {
 }
 
 MINIMIZED_COLS = [
+    "id",
     "is_valid",
-    "created_at",
-    "reservation_code",
     "reservation_type",
     "reservation_date",
     "start_time",
