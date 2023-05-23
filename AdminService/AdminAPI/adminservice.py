@@ -67,7 +67,6 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
 
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
@@ -87,7 +86,7 @@ class ConferenceRoom(Resource, Service):
                         "invalid": invalid_data
                     }, 200
                 
-                res = conn.execute(select(Room)).mappings().all()
+                # res = conn.execute(select(Room)).mappings().all()
                 # print(valid_data, res)
                 
                 # if validated data is already in table, 
@@ -178,7 +177,6 @@ class ConferenceRoom(Resource, Service):
         
         
 # GET, DELETE, UPDATE by room id
-
 @admin.route('/<int:id>')
 class ConferenceRoomById(Resource, Service):
     """
@@ -431,9 +429,9 @@ class ConferenceRoomImage(Resource, Service):
     def post(self, id):
         max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
         uploaded_image = request.files['image']
-    
+        filepath_with_id = os.path.join(filepath, str(id))
         filename = secure_filename(uploaded_image.filename)
-        joined_path = os.path.join(filepath, filename)
+        joined_path = os.path.join(filepath_with_id, filename)
         
         # check user if has authorization.
         user_status = self.query_api( 
@@ -485,6 +483,11 @@ class ConferenceRoomImage(Resource, Service):
                     }
                 )
 
+                # create image saving folder for each room
+                # if there's no folder in thumbnail
+                if not os.path.exists(filepath_with_id):
+                    os.makedirs(filepath_with_id)
+
                 # save image
                 uploaded_image.save(joined_path)
 
@@ -495,7 +498,8 @@ class ConferenceRoomImage(Resource, Service):
                     #"uploaded": filename,
                     # "uploadedPath": joined_path
                 }
-        except Exception as e:
+        except OSError as e:
+            print(e)
             return {
                 "status": False,
                 "msg": "Uploading image failed"
