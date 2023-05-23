@@ -132,15 +132,15 @@ class ConferenceRoom(Resource, Service):
         """
 
         # check if user is logged in.
-        # user_status = self.query_api( 
-        #     "jwt_status", "get", headers=request.headers
-        # )
-        # # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
-        # if not check_jwt_exists(user_status):
-        #     return {
-        #         "status": False,
-        #         "msg": "Not logged in",
-        #     }, 200
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        if not check_jwt_exists(user_status):
+            return {
+                "status": False,
+                "msg": "Not logged in",
+            }, 200
         
         try:
             with self.query_model("Room") as (conn, Room):
@@ -348,6 +348,7 @@ class ConferenceRoomById(Resource, Service):
                     }, 200
 
                 roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+                
                 # if there's no such room by given id
                 if roomById is None:
                     return {
@@ -355,13 +356,12 @@ class ConferenceRoomById(Resource, Service):
                         "msg": f"Room id:{id} not found"
                     }, 200
                 
-                # if updated room data already exists in the table
-                for room in valid_data:
-                    if check_if_room_identical(conn, Room, valid_data):
-                        return{
-                            "statsus": False,
-                            "msg": f"Room {room['room_name']} already exists." 
-                        }, 200
+                # if there's already a room with given room name
+                if check_if_room_identical(conn, Room, valid_data):
+                    return{
+                        "statsus": False,
+                        "msg": f"Room {valid_data['room_name']} already exists." 
+                    }, 200
 
                 # UPDATE room
                 conn.execute(
@@ -377,7 +377,7 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error
-        except Exception as e:
+        except OSError as e:
             print(e, flush=True)
             return {
                 "status": False,
