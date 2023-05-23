@@ -13,7 +13,7 @@
 import { ref, watch, computed } from 'vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import MonthCalendar from '@/components/MonthCalendar.vue';
-// import { userStore } from '@/stores/user.js';
+// import { userInfoStore } from '@/stores/userInfo.js';
 import { reservationService } from '@/assets/scripts/requests/request.js';
 
 import getLastDayInMonth from '@/assets/scripts/utils/getLastDayInMonth.js';

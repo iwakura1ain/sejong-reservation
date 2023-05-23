@@ -40,7 +40,8 @@ import LogoImgRed from '@/assets/images/logo_red.png';
 import TextInput from '@/components/atoms/TextInput.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
 import { userService } from '@/assets/scripts/requests/request.js';
-import { userStore } from '@/stores/user.js';
+import { userInfoStore } from '@/stores/userInfo.js';
+import { userTokenStore } from '@/stores/userToken.js';
 import { loadingStore } from '@/stores/loading.js';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
 
@@ -74,7 +75,11 @@ async function handleLogin() {
 		}
 
 		// 완료
-		userStore.set(res.data);
+		userInfoStore.set(res.data);
+		userTokenStore.set({
+			accessToken: res.data.accessToken,
+			refreshToken: res.data.refreshToken,
+		});
 		router.push({ name: 'UserMain' });
 		// ------------------------------
 	} catch (err) {

@@ -194,7 +194,35 @@ const userService = {
 		}
 	},
 	// --------------------------------------------------------------------------
-	refreshAuth: async function () {},
+	refreshAuth: async function (refreshToken) {
+		try {
+			// 통신
+			const res = await axios.get(`${BASE_URL.USER_SERVICE}/auth/jwt-refresh`, {
+				headers: {
+					Authorization: `Bearer ${refreshToken}`,
+				},
+			});
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 액세스토큰 반환
+			const data = res.data;
+			return {
+				status: true,
+				data: data.access_token,
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
 	logout: async function (accessToken) {
 		try {

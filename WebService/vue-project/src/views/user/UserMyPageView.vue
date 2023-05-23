@@ -32,9 +32,9 @@ import { ref } from 'vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
 // import Calendar from '@/components/Calendar.vue';
-import { userStore, userTypeStr, userDeptStr } from '@/stores/user.js';
+import { userInfoStore, userDeptStr, userTypeStr } from '@/stores/userInfo.js';
 
-const userInfo = userStore.getInfo();
+const userInfo = userInfoStore.get();
 
 // 내 예약 기록
 const filter = ref({

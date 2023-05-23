@@ -39,7 +39,7 @@
 				</p>
 				<div class="content-container">
 					<p class="content member creator">
-						{{ userStore.getInfo().name }} {{ userStore.getInfo().email }}
+						{{ userInfoStore.get().name }} {{ userInfoStore.get().email }}
 					</p>
 					<p
 						v-for="(member, index) in reservationCommonField.members"
@@ -174,7 +174,7 @@ import FilledButton from '@/components/atoms/FilledButton.vue';
 import CheckBox from '@/components/atoms/CheckBox.vue';
 import { reservationService } from '@/assets/scripts/requests/request.js';
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
-import { userStore } from '@/stores/user.js';
+import { userInfoStore } from '@/stores/userInfo.js';
 
 import getDayofWeek from '@/assets/scripts/utils/getDayofWeek.js';
 

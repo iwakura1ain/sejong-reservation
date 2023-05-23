@@ -2,8 +2,9 @@
 // https://www.notion.so/sogeumguideopbap/Web-Service-193dca19bff94c64a5673b7a0f116fbe?pvs=4#55d729ed74cd460b89a4090fa9bf6eb5
 
 import { createRouter, createWebHistory } from 'vue-router';
-// import { userStore } from '@/stores/user.js';
-// import { userService } from '@/assets/scripts/requests/request.js';
+import { userInfoStore } from '@/stores/userInfo.js';
+import { userTokenStore } from '@/stores/userToken.js';
+import { userService } from '@/assets/scripts/requests/request.js';
 
 // 뷰 불러오기 ------------------------------------
 // 공통 뷰
@@ -166,9 +167,46 @@ const router = createRouter({
 });
 
 // 네이게이션 가드 설정
-// const needlogin = [];
-// router.beforeEach(async (to, from, next) => {
+const notRequireLogin = ['Login', 'Register', 'Landing'];
+router.beforeEach(async (to, from, next) => {
+	// 로그인이 필요하지 않은 페이지들은 그냥 갈길 갑시다.
+	// console.log('1', to.name, from.name);
+	if (notRequireLogin.includes(to.name)) {
+		next();
+		return;
+	}
 
-// });
+	// 로그인이 필요한 페이지들.
+	try {
+		// console.log('2', to.name, from.name);
+		const refreshToken = userTokenStore.getRefreshToken();
+
+		// 액세스토큰, 리프레시토큰 둘 중 하나라도 저장된 것 없으면 로그인으로 갑시다
+		if (!userTokenStore.exist()) {
+			next({ name: 'Login' });
+			return;
+		}
+
+		if (from.name === undefined) {
+			next();
+			return;
+		}
+
+		// 두 토큰이 저장돼있다면 refresh Auth를 합시다
+		// const res = await userService.refreshAuth(refreshToken);
+		// if (!res.status) {
+		// 	throw new Error();
+		// }
+
+		// // 새로운 액세스 토큰을 저장합시다.
+		// userTokenStore.setAccessToken(res.data);
+		// console.log('3', to.name, res.data);
+
+		// 가려던 길을 갑시다
+		next();
+	} catch (err) {
+		console.error(err);
+	}
+});
 
 export default router;

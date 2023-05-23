@@ -36,7 +36,6 @@
 				>
 			</div>
 		</div>
-		<div v-else class="r-container">로그인안함</div>
 	</div>
 </template>
 
@@ -50,7 +49,8 @@ import FilledButton from '@/components/atoms/FilledButton.vue';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
 
 import { userService } from '@/assets/scripts/requests/request.js';
-import { userStore } from '@/stores/user.js';
+import { userInfoStore, userTypeStr } from '@/stores/userInfo.js';
+import { userTokenStore } from '@/stores/userToken.js';
 import { loadingStore } from '@/stores/loading.js';
 
 // ----------------------------------
@@ -59,22 +59,12 @@ const props = defineProps({
 		required: true,
 		type: Boolean,
 	},
-	userInfo: {
-		required: false,
-		type: Object,
-		default(rawProps) {
-			return {};
-		},
-		validator(value) {
-			return true;
-		},
-	},
 });
 
 // 상태 ----------------------------------
 const userinfoString = computed(() => {
-	const { username, level, isAdmin, noShowCount, isBanned } = props.userInfo;
-	return `(${username} | ${level})`;
+	const { name } = userInfoStore.get();
+	return `(${name} | ${userTypeStr.value})`;
 });
 
 // 초기화 ----------------------------
@@ -85,7 +75,7 @@ async function handleLogout() {
 	try {
 		loadingStore.start();
 
-		const res = await userService.logout(userStore.getToken().accessToken);
+		const res = await userService.logout(userTokenStore.getAccessToken());
 		if (!res.status) {
 			if (res.msg) throw new Error(res.msg);
 			else throw new Error(res);
@@ -100,7 +90,8 @@ async function handleLogout() {
 			makeToast('예기치 못한 오류가 발생했습니다.', 'error');
 		}
 	} finally {
-		userStore.init();
+		userInfoStore.clear();
+		userTokenStore.clear();
 		router.push({ name: 'Login' });
 		loadingStore.stop();
 	}

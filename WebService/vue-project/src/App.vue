@@ -1,5 +1,5 @@
 <template>
-	<app-header :isLogin="true" :user-info="userinfo"> </app-header>
+	<app-header :isLogin="userIsLogin" />
 	<Transition appear>
 		<router-view class="app-router-view"></router-view>
 	</Transition>
@@ -15,14 +15,18 @@ import AppFooter from '@/layouts/AppFooter.vue';
 import LoadingOveray from '@/components/atoms/LoadingOveray.vue';
 
 import { adminService } from '@/assets/scripts/requests/request.js';
+import { userService } from '@/assets/scripts/requests/request.js';
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
 import { loadingStore } from '@/stores/loading.js';
-
-// 초기화 -----------------------------
-init();
+import { userInfoStore, userIsLogin } from '@/stores/userInfo.js';
+import { userTokenStore } from '@/stores/userToken.js';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
 
 // 상태 (state) -----------------------
 //
+
+// 초기화 -----------------------------
+init();
 
 // 일반 함수 --------------------------
 
@@ -42,6 +46,40 @@ async function fetchRooms() {
 
 async function init() {
 	await fetchRooms();
+
+	// 저장된 토큰이 있으면 유저정보 가져오기
+	try {
+		if (!userTokenStore.exist()) {
+			return;
+		}
+
+		// refresh auth하고 새로운 액세스토큰 가져와 저장하기
+		// const refreshToken = userTokenStore.getRefreshToken();
+		// const res = await userService.refreshAuth(refreshToken);
+		// if (!res.status) {
+		// 	throw new Error();
+		// }
+		// userTokenStore.set({
+		// 	accessToken: res.data,
+		// 	refreshToken,
+		// });
+
+		// 새로운 액세스토큰으로 유저 정보 가져오기
+		const newAccessToken = userTokenStore.getAccessToken();
+		const infoRes = await userService.getAuthInfo(newAccessToken);
+		if (!infoRes.status) {
+			throw new Error(infoRes);
+		}
+		userInfoStore.set(infoRes.data);
+	} catch (err) {
+		const msg = err.msg;
+		console.error(err, msg);
+		if (msg === 'Token has expired') {
+			makeToast('로그인이 만료되었습니다', 'error');
+		} else {
+			makeToast('사용자 정보를 정상적으로 불러오지 못했습니다', 'error');
+		}
+	}
 }
 </script>
 

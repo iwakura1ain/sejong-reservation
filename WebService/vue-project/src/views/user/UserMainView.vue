@@ -31,7 +31,7 @@ import ReservationCard from '@/components/atoms/ReservationCard.vue';
 // import MonthCalendar from '@/components/MonthCalendar.vue';
 
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
-import { userStore } from '@/stores/user.js';
+import { userInfoStore } from '@/stores/userInfo.js';
 import { reservationService } from '@/assets/scripts/requests/request.js';
 import getDateStringInThreeDays from '@/assets/scripts/utils/getDateStringInThreeDays';
 
@@ -66,7 +66,7 @@ async function fetchReservationsInThreeDays() {
 		const res = await reservationService.getMyFullData({
 			after: today,
 			before: afterTomorrow,
-			creator: userStore.getInfo().id,
+			creator: userInfoStore.get().id,
 		});
 
 		if (!res.status) {

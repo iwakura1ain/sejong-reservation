@@ -70,10 +70,10 @@ import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
 import TextInput from '@/components/atoms/TextInput.vue';
 import RadioGroup from '@/components/RadioGroup.vue';
-import { userStore } from '@/stores/user.js';
+import { userInfoStore } from '@/stores/userInfo.js';
 
 // shared state
-const userInfo = userStore.getInfo();
+const userInfo = userInfoStore.get();
 
 // local states
 const name = ref(userInfo.name);
