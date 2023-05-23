@@ -20,7 +20,6 @@ from utils import (
 ns = Namespace(
     name="reservation",
     description="예약 서비스 API",
-    prefix="/reservation"
 )
 
 
