@@ -1,11 +1,14 @@
 from flask import request, send_from_directory, current_app
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
+from werkzeug.utils import secure_filename
+
 from service import Service
+
 from config import model_config, api_config, filepath
 from utils import serialization, check_jwt_exists, check_if_room_identical
-from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
-from werkzeug.utils import secure_filename
+#from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
+
 import os
 
 """
@@ -121,7 +124,7 @@ class ConferenceRoom(Resource, Service):
                 }, 200
         
         # error
-        except OSError as e:
+        except Exception as e:
             print(e, flush=True)
             return {
                 "status": False,
@@ -256,7 +259,7 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error      
-        except OSError as e:
+        except Exception as e:
             print(e, flush=True)
             return {
                 "msg": "Room GET failed"
@@ -348,8 +351,7 @@ class ConferenceRoomById(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate data from request body
-                valid_data, invalid_data = Room.validate(request.json)
-                
+                valid_data, invalid_data = Room.validate(request.json, optional=True)
                 if len(invalid_data) > 0:
                     return {
                         "status": False,
@@ -467,7 +469,7 @@ class ConferenceRoomImage(Resource, Service):
                 "status": False,
                 "msg": "Invalid file extension",
                 "filename": filename
-            }
+            }, 200
 
         # error checking: is file unique
         if not self.check_if_file_unique(joined_path):
@@ -502,7 +504,8 @@ class ConferenceRoomImage(Resource, Service):
                     "msg": "Image uploaded",
                     #"uploaded": filename,
                     # "uploadedPath": joined_path
-                }
+                }, 200
+            
         except Exception as e:
             return {
                 "status": False,
