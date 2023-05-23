@@ -404,6 +404,7 @@ class ConferenceRoomImage(Resource, Service):
         return True
 
     def get(self, id):
+        filepath_with_id = os.path.join(filepath, str(id))
         try:
             with self.query_model("Room") as (conn, Room):
                 room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
@@ -413,11 +414,17 @@ class ConferenceRoomImage(Resource, Service):
                         "msg": f"Room id:{id} not found"
                     }, 200
                 
+                if room['preview_image_name'] == 'no-image.png':
+                    return {
+                        "status": False,
+                        "msg": f"No file in room id:{id}"
+                    }, 200
+                
                 return send_from_directory(
-                    filepath, room["preview_image_name"]
+                    filepath_with_id, room["preview_image_name"]
                 )
             
-        except Exception as e:
+        except OSError as e:
             print(e, flush=True)
             return {
                 "status": False,
