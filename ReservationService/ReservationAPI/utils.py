@@ -152,7 +152,6 @@ def check_date_constraints(user_type, reservation_date):
     diff = date.fromisoformat(reservation_date) - date.today()
     return True if diff < reservation_limit[user_type] else False
 
-
 def create_confirmation_email(
     reservation, room, creator,
     # sender="reservationsys_admin@sejong.ac.kr",
@@ -194,7 +193,6 @@ def create_confirmation_email(
     with open(template_name, "r") as f:
         template = f.read()
 
-    print(template.format(**template_data),flush=True)
     return {
         "title": title,
         "text": template.format(**template_data),
