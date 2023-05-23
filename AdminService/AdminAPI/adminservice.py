@@ -269,7 +269,6 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
@@ -408,10 +407,10 @@ class ConferenceRoomImage(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
-                if len(room) == 0:
+                if room is None:
                     return {
                         "status": False,
-                        "msg": "Room not found"
+                        "msg": f"Room id:{id} not found"
                     }, 200
                 
                 return send_from_directory(
@@ -477,6 +476,14 @@ class ConferenceRoomImage(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 # insert file path into the data
+                room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+                
+                if room is None:
+                    return {
+                        "status": False,
+                        "msg": f"Room id:{id} not found"
+                    }, 200
+                
                 conn.execute(
                     update(Room).where(Room.id == id), {
                         "preview_image_name": filename
@@ -495,8 +502,6 @@ class ConferenceRoomImage(Resource, Service):
                 return {
                     "status": True,
                     "msg": "Image uploaded",
-                    #"uploaded": filename,
-                    # "uploadedPath": joined_path
                 }
         except OSError as e:
             print(e)
