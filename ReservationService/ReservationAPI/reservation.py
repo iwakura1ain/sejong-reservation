@@ -30,13 +30,14 @@ class ReservationList(Resource, Service):
     The ReservationList class defines methods for getting a list of reservations and making a new
     reservation, with various filtering and validation checks.
     """
-    
+
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource
         classes, passing arguments to their respective initialization functions.
         """
-        Service.__init__(self, model_config=model_config, api_config=api_config)
+        Service.__init__(self, model_config=model_config,
+                         api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
     def get(self):
@@ -66,7 +67,6 @@ class ReservationList(Resource, Service):
                     "msg": "Unauthenticated"
                 }, 400
 
-            
             with self.query_model("Reservation") as (conn, Reservation):
                 stmt = None
 
@@ -80,9 +80,9 @@ class ReservationList(Resource, Service):
                     }
                     stmt = select(*select_cols)
 
-                #query parameters
+                # query parameters
                 params = request.args
-                    
+
                 # filter by reservation_code (noshow code)
                 if reservation_code := params.get("reservation_code"):
                     stmt = stmt.where(
@@ -148,7 +148,8 @@ class ReservationList(Resource, Service):
             reservations = request.json.get("reservations", [])
 
             # make regular reservation code
-            reservation_type = generate(size=12) if len(reservations) > 1 else None
+            reservation_type = generate(size=12) if len(
+                reservations) > 1 else None
             valid_reservaitons, invalid_reservaitons = [], []
             with self.query_model("Reservation") as (conn, Reservation):
                 for reservation in reservations:
@@ -160,10 +161,13 @@ class ReservationList(Resource, Service):
                             "msg": "Invalid reservation",
                             "invalid": invalid
                         }, 400
+                    # if members data exist in valid, serialize to string for db
+                    if "members" in valid.keys():
+                        valid["members"] = json.dumps(valid["members"])
 
                     # check reservation date
                     reservation_date = valid["reservation_date"]
-                    if not check_date_constraints(auth_info, reservation_date):
+                    if not check_date_constraints(auth_info["User"]["type"], reservation_date):
                         return {
                             "status": False,
                             "msg": "User cannot reserve that far into future"
@@ -185,7 +189,7 @@ class ReservationList(Resource, Service):
 
                     # check time conflict
                     if check_time_conflict(valid, connection=conn, model=Reservation):
-                        #insert into invalid reservation list
+                        # insert into invalid reservation list
                         invalid_reservaitons.append(valid)
 
                     else:
@@ -199,7 +203,7 @@ class ReservationList(Resource, Service):
                     return {
                         "status": False,
                         "msg": "Conflict in reservations",
-                        "reservations": invalid_reservaitons
+                        "reservations": [serialize(r) for r in invalid_reservaitons]
                     }
 
                 # insert
@@ -241,7 +245,8 @@ class ReservationByID(Resource, Service):
         This is the initialization function for a class that inherits from both Service and Resource
         classes, and takes in arguments for model and API configurations.
         """
-        Service.__init__(self, model_config=model_config, api_config=api_config)
+        Service.__init__(self, model_config=model_config,
+                         api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
     def get(self, id: int):
@@ -275,8 +280,6 @@ class ReservationByID(Resource, Service):
             with self.query_model("Reservation") as (conn, Reservation):
                 stmt = None
 
-                print("is_admin: ", is_admin(auth_info), flush=True)
-
                 # return columns based on user type
                 if is_admin(auth_info):  # full table
                     stmt = select(Reservation)
@@ -293,7 +296,7 @@ class ReservationByID(Resource, Service):
                 if not row:
                     return {
                         "status": False,
-                        "msg": "reservation not found"
+                        "msg": "Reservation not found"
                     }, 400
 
             return {
@@ -304,10 +307,9 @@ class ReservationByID(Resource, Service):
         except Exception as e:
             return {
                 "status": False,
-                "msg": "Get reservation by ID failed."
+                "msg": "Get reservation by ID failed"
             }, 400
 
-        
     def patch(self, id: int):
         """
         This function updates a reservation with the given ID, checking for conflicts and validating the
@@ -353,7 +355,7 @@ class ReservationByID(Resource, Service):
 
                 reservation_date = row["reservation_date"]
                 if ("reservation_date" in valid.keys()
-                        and not check_date_constraints(auth_info, reservation_date)):
+                        and not check_date_constraints(auth_info["User"]["type"], reservation_date)):
                     return {
                         "status": False,
                         "msg": "User cannot reserve that far into future"
@@ -361,7 +363,7 @@ class ReservationByID(Resource, Service):
 
                 # check rooms
                 if "room_id" in valid.keys():
-                    room_id = row["room"]
+                    room_id = row["room_id"]
                     room = self.query_api(
                         "get_rooms_info", "get",
                         headers=request.headers,
@@ -381,10 +383,13 @@ class ReservationByID(Resource, Service):
                     }
 
                 # update reservation
+                # if members data exist in data, serialize to string for db
+                if "members" in row.keys():
+                    row["members"] = json.dumps(row["members"])
                 stmt = (
                     update(Reservation)
                     .where(Reservation.id == id)
-                    .values(valid)
+                    .values(row)
                 )
                 conn.execute(stmt)
 
