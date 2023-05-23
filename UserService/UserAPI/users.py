@@ -93,7 +93,7 @@ class UserList(Service, Resource):
             }, 500
 
 
-@USERS.route("/<id>")
+@USERS.route("/<string:id>")
 class UserDetail(Service, Resource):
     """
     This code defines a Flask-RestX resource for handling CRUD operations related to a specific user
