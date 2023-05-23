@@ -11,10 +11,19 @@ from os import getenv
 # }
 
 # orm config
+# ORM = {
+#     "username": getenv("DB_USERNAME"),
+#     "password": getenv("DB_PASSWORD"),
+#     "host": getenv("DB_URL"),
+#     "port": getenv("DB_PORT"),
+#     "database": getenv("DB_NAME")
+# }
+
+# local orm config
 ORM = {
-    "username": getenv("DB_USERNAME"),
-    "password": getenv("DB_PASSWORD"),
-    "host": getenv("DB_URL"),
-    "port": getenv("DB_PORT"),
-    "database": getenv("DB_NAME")
+    "username": "development",
+    "password": "1234",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "database": "sejong"
 }

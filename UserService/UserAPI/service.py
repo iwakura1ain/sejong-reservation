@@ -70,6 +70,7 @@ def insert_into_dict(dest, keys, vals):
         if k not in dest.keys():
             dest[k] = v
 
+
 def validate(self, data):
     """
     This is a validator method for a request body in a SQLAlchemy model that validates the data and
@@ -95,11 +96,8 @@ def validate(self, data):
     ---
     Returns dict of validated values mapped to model.
     """
-    import validators
 
-    print(VALIDATORS, flush=True)
-    
-    # check if request data key in model schema
+    # check if request data key in model schema 
     schema_exists = {}
     for key, val in data.items():
         schema_key = f"{self.__name__}.{key}"
@@ -107,24 +105,19 @@ def validate(self, data):
             schema_exists[key] = val
 
     # check if validation function keys in model schema
-    for key_list in VALIDATORS.keys():
-        if not self.columns.issuperset(set(key_list)):
-            print("ERROR: validator function arguments wrong", flush=True)
-            raise KeyError
+    for keys in VALIDATORS.items():
+        self.columns.issuperset(set(keys))
 
     # check if valid
     validated, invalidated = schema_exists.copy(), {}
     for keys, validator in VALIDATORS.items():
         keys = [k.split(".")[-1] for k in keys]
-    
-        validator_args = {k: schema_exists.get(k) for k in keys}
-        if None in validator_args.values():
-            invalidated.update(validator_args)
-            
-        elif not validator(**validator_args):
+
+        validator_args = {k: schema_exists[k] for k in keys}
+        if not validator(**validator_args):
             popped = list(map(validated.pop, keys, repeat(None)))
             insert_into_dict(invalidated, keys, popped)
-           
+            
     return validated, invalidated
 # inject validate function into sqlalchemy
 DeclarativeMeta.validate = validate
@@ -293,11 +286,6 @@ class Service:
         query is a SELECT statement) or a boolean value indicating whether the query was successful (if
         `retval` is False and the query is not a SELECT statement). If there is an error, it returns an
         empty list (if `retval` is True) or False (if `retval` is False).
-
-        ---
-        query: sql query
-        args: sql query arguments
-        retval: True for SELECT | FALSE for INSERT, DELETE, etc
         """
         if self.db_config is None:
             raise NotImplementedError
@@ -351,12 +339,6 @@ class Service:
         request method, request parameters, headers, and body. If an error occurs during the API query,
         the function returns False.
 
-        ---
-        api_name: registered api name in api_config
-        request_method: "get", "post", "put", "delete"
-        request_params: request parameters
-        headers: request headers
-        body: request body
         ---
         USAGE:
         api_config = {

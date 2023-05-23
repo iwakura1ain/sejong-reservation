@@ -181,6 +181,7 @@ class Login(Service, Resource):
                 # validate request body
 
                 req, invalidated = User.validate(request.json)
+                print(req, invalidated)
                 if len(invalidated) != 0:
                     return {
                         "status": False,
