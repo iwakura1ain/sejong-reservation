@@ -75,15 +75,6 @@ class ConferenceRoom(Resource, Service):
                 "status": False,
                 "msg": "No authorization"
             }, 200
-        
-        # # get token info
-        #     auth_info = self.query_api(
-        #         "get_auth_info", "get", headers=request.headers)
-        #     if not is_valid_token(auth_info):
-        #         return {
-        #             "status": False,
-        #             "msg": "Unauthenticated"
-        #         }, 400
 
         try:
             with self.query_model("Room") as (conn, Room):
@@ -117,7 +108,8 @@ class ConferenceRoom(Resource, Service):
                 # CREATE room
                 return{
                     "status": True,
-                    "msg": "Room Created"
+                    "msg": "Room Created",
+                    "created_room": req
                 }, 200
         
         # error
