@@ -16,6 +16,7 @@ from utils import (
     check_date_constraints,
     check_time_conflict,
     create_confirmation_email,
+    validate_members,
 )
 
 ns = Namespace(
@@ -159,6 +160,10 @@ class ReservationList(Resource, Service):
                 for reservation in reservations:
                     # validate model
                     valid, invalid = Reservation.validate(reservation, exclude=["members"])
+                    # and validate members data
+                    if not validate_members(valid["members"]):
+                        invalid["members"] = valid["members"]
+
                     if invalid != {}:
                         return {
                             "status": False,
@@ -356,7 +361,11 @@ class ReservationByID(Resource, Service):
 
             with self.query_model("Reservation") as (conn, Reservation):
                 # validate model
-                valid, invalid = Reservation.validate(request.json, optional=True, exclude=["members"])
+                valid, invalid = Reservation.validate(request.json, exclude=["members"])
+                # and validate members data
+                if not validate_members(valid["members"]):
+                    invalid["members"] = valid["members"]
+
                 if invalid != {}:
                     return {
                         "status": False,
