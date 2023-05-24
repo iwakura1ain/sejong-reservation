@@ -33,7 +33,7 @@ reservation_limit = {
 }
 
 # email address from which alert emails will be sent
-SENDER = "" 
+SENDER = "ernie937@gmail.com" 
 
 MINIMIZED_COLS = [
     "id",

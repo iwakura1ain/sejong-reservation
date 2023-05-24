@@ -379,5 +379,5 @@ class Service:
             return res.json() # will raise error if response is not jsn
 
         except Exception as e:
-            return False
+            raise ConnectionError
 
