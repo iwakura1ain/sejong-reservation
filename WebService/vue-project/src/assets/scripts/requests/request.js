@@ -298,8 +298,7 @@ const userService = {
 					},
 				},
 			);
-			console.log(`${BASE_URL.USER_SERVICE}/users/${id}`);
-			console.log(accessToken);
+
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);

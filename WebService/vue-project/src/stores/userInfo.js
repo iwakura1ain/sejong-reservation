@@ -15,16 +15,23 @@ export const userInfoStore = reactive({
 
 	clear: function () {
 		// userInfoStore 내용을 빈 값으로 만드는 메소드
-		userInfoStore.data = template;
+		// this.data = { ...template };
+		this.data.id = template.id;
+		this.data.name = template.name;
+		this.data.email = template.email;
+		this.data.phone = template.phone;
+		this.data.type = template.type;
+		this.data.dept = template.id;
+		this.data.noShow = template.noShow;
 	},
 	set: function (_data) {
-		userInfoStore.data.id = _data.id;
-		userInfoStore.data.name = _data.name;
-		userInfoStore.data.email = _data.email;
-		userInfoStore.data.phone = _data.phone;
-		userInfoStore.data.type = _data.type;
-		userInfoStore.data.dept = _data.dept;
-		userInfoStore.data.noShow = _data.noShow;
+		this.data.id = _data.id;
+		this.data.name = _data.name;
+		this.data.email = _data.email;
+		this.data.phone = _data.phone;
+		this.data.type = _data.type;
+		this.data.dept = _data.dept;
+		this.data.noShow = _data.noShow;
 	},
 	setFromBackend: async function (accessToken) {
 		try {

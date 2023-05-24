@@ -1,5 +1,5 @@
 <template>
-	<app-header :isLogin="userIsLogin" />
+	<app-header />
 	<Transition appear>
 		<router-view class="app-router-view"></router-view>
 	</Transition>
@@ -19,7 +19,7 @@ import { adminService } from '@/assets/scripts/requests/request.js';
 import { userService } from '@/assets/scripts/requests/request.js';
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
 import { loadingStore } from '@/stores/loading.js';
-import { userInfoStore, userIsLogin } from '@/stores/userInfo.js';
+import { userInfoStore } from '@/stores/userInfo.js';
 import { userTokenStore } from '@/stores/userToken.js';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
 

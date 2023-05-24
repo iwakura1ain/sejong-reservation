@@ -193,9 +193,16 @@ router.beforeEach(async (to, from, next) => {
 			return;
 		}
 
+		// 만약 관리자여야 진입가능한 곳인데 일반사용자가 들어갔으면 로그인으로 갑시다
+		if (RequireAdmin.includes(to.name) && resAuth.data.type !== 1) {
+			await userService.logout(accessToken);
+			throw new Error(
+				`ADMIN권한을 요구하는 페이지이지만 사용자가 ADMIN이 아닙니다(권한유형코드:${resAuth.data.type})`,
+			);
+		}
+
 		if (from.name === undefined) {
 			next();
-			console.log('aaaa');
 			return;
 		}
 
@@ -213,17 +220,9 @@ router.beforeEach(async (to, from, next) => {
 			throw new Error(resAuth);
 		}
 
-		// 만약 관리자여야 진입가능한 곳인데 일반사용자가 들어갔으면 로그인으로 갑시다
-		if (RequireAdmin.includes(to.name) && resAuth.data.type !== 1) {
-			throw new Error(
-				`ADMIN권한을 요구하는 페이지이지만 사용자가 ADMIN이 아닙니다(권한유형코드:${resAuth.data.type})`,
-			);
-		}
-
 		// 모든 시련을 이겨냈다면 이제 가려던 길을 갑시다
 		next();
 	} catch (err) {
-		console.error(err);
 		userInfoStore.clear();
 		userTokenStore.clear();
 		next({ name: 'Login', state: { failToAuth: true } });

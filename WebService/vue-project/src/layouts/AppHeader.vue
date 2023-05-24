@@ -23,7 +23,7 @@
 			</router-link>
 		</div>
 
-		<div v-if="isLogin" class="r-container">
+		<div v-if="userIsLogin" class="r-container">
 			<router-link :to="{ name: 'UserMyPage' }">
 				<text-button color="white">{{ userinfoString }}</text-button>
 			</router-link>
@@ -49,17 +49,11 @@ import FilledButton from '@/components/atoms/FilledButton.vue';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
 
 import { userService } from '@/assets/scripts/requests/request.js';
-import { userInfoStore, userTypeStr } from '@/stores/userInfo.js';
+import { userInfoStore, userIsLogin, userTypeStr } from '@/stores/userInfo.js';
 import { userTokenStore } from '@/stores/userToken.js';
 import { loadingStore } from '@/stores/loading.js';
 
 // ----------------------------------
-const props = defineProps({
-	isLogin: {
-		required: true,
-		type: Boolean,
-	},
-});
 
 // 상태 ----------------------------------
 const userinfoString = computed(() => {

@@ -50,6 +50,8 @@ const id = ref('');
 const pw = ref('');
 
 // 초기화 -----------------------
+userInfoStore.clear();
+userTokenStore.clear();
 const router = useRouter();
 if (history.state.failToAuth) {
 	makeToast('사용자 인증에 문제가 있습니다', 'error');
