@@ -118,7 +118,6 @@ class ReservationList(Resource, Service):
                 }, 200
 
         except Exception as e:
-            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Get reservation list failed"
@@ -149,29 +148,25 @@ class ReservationList(Resource, Service):
             reservations = request.json.get("reservations", [])
 
             # make regular reservation code
-            reservation_type = generate(size=12) if len(reservations) > 1 else None
+            reservation_type = generate(size=12) if len(
+                reservations) > 1 else None
             valid_reservaitons, invalid_reservaitons = [], []
             with self.query_model("Reservation") as (conn, Reservation):
                 for reservation in reservations:
+                    print("sanity check", flush=True)
                     # validate model
+                    print("unvalidated: ", reservation)
                     valid, invalid = Reservation.validate(reservation, exclude=["members"])
+                    print("validated: ", valid, invalid, flush=True)
                     if invalid != {}:
                         return {
                             "status": False,
                             "msg": "Invalid reservation",
                             "invalid": invalid
                         }, 400
-                    
                     # if members data exist in valid, serialize to string for db
                     if "members" in valid.keys():
                         valid["members"] = json.dumps(valid["members"])
-
-                    # check if logged in user is same as reservation creator
-                    if auth_info["User"]["id"] != valid["creator_id"]:
-                        return {
-                            "status": False,
-                            "msg": "cannot create reservation for another user"
-                        }, 400
 
                     # check reservation date
                     reservation_date = valid["reservation_date"]
@@ -187,6 +182,8 @@ class ReservationList(Resource, Service):
                         headers=request.headers,
                         request_params={"id": valid["room_id"]}
                     )
+
+                    print(room)
                     if "status" not in room.keys() or not room["status"]:
                         return {
                             "status": False,
@@ -197,6 +194,7 @@ class ReservationList(Resource, Service):
                     if check_time_conflict(valid, connection=conn, model=Reservation):
                         # insert into invalid reservation list
                         invalid_reservaitons.append(valid)
+
                     else:
                         # insert reservation_type and reservation_code
                         valid["reservation_type"] = reservation_type
@@ -228,8 +226,7 @@ class ReservationList(Resource, Service):
                 "reservations": retval,
             }, 200
 
-        except OSError as e:
-            print(e, flush=True)
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Reservation failed"
@@ -296,9 +293,7 @@ class ReservationByID(Resource, Service):
                     }
                     stmt = select(*select_cols)
 
-                row = conn.execute(
-                    stmt.where(Reservation.id == id)
-                ).mappings().fetchone()
+                row = conn.execute(stmt).mappings().fetchone()
 
                 # if reservation with this id doesn't exist
                 if not row:
@@ -313,7 +308,6 @@ class ReservationByID(Resource, Service):
             }, 200
 
         except Exception as e:
-            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Get reservation by ID failed"
@@ -345,7 +339,7 @@ class ReservationByID(Resource, Service):
 
             with self.query_model("Reservation") as (conn, Reservation):
                 # validate model
-                valid, invalid = Reservation.validate(request.json, optional=True, exclude=["members"])
+                valid, invalid = Reservation.validate(request.json, optional=True)
                 if invalid != {}:
                     return {
                         "status": False,
@@ -395,7 +389,6 @@ class ReservationByID(Resource, Service):
                 # if members data exist in data, serialize to string for db
                 if "members" in row.keys():
                     row["members"] = json.dumps(row["members"])
-                    
                 stmt = (
                     update(Reservation)
                     .where(Reservation.id == id)
@@ -412,8 +405,7 @@ class ReservationByID(Resource, Service):
                 "reservation": serialize(row)
             }, 200
 
-        except OSError as e:
-            print(e, flush=True)
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Reservation edit failed"
@@ -472,7 +464,7 @@ class ReservationByID(Resource, Service):
             }, 200
 
         except Exception as e:
-            print(e, flush=True)
+
             return {
                 "status": False,
                 "msg": "Server error"

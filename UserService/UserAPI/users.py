@@ -87,6 +87,7 @@ class UserList(Service, Resource):
                 }
 
         except Exception as e:
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "error"
@@ -160,15 +161,16 @@ class UserDetail(Service, Resource):
         """
         try:
             with self.query_model("User") as (conn, User):
-                req, invalidated = User.validate(request.json)
+                req, invalidated = User.validate(request.json, optional=True, drop=True)
                 if len(invalidated) != 0:
                     return {
                         "status": False,
                         "msg": "key:value pair wrong"
                     }, 200
+                
                 res = conn.execute(
                     select(User).where(User.id == id)
-                ).mappings().fetchone
+                ).mappings().fetchone()
                 if len(res) == 0:
                     return {
                         "status": False,

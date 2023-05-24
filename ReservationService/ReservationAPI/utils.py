@@ -1,7 +1,7 @@
 from sqlalchemy import select, and_
 
 import json
-from datetime import date, time
+from datetime import datetime, date, time
 
 def serialize(row):
     """
@@ -17,11 +17,13 @@ def serialize(row):
     """
     row = dict(row)
     ret = {}
-    for k,v in row.items():
-        if k=="members":
+    for k, v in row.items():
+        if k == "members":
             ret[k] = json.loads(v)
-        else:
+        elif type(v) in [datetime, date, time]:
             ret[k] = str(v)
+        else:
+            ret[k] = v
     return ret
 
 def is_valid_token(auth_info):
@@ -147,12 +149,5 @@ def check_date_constraints(user_type, reservation_date):
 
     from config import reservation_limit
     
-    # reservation_date = new_reservation["reservation_date"]
     diff = date.fromisoformat(reservation_date) - date.today()
     return True if diff < reservation_limit[user_type] else False
-    
-        
-
-
-
-
