@@ -40,10 +40,14 @@ CREATE TABLE Reservation (
 	   end_time TIME NOT NULL,
 	   room_id INT NOT NULL,
 	   CONSTRAINT reservation_to_room
-	   FOREIGN KEY (room_id) REFERENCES Room(id),
+	   FOREIGN KEY (room_id) REFERENCES Room(id)
+	   ON UPDATE CASCADE
+	   ON DELETE CASCADE,
 	   creator_id VARCHAR(10) NOT NULL,
 	   CONSTRAINT reservation_to_user
-	   FOREIGN KEY (creator_id) REFERENCES User(id),
+	   FOREIGN KEY (creator_id) REFERENCES User(id)
+	   ON UPDATE CASCADE
+	   ON DELETE CASCADE,
 	   members JSON NOT NULL DEFAULT '{}'
 	   CHECK (JSON_VALID(members)),
 	   room_used BOOLEAN NOT NULL DEFAULT 0
@@ -57,6 +61,8 @@ CREATE TABLE Token_Blocklist (
 	   user_id VARCHAR(10) NOT NULL,
 	   CONSTRAINT blocklist_to_user
 	   FOREIGN KEY (user_id) REFERENCES User(id)
+	   ON UPDATE CASCADE
+	   ON DELETE CASCADE
 ) DEFAULT CHARSET=utf8;
 
 CREATE USER 'development'@'%' IDENTIFIED BY '1234';
