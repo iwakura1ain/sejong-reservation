@@ -33,6 +33,8 @@ services:
       DB_PASSWORD: 1234
     ports:
       - "5001:5000"
+    volumes:
+      - ./UserService/UserAPI:/UserAPI
 
   managementservice:
     build:
@@ -45,28 +47,14 @@ services:
       DB_PORT: 3306
       DB_USERNAME: development
       DB_PASSWORD: 1234
-    links:
-      - adminservice
+    networks:
+      default:
+        aliases:
+          - adminservice
     volumes:
       - ./ManagementService/thumbnails:/ManagementAPI/static:rw
     ports:
       - "5002:5000"
-
-  adminservice:
-    build:
-      context: .
-      dockerfile: ./ManagementService/Dockerfile
-    restart: on-failure # always
-    environment:
-      DB_URL: dbservice
-      DB_NAME: sejong
-      DB_PORT: 3306
-      DB_USERNAME: development
-      DB_PASSWORD: 1234
-    volumes:
-      - ./ManagementService/thumbnails:/ManagementAPI/static:rw
-    ports:
-      - "5004:5000"
 
   alertservice:
     build:
