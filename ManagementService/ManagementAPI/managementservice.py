@@ -64,7 +64,6 @@ class ConferenceRoom(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
 
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
@@ -72,15 +71,6 @@ class ConferenceRoom(Resource, Service):
                 "status": False,
                 "msg": "No authorization"
             }, 200
-        
-        # # get token info
-        #     auth_info = self.query_api(
-        #         "get_auth_info", "get", headers=request.headers)
-        #     if not is_valid_token(auth_info):
-        #         return {
-        #             "status": False,
-        #             "msg": "Unauthenticated"
-        #         }, 400
 
         try:
             with self.query_model("Room") as (conn, Room):
@@ -141,7 +131,6 @@ class ConferenceRoom(Resource, Service):
         # user_status = self.query_api( 
         #     "jwt_status", "get", headers=request.headers
         # )
-        # # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         # if not check_jwt_exists(user_status):
         #     return {
         #         "status": False,
@@ -162,8 +151,9 @@ class ConferenceRoom(Resource, Service):
                 # if there's no such room
                 if len(serialized_rooms) == 0:
                     return {
-                        "status": False,
-                        "msg": "Room Not Found"
+                        "status": True,
+                        "msg": "No room exists",
+                        "rooms": rooms
                     }, 200
 
                 # GET all rooms
