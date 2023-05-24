@@ -10,7 +10,7 @@ from os import getenv
 #     'autocommit': True
 # }
 
-# orm config
+#orm config
 ORM = {
     "username": getenv("DB_USERNAME"),
     "password": getenv("DB_PASSWORD"),
@@ -19,7 +19,8 @@ ORM = {
     "database": getenv("DB_NAME")
 }
 
-# local config
+
+# # local orm config
 # ORM = {
 #     "username": "development",
 #     "password": "1234",

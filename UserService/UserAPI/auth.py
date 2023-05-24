@@ -90,7 +90,6 @@ class Register(Service, Resource):
         try:
             with self.query_model("User") as (conn, User):
                 # validate request body arguments
-
                 req, invalidated = User.validate(request.json)
                 if len(invalidated) != 0:
                     return {
@@ -132,7 +131,7 @@ class Register(Service, Resource):
                 }, 200
 
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Register Failed",
@@ -181,7 +180,8 @@ class Login(Service, Resource):
             with self.query_model("User") as (conn, User):
                 # validate request body
 
-                req, invalidated = User.validate(request.json)
+                req, invalidated = User.validate(request.json, optional=True)
+                print(req, invalidated)
                 if len(invalidated) != 0:
                     return {
                         "status": False,
@@ -226,7 +226,7 @@ class Login(Service, Resource):
                 }, 200
 
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Login Failed"
@@ -349,7 +349,7 @@ class JWTStatus(Service, Resource):
                 }, 200
 
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "jwt status Failed"
@@ -427,46 +427,52 @@ class UserImport(Service, Resource):
                 "status": False,
                 "msg": "invalid filetype"
             }, 200
+        try:
+            with self.query_model("User") as (conn, User):
+                users_sheet = load_workbook(filename=BytesIO(f)).active
+                schema = User.columns
 
-        with self.query_model("User") as (conn, User):
-            users_sheet = load_workbook(filename=BytesIO(f)).active
-            schema = User.columns
+                insert_values = []
+                for row in users_sheet.iter_rows(min_row=2, min_col=1, max_col=8):
+                    # create new user dict
+                    new_user, invalid = User.validate(
+                        {key: val.value for key, val in zip(schema, row)},
+                        optional=False,
+                    )
 
-            insert_values = []
-            for n, row in enumerate(users_sheet.iter_rows(min_row=2, min_col=1, max_col=8)):
-                # create new user dict
-                new_user, invalid = User.validate(
-                    {key: val.value for key, val in zip(schema, row)}
+                    #check excel values
+                    if len(invalid) != 0:
+                        return {
+                            "status": False,
+                            "msg": "invalid value",
+                            "invalid": row
+                        }, 200
+
+                    # check if user in db 
+                    res = conn.execute(
+                        select(User).where(User.id == new_user["id"])
+                    ).mappings().fetchone()
+                    if res is None:
+                        new_user["password"] = generate_password_hash(new_user["password"])
+                        insert_values.append(new_user)
+
+                # insert new user
+                conn.execute(
+                    insert(User), insert_values
                 )
 
-                #check excel values
-                if len(invalid) != 0:
-                    return {
-                        "status": False,
-                        "msg": "invalid value in excel file",
-                        "rownum": n,
-                        "invalid": row
-                    }, 200
+            return {
+                "status": True,
+                "msg": "users imported",
+                "imported_count": len(insert_values)
+            }, 200
 
-                # check if user in db 
-                res = conn.execute(
-                    select(User).where(User.id == new_user["id"])
-                ).mappings().fetchone()
-                if res is None:
-                    new_user["password"] = generate_password_hash(new_user["password"])
-                    insert_values.append(new_user)
-
-            # insert new user
-            conn.execute(
-                insert(User), insert_values
-            )
-
-        return {
-            "status": True,
-            "msg": "users imported",
-            "imported_count": len(insert_values)
-        }, 200
-
+        except Exception as e:
+            print(e, flush=True)
+            return {
+                "status": False,
+                "msg": "error while importing users"
+            }, 500
 
 
 

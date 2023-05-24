@@ -2,7 +2,16 @@ from service import validator
 from re import fullmatch
 
 @validator("User.id")
-def username_validator(id):
+
+def id_validator(id):
+    return True
+
+@validator("User.password")
+def id_validator(password):
+    return True
+
+@validator("User.email")
+def email_validator(email):
     return True
 
 @validator("User.name")

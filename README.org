@@ -1,0 +1,45 @@
+* Sejong-Reservation
+** Services
+- gatewayservice
+- dbservice
+- userservice
+- adminservice
+- reservationservice
+- alertservice
+- adminer (db manager)
+
+** Integrated Features
+- Email send API
+- User login, logout, register, jwt API
+- User CRUD API with query params
+- Room CRUD API
+- Room preview image upload, download API
+- Single+Regular Reservation RETRIEVE with query params
+- Single+Regular Reservation CREATE
+- Single Reservation Update, Delete
+
+** WIP Features
+- Email alert when creating reservation
+- Disable reservations if Room is not usable
+- Get reservation for current time
+- NoShow code verification API
+- rename adminservice to managementservice
+
+** How to run
+*** Build containers
+#+begin_src bash
+  docker compose down --volumes
+  docker compose build --no-cache
+#+end_src
+
+*** Run newly built containers
+- Run with console output
+#+begin_src bash
+  docker compose up 
+#+end_src
+
+- Run in background
+#+begin_src bash
+  docker compose up 
+#+end_src
+
