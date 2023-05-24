@@ -194,6 +194,10 @@ router.beforeEach(async (to, from, next) => {
 		}
 
 		// 만약 관리자여야 진입가능한 곳인데 일반사용자가 들어갔으면 로그인으로 갑시다
+		const resAuth = await userService.getAuthInfo(accessToken);
+		if (!resAuth.status) {
+			throw new Error(resAuth);
+		}
 		if (RequireAdmin.includes(to.name) && resAuth.data.type !== 1) {
 			await userService.logout(accessToken);
 			throw new Error(
@@ -215,10 +219,6 @@ router.beforeEach(async (to, from, next) => {
 		// 새로운 액세스 토큰을 저장하고 올바른 토큰인지 검사합시다
 		// userTokenStore.setAccessToken(res.data);
 		// console.log('3', to.name, res.data);
-		const resAuth = await userService.getAuthInfo(accessToken);
-		if (!resAuth.status) {
-			throw new Error(resAuth);
-		}
 
 		// 모든 시련을 이겨냈다면 이제 가려던 길을 갑시다
 		next();
