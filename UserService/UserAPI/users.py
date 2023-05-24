@@ -212,16 +212,32 @@ class UserDetail(Service, Resource):
         "error", with an HTTP status code of 200.
         """
         try:
+            # with self.query_model("User") as (conn, User):
+            #     res = conn.execute(
+            #         select(User).where(User.id == id)
+            #     ).mappings().fetchone()
+            #     if len(res) == 0:
+            #         return {
+            #             "status": False,
+            #             "msg": "user not found"
+            #         }, 200
+
+            with self.query_model("Token_Blocklist") as (conn, Blocklist):
+                conn.execute(
+                    remove(Blocklist).where(Blocklist.id == id)
+                )
+            
             with self.query_model("User") as (conn, User):
                 res = conn.execute(
                     select(User).where(User.id == id)
-                ).mappings().fetchone
+                ).mappings().fetchone()
+
                 if len(res) == 0:
                     return {
                         "status": False,
                         "msg": "user not found"
                     }, 200
-                
+
                 conn.execute(
                     remove(User).where(User.id == id)
                 )
@@ -231,9 +247,11 @@ class UserDetail(Service, Resource):
                     "msg": "deleted"
                 }, 200
 
-        except Exception as e:
+            #TODO: must revoke current token from user
+
+        except OSError as e:
             print(e)
             return {
                 "status": False,
-                "msg": "error"
+                "msg": "error while deleting user"
             }, 200
