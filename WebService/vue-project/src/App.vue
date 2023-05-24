@@ -10,6 +10,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import AppHeader from '@/layouts/AppHeader.vue';
 import AppFooter from '@/layouts/AppFooter.vue';
 import LoadingOveray from '@/components/atoms/LoadingOveray.vue';
@@ -26,6 +27,7 @@ import makeToast from '@/assets/scripts/utils/makeToast.js';
 //
 
 // 초기화 -----------------------------
+const router = useRouter();
 init();
 
 // 일반 함수 --------------------------
@@ -53,24 +55,8 @@ async function init() {
 			return;
 		}
 
-		// refresh auth하고 새로운 액세스토큰 가져와 저장하기
-		// const refreshToken = userTokenStore.getRefreshToken();
-		// const res = await userService.refreshAuth(refreshToken);
-		// if (!res.status) {
-		// 	throw new Error();
-		// }
-		// userTokenStore.set({
-		// 	accessToken: res.data,
-		// 	refreshToken,
-		// });
-
-		// 새로운 액세스토큰으로 유저 정보 가져오기
-		const newAccessToken = userTokenStore.getAccessToken();
-		const infoRes = await userService.getAuthInfo(newAccessToken);
-		if (!infoRes.status) {
-			throw new Error(infoRes);
-		}
-		userInfoStore.set(infoRes.data);
+		const accessToken = userTokenStore.getAccessToken();
+		await userInfoStore.setFromBackend(accessToken);
 	} catch (err) {
 		const msg = err.msg;
 		console.error(err, msg);
@@ -79,6 +65,9 @@ async function init() {
 		} else {
 			makeToast('사용자 정보를 정상적으로 불러오지 못했습니다', 'error');
 		}
+		userInfoStore.clear();
+		userTokenStore.clear();
+		router.push({ name: 'Login', state: { failToAuth: true } });
 	}
 }
 </script>

@@ -51,6 +51,12 @@ const pw = ref('');
 
 // 초기화 -----------------------
 const router = useRouter();
+if (history.state.failToAuth) {
+	makeToast('사용자 인증에 문제가 있습니다', 'error');
+}
+if (history.state.userDeleted) {
+	makeToast('정상적으로 탈퇴 처리되었습니다', 'info');
+}
 
 // 이벤트 핸들러 -----------------
 async function handleLogin() {
