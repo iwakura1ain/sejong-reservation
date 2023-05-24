@@ -40,7 +40,7 @@ def protected():
         @wraps(fn)
         def decorator(*args, **kwargs):
             identity = retrieve_jwt()
-            if identity["type"] == 2 or identity["id"] == kwargs.get("id"):
+            if identity["type"] == 1 or identity["id"] == kwargs.get("id"):
                 return fn(*args, **kwargs)
             
             return {
