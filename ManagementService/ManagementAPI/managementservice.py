@@ -66,7 +66,7 @@ class ConferenceRoom(Resource, Service):
         )
 
         if(check_jwt_exists(user_status) 
-           and (user_status['User']['type'] != 2)):
+           and (user_status['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -261,7 +261,7 @@ class ConferenceRoomById(Resource, Service):
             "jwt_status", "get", headers=request.headers
         )
         if(check_jwt_exists(user_status) 
-           and (user_status['User']['type'] != 2)):
+           and (user_status['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -319,7 +319,7 @@ class ConferenceRoomById(Resource, Service):
         )
         
         if (check_jwt_exists(user_status)
-           and (user_status['User']['type'] != 2)):
+           and (user_status['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -430,7 +430,7 @@ class ConferenceRoomImage(Resource, Service):
             "jwt_status", "get", headers=request.headers
         )
         if(check_jwt_exists(user_status) 
-           and (user_status['User']['type'] != 2)):
+           and (user_status['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
