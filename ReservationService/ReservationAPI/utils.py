@@ -58,7 +58,7 @@ def is_authorized(auth_info, reservation):
     if user["id"] == reservation["creator_id"]:
         return True
     # user is admin
-    if user["type"] == 2:
+    if user["type"] == 1:
         return True
     return False
 
@@ -74,7 +74,7 @@ def is_admin(auth_info):
     :return: a boolean value indicating whether the user is an admin or not. If the user is an admin,
     the function returns True, otherwise it returns False.
     """
-    if auth_info["User"]["type"] == 2:
+    if auth_info["User"]["type"] == 1:
         return True
     return False
 

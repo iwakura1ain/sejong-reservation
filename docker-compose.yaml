@@ -8,6 +8,7 @@ services:
       dockerfile: ./ReservationService/Dockerfile
     restart: on-failure # always
     environment:
+      TZ: Asia/Seoul
       DB_URL: dbservice
       DB_NAME: sejong
       DB_PORT: 3306
@@ -26,6 +27,7 @@ services:
       dockerfile: ./UserService/Dockerfile
     restart: on-failure # always
     environment:
+      TZ: Asia/Seoul
       DB_URL: dbservice
       DB_NAME: sejong
       DB_PORT: 3306
@@ -42,6 +44,7 @@ services:
       dockerfile: ./ManagementService/Dockerfile
     restart: on-failure # always
     environment:
+      TZ: Asia/Seoul
       DB_URL: dbservice
       DB_NAME: sejong
       DB_PORT: 3306
@@ -61,6 +64,8 @@ services:
       context: .
       dockerfile: ./AlertService/dockerfile
     restart: on-failure
+    environment:
+      - TZ: Asia/Seoul
     volumes:
       - ./AlertService/AlertAPI:/AlertAPI
     ports:
@@ -70,6 +75,8 @@ services:
     #container_name: dbmanager
     image: adminer:latest
     restart: on-failure #always
+    environment:
+      - TZ: Asia/Seoul
     ports:
       - "9999:8080"
 
@@ -96,5 +103,7 @@ services:
       # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.pem:/etc/nginx/cert/star_xx_com.pem
       # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.key:/etc/nginx/cert/star_xx_com.key
       # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.crt:/etc/nginx/cert/star_xx_com.crt
+    environment:
+      - TZ: Asia/Seoul
     ports:
       - 8080:8080
