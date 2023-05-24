@@ -286,9 +286,62 @@ const userService = {
 	// --------------------------------------------------------------------------
 	registerFromExcel: async function () {},
 	// --------------------------------------------------------------------------
-	update: async function () {},
+	update: async function (id, reqBody, accessToken) {
+		try {
+			// 통신
+			const res = await axios.patch(
+				`${BASE_URL.USER_SERVICE}/users/${id}`,
+				reqBody,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				},
+			);
+			console.log(`${BASE_URL.USER_SERVICE}/users/${id}`);
+			console.log(accessToken);
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			return res.data;
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
-	delete: async function () {},
+	delete: async function (id, accessToken) {
+		try {
+			const res = await axios.delete(`${BASE_URL.USER_SERVICE}/users/${id}`, {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 반환
+			return {
+				status: true,
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
 	// --------------------------------------------------------------------------
 	getAll: async function () {},
@@ -320,7 +373,7 @@ const reservationService = {
 		// 	before : 'YYYY-MM-DD', // 이 날짜 포함 이전
 		// 	after : 'YYYY-MM-DD', // 이 날짜 포함 이후
 		// 	room : Int, // room id
-		// 	creator : Int
+		// 	creator : String
 		//	reservationType : String(12),
 		// }
 
@@ -337,7 +390,7 @@ const reservationService = {
 			if (options.room) {
 				queryStr += `&room=${options.room}`;
 			}
-			if (options.creator || options.creator === 0) {
+			if (options.creator) {
 				queryStr += `&room=${options.creator}`;
 			}
 			if (options.reservationType) {
