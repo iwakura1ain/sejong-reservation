@@ -74,7 +74,7 @@ class ConferenceRoom(Resource, Service):
 
         try:
             with self.query_model("Room") as (conn, Room):
-                valid_data, invalid_data = Room.validate(request.json)
+                valid_data, invalid_data = Room.validate(request.json, optional=True)
 
                 if len(invalid_data) > 0:
                     return {
@@ -82,9 +82,6 @@ class ConferenceRoom(Resource, Service):
                         "msg": "invalid data",
                         "invalid": invalid_data
                     }, 200
-                
-                res = conn.execute(select(Room)).mappings().all()
-                # print(valid_data, res)
                 
                 # if validated data is already in table, 
                 # send message 'data already exists'
@@ -112,7 +109,7 @@ class ConferenceRoom(Resource, Service):
             print(e, flush=True)
             return {
                 "status": False,
-                "msg": "Room Create Failed"
+                "msg": "Room CREATE failed"
             }, 500
         
     # GET all rooms
@@ -170,10 +167,8 @@ class ConferenceRoom(Resource, Service):
                 "status": False,
                 "msg": "Failed to get room data"
             }, 500
-        
-        
+                
 # GET, DELETE, UPDATE by room id
-
 @management.route('/<int:id>')
 class ConferenceRoomById(Resource, Service):
     """
@@ -213,7 +208,6 @@ class ConferenceRoomById(Resource, Service):
         # user_status = self.query_api( 
         #     "jwt_status", "get", headers=request.headers
         # )
-        # # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         # if not check_jwt_exists(user_status):
         #     return {
         #         "status": False,
@@ -243,9 +237,9 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error      
-        except OSError as e:
-            print(e, flush=True)
+        except Exception as e:
             return {
+                "status": False,
                 "msg": "Room GET failed"
             }, 500
         
@@ -266,7 +260,6 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
@@ -335,8 +328,8 @@ class ConferenceRoomById(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate data from request body
-                valid_data, invalid_data = Room.validate(request.json)
-                
+                valid_data, invalid_data = Room.validate(request.json, optional=True)
+
                 if len(invalid_data) > 0:
                     return {
                         "status": False,
@@ -351,13 +344,16 @@ class ConferenceRoomById(Resource, Service):
                         "status": False,
                         "msg": f"Room id:{id} not found"
                     }, 200
-                
+
                 # if updated room data already exists in the table
-                for room in valid_data:
+                if ('room_name' in valid_data
+                    and 'room_address1' in valid_data
+                    and 'room_address2' in valid_data):
+                    # for room in valid_data:
                     if check_if_room_identical(conn, Room, valid_data):
                         return{
                             "statsus": False,
-                            "msg": f"Room {room['room_name']} already exists." 
+                            "msg": f"Room {valid_data['room_name']} already exists." 
                         }, 200
 
                 # UPDATE room
@@ -374,13 +370,12 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error
-        except Exception as e:
+        except OSError as e:
             print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Update Failed"
             }, 500
-
 
 @management.route('/<int:id>/image')
 class ConferenceRoomImage(Resource, Service):
@@ -487,7 +482,7 @@ class ConferenceRoomImage(Resource, Service):
                 return {
                     "status": True,
                     "msg": "Image uploaded",
-                    #"uploaded": filename,
+                    # "uploaded": filename,
                     # "uploadedPath": joined_path
                 }
         except Exception as e:

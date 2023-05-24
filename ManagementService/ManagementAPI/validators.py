@@ -1,9 +1,4 @@
-# from flask import request
-# from flask_restx import Resource, namespace
-# from sqlalchemy import select, insert, update, delete
-# from config import model_config, api_config
-
-from service import validator
+from service import validator, validate
 
 @validator("Room.room_name")
 def room_name_validator(room_name):

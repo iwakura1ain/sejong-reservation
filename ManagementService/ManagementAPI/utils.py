@@ -29,14 +29,4 @@ def check_if_room_identical(conn, Room, valid_data):
         and conn.execute(select(Room).where(Room.room_address1 == valid_data['room_address1'])).mappings().fetchone()
         and conn.execute(select(Room).where(Room.room_address2 == valid_data['room_address2'])).mappings().fetchone()):
         return True
-
-# from sqlalchemy import insert, update
-# def create_update_data(table, data, method):
-#     if method == 'create':  
-#         insert(table), {}
-#         pass
-#     elif method == 'update':
-#         pass
-#     else:
-#         return "No Method"
-
+    
