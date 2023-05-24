@@ -132,15 +132,15 @@ class ConferenceRoom(Resource, Service):
         """
 
         # check if user is logged in.
-        # user_status = self.query_api( 
-        #     "jwt_status", "get", headers=request.headers
-        # )
-        # # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
-        # if not check_jwt_exists(user_status):
-        #     return {
-        #         "status": False,
-        #         "msg": "Not logged in",
-        #     }, 200
+        user_status = self.query_api( 
+            "jwt_status", "get", headers=request.headers
+        )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        if not check_jwt_exists(user_status):
+            return {
+                "status": False,
+                "msg": "Not logged in",
+            }, 200
         
         try:
             with self.query_model("Room") as (conn, Room):
@@ -269,7 +269,6 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
@@ -348,6 +347,7 @@ class ConferenceRoomById(Resource, Service):
                     }, 200
 
                 roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+                
                 # if there's no such room by given id
                 if roomById is None:
                     return {
@@ -355,13 +355,12 @@ class ConferenceRoomById(Resource, Service):
                         "msg": f"Room id:{id} not found"
                     }, 200
                 
-                # if updated room data already exists in the table
-                for room in valid_data:
-                    if check_if_room_identical(conn, Room, valid_data):
-                        return{
-                            "statsus": False,
-                            "msg": f"Room {room['room_name']} already exists." 
-                        }, 200
+                # if there's already a room with given room name
+                if check_if_room_identical(conn, Room, valid_data):
+                    return{
+                        "statsus": False,
+                        "msg": f"Room {valid_data['room_name']} already exists." 
+                    }, 200
 
                 # UPDATE room
                 conn.execute(
@@ -377,7 +376,7 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error
-        except Exception as e:
+        except OSError as e:
             print(e, flush=True)
             return {
                 "status": False,
@@ -405,20 +404,27 @@ class ConferenceRoomImage(Resource, Service):
         return True
 
     def get(self, id):
+        filepath_with_id = os.path.join(filepath, str(id))
         try:
             with self.query_model("Room") as (conn, Room):
                 room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
-                if len(room) == 0:
+                if room is None:
                     return {
                         "status": False,
-                        "msg": "Room not found"
+                        "msg": f"Room id:{id} not found"
+                    }, 200
+                
+                if room['preview_image_name'] == 'no-image.png':
+                    return {
+                        "status": False,
+                        "msg": f"No file in room id:{id}"
                     }, 200
                 
                 return send_from_directory(
-                    filepath, room["preview_image_name"]
+                    filepath_with_id, room["preview_image_name"]
                 )
             
-        except Exception as e:
+        except OSError as e:
             print(e, flush=True)
             return {
                 "status": False,
@@ -477,6 +483,14 @@ class ConferenceRoomImage(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 # insert file path into the data
+                room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
+                
+                if room is None:
+                    return {
+                        "status": False,
+                        "msg": f"Room id:{id} not found"
+                    }, 200
+                
                 conn.execute(
                     update(Room).where(Room.id == id), {
                         "preview_image_name": filename
@@ -495,8 +509,6 @@ class ConferenceRoomImage(Resource, Service):
                 return {
                     "status": True,
                     "msg": "Image uploaded",
-                    #"uploaded": filename,
-                    # "uploadedPath": joined_path
                 }
         except OSError as e:
             print(e)
