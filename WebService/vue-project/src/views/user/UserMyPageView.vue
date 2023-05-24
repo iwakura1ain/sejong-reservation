@@ -169,7 +169,7 @@ async function getMyReservationStat() {
 			else throw new Error(res);
 		}
 		const reservationList = res.data ? res.data : [];
-
+		console.log(reservationList);
 		// 완료
 		const beforeNow = reservationList.filter(rsv =>
 			endTimeIsOvered(rsv.meetingDatetime),
@@ -184,7 +184,7 @@ async function getMyReservationStat() {
 				(cnt, item) => cnt + (item.roomUsed === 1),
 				0,
 			),
-			noshow: beforeNow.reduce((cnt, item) => cnt + (item.roomUsed === 1), 0),
+			noshow: beforeNow.reduce((cnt, item) => cnt + (item.roomUsed === 0), 0),
 			notyet: fromNow.reduce((cnt, item) => cnt + (item.roomUsed === 0), 0),
 		};
 
