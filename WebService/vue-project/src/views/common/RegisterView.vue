@@ -128,7 +128,7 @@ function validateForm(req) {
 		!req.name ||
 		!req.id ||
 		!req.password ||
-		!req.passwordConfirm ||
+		!formdata.value.passwordConfirm ||
 		!req.email
 	) {
 		makeToast('빈 항목이 있습니다', 'warning');
@@ -142,11 +142,15 @@ function validateForm(req) {
 		makeToast('사용자 구분의 선택값이 올바르지 않습니다', 'warning');
 		flag = false;
 	}
+	if (req.password.length < 8) {
+		makeToast('비밀번호는 8자 이상입니다', 'warning');
+		return;
+	}
 	if (req.password !== req.passwordConfirm) {
 		makeToast('비밀번호와 비밀번호 확인이 일치하지 않습니다.', 'warning');
 		flag = false;
 	}
-	if (!req.email.includes('@')) {
+	if (!req.email.includes('@') || !req.email.includes('.')) {
 		makeToast('이메일의 형식이 올바르지 않습니다', 'warning');
 		flag = false;
 	}
@@ -159,10 +163,18 @@ async function handleSubmit() {
 	try {
 		loadingStore.start();
 
-		const req = { ...formdata.value };
-		if (!validateForm(req)) {
+		if (!validateForm(formdata.value)) {
 			return;
 		}
+		const req = {
+			name: formdata.value.name,
+			type: formdata.value.type,
+			dept: formdata.value.dept,
+			id: formdata.value.id,
+			password: formdata.value.password,
+			email: formdata.value.email,
+			phone: formdata.value.phone,
+		};
 
 		// 통신
 		const res = await userService.register(req);
@@ -182,6 +194,8 @@ async function handleSubmit() {
 
 		if (msg === 'User Exists') {
 			makeToast('이미 가입된 학번(직번)입니다', 'error');
+		} else if (msg === 'key:value pair wrong') {
+			makeToast('입력한 내용의 형식이 올바르지 않습니다', 'error');
 		} else {
 			makeToast('예기치 못한 오류가 발생했습니다.', 'error');
 		}

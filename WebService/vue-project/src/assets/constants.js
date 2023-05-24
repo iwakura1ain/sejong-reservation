@@ -27,7 +27,7 @@ export const DEPT_TYPE = {
 // 백엔드로 요청 넣을 베이스 URL
 export const BASE_URL = {
 	USER_SERVICE: 'http://127.0.0.1:8080/userservice',
-	ADMIN_SERVICE: 'http://127.0.0.1:8080/adminservice',
+	MANAGEMENT_SERVICE: 'http://127.0.0.1:8080/managementservice',
 	RESERVATION_SERVICE: 'http://127.0.0.1:8080/reservationservice',
 	ALERT_SERVICE: 'http://127.0.0.1:5000/alert',
 	// WEB_SERVICE : "http://127.0.0.1/webservice",

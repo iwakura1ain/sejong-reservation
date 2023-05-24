@@ -26,15 +26,16 @@ export const userInfoStore = reactive({
 		userInfoStore.data.noShow = _data.noShow;
 	},
 	get: function () {
-		return {
-			id: userInfoStore.data.id,
-			name: userInfoStore.data.name,
-			email: userInfoStore.data.email,
-			phone: userInfoStore.data.phone,
-			type: userInfoStore.data.type,
-			dept: userInfoStore.data.dept,
-			noShow: userInfoStore.data.noShow,
-		};
+		return userInfoStore.data;
+		// return {
+		// 	id: userInfoStore.data.id,
+		// 	name: userInfoStore.data.name,
+		// 	email: userInfoStore.data.email,
+		// 	phone: userInfoStore.data.phone,
+		// 	type: userInfoStore.data.type,
+		// 	dept: userInfoStore.data.dept,
+		// 	noShow: userInfoStore.data.noShow,
+		// };
 	},
 });
 

@@ -66,6 +66,10 @@ async function handleLogin() {
 			makeToast('계정 또는 비밀번호가 비어있습니다.', 'warning');
 			return;
 		}
+		if (req.password.length < 8) {
+			makeToast('비밀번호는 8자 이상입니다', 'warning');
+			return;
+		}
 
 		// 통신
 		const res = await userService.login(req);
@@ -90,6 +94,8 @@ async function handleLogin() {
 			makeToast('존재하지 않는 계정입니다.', 'error');
 		} else if (msg === 'Wrong Password') {
 			makeToast('비밀번호가 틀렸습니다.', 'error');
+		} else if (msg === 'key:value pair wrong') {
+			makeToast('입력한 내용의 형식이 올바르지 않습니다', 'error');
 		} else {
 			makeToast('예기치 못한 오류가 발생했습니다.', 'error');
 		}

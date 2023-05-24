@@ -104,7 +104,7 @@ export default function convertReservationRes(res, minmaxType) {
 	start_time: String, // HH:mm:ss
 	end_time: String, // HH:mm:ss
 
-	creator_id: Int
+	creator_id: String,
 	reservation_topic: String,
 	members: [
 		{ name: String, email: String }
@@ -151,7 +151,7 @@ export default function convertReservationRes(res, minmaxType) {
 	topic: String,
 	members: [ {name:'String', email:'String'} ],
 
-	creatorId: Int, // 0, 1, 2, ...
+	creatorId: String, // '0', '1', '2', ...
 	createdAt: {
 		date: String, // YYYY-MM-DD
 		time: String, // HH:mm:ss
@@ -205,7 +205,7 @@ export default function convertReservationRes(res, minmaxType) {
 		{name:'이원진', email:'lwj@example.com'},
 	],
 
-	creatorId: 3
+	creatorId: '3',
 	createdAt: {
 		date: '2023-04-01',
 		time: '09:10:11',

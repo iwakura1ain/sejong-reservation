@@ -33,7 +33,7 @@ export default function convertUserRes(res) {
   "access_token": String,
   "refresh_token": String,
   "User": {
-      "id": Int,
+      "id": String,
       "name": String | null,
       "dept": Int, // 
       "phone": String(2) | null,
@@ -49,7 +49,7 @@ export default function convertUserRes(res) {
 // --------------------------------------------
 /*
 { 
-  id: Int,
+  id: String,
   name: String,
   email: String,
   phone: String,
@@ -66,7 +66,7 @@ export default function convertUserRes(res) {
 // --------------------------------------------
 /*
 { 
-  id: 1,
+  id: '1',
   name: '이원진',
   email: 'wjlee@example.com',
   phone: '010-1234-5678',
