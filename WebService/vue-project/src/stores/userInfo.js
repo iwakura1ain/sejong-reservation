@@ -1,5 +1,6 @@
 import { reactive, computed } from 'vue';
 import { USER_TYPE, DEPT_TYPE } from '@/assets/constants.js';
+import { userService } from '@/assets/scripts/requests/request.js';
 
 export const userInfoStore = reactive({
 	data: {
@@ -25,6 +26,18 @@ export const userInfoStore = reactive({
 		userInfoStore.data.dept = _data.dept;
 		userInfoStore.data.noShow = _data.noShow;
 	},
+	setFromBackend: async function (accessToken) {
+		try {
+			const res = await userService.getAuthInfo(accessToken);
+			if (!res.status) {
+				throw new Error(res);
+			}
+			this.set(res.data);
+		} catch (err) {
+			console.error(err, err.message);
+			throw new Error(err);
+		}
+	},
 	get: function () {
 		return userInfoStore.data;
 		// return {
@@ -49,7 +62,7 @@ export const userTypeStr = computed(() => {
 	} else if (userInfoStore.data.type === USER_TYPE.UNDER_GRAD_STUDENT) {
 		return '학부생';
 	} else {
-		console.error('사용자 유형이 올바르지 않습니다.');
+		//console.error('사용자 유형이 올바르지 않습니다.');
 		return '올바르지 않은 사용자 유형';
 	}
 });
@@ -60,7 +73,7 @@ export const userDeptStr = computed(() => {
 	} else if (userInfoStore.data.dept === DEPT_TYPE.OTHERS) {
 		return '기타 학과';
 	} else {
-		console.error('학과 유형이 올바르지 않습니다.');
+		//console.error('학과 유형이 올바르지 않습니다.');
 		return '올바르지 않은 학과 유형';
 	}
 });
