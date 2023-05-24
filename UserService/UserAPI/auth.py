@@ -68,7 +68,7 @@ class Register(Service, Resource):
 
     @jwt_required()
     @admin_only()
-    def create_admin_user(*args, **kwargs):
+    def admin_credentials_required(*args, **kwargs):
         pass
 
     def post(self):
@@ -95,7 +95,8 @@ class Register(Service, Resource):
                 if len(invalidated) != 0:
                     return {
                         "status": False,
-                        "msg": "key:value pair wrong"
+                        "msg": "key:value pair wrong",
+                        "invalid": invalidated
                     }, 200
 
                 # check if user exists
@@ -130,7 +131,7 @@ class Register(Service, Resource):
                     "User": serialize(res, exclude=exclude)
                 }, 200
 
-        except OSError as e:
+        except Exception as e:
             print(e)
             return {
                 "status": False,
@@ -184,7 +185,8 @@ class Login(Service, Resource):
                 if len(invalidated) != 0:
                     return {
                         "status": False,
-                        "msg": "key:value pair wrong"
+                        "msg": "key:value pair wrong",
+                        "invalid": invalidated
                     }, 200
 
                 # get user
@@ -431,7 +433,7 @@ class UserImport(Service, Resource):
             schema = User.columns
 
             insert_values = []
-            for row in users_sheet.iter_rows(min_row=2, min_col=1, max_col=8):
+            for n, row in enumerate(users_sheet.iter_rows(min_row=2, min_col=1, max_col=8)):
                 # create new user dict
                 new_user, invalid = User.validate(
                     {key: val.value for key, val in zip(schema, row)}
@@ -441,7 +443,8 @@ class UserImport(Service, Resource):
                 if len(invalid) != 0:
                     return {
                         "status": False,
-                        "msg": "invalid value",
+                        "msg": "invalid value in excel file",
+                        "rownum": n,
                         "invalid": row
                     }, 200
 

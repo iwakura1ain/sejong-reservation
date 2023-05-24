@@ -18,3 +18,12 @@ ORM = {
     "port": getenv("DB_PORT"),
     "database": getenv("DB_NAME")
 }
+
+# local config
+# ORM = {
+#     "username": "development",
+#     "password": "1234",
+#     "host": "127.0.0.1",
+#     "port": 3306,
+#     "database": "sejong"
+# }
