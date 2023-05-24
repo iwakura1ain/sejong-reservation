@@ -399,7 +399,7 @@ class JWTRefresh(Service, Resource):
 # TODO: change to database
 RECOVERY_CODES = []
 
-@AUTH.route("/change-password")
+@AUTH.route("/recovery/password")
 def PasswordChange(Service, Resource):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=ORM, api_config=API)
