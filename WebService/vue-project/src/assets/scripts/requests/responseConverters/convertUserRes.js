@@ -16,7 +16,7 @@ export default function convertUserRes(res) {
 		id,
 		name: name ? name : '이름 없는 사용자',
 		email,
-		phone: phone ? phone : '010-0000-0000',
+		phone: phone ? phone : '01000000000',
 		type,
 		dept,
 	};
