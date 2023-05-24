@@ -43,7 +43,7 @@ const props = defineProps({
 const emits = defineEmits(['update:modelValue']);
 
 // states
-const selectedValue = ref(props.buttons[0].value);
+const selectedValue = ref(props.modelValue);
 const len = computed(() => {
 	return props.buttons.length;
 });
