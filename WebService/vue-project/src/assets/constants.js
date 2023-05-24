@@ -25,10 +25,20 @@ export const DEPT_TYPE = {
 };
 
 // 백엔드로 요청 넣을 베이스 URL
+const SERVICE_IP = localStorage.getItem('SEJONG_RESERVATION_SERVICE_IP');
 export const BASE_URL = {
-	USER_SERVICE: 'http://127.0.0.1:8080/userservice',
-	MANAGEMENT_SERVICE: 'http://127.0.0.1:8080/managementservice',
-	RESERVATION_SERVICE: 'http://127.0.0.1:8080/reservationservice',
-	ALERT_SERVICE: 'http://127.0.0.1:5000/alert',
-	// WEB_SERVICE : "http://127.0.0.1/webservice",
+	// TODO: 실제로 배포하게 되면 아래 속성들을 사용합니다.
+	// USER_SERVICE: `http://${SERVICE_IP}:8080/userservice`,
+	// ADMIN_SERVICE: `http://${SERVICE_IP}:8080/adminservice`,
+	// RESERVATION_SERVICE: `http://${SERVICE_IP}:8080/reservationservice`,
+	// ALERT_SERVICE: `http://${SERVICE_IP}:5000/alert`,
+	// WEB_SERVICE : `http://${SERVICE_IP}/webservice`,
+
+	// 테스트할때는 아래 속성들을 사용합니다.
+	// 웹사이트에 접속하는 기기에서 우리 도커컨테이너가 돌아가고 있어야 합니다.
+	USER_SERVICE: `http://127.0.0.1:8080/userservice`,
+	ADMIN_SERVICE: `http://127.0.0.1:8080/adminservice`,
+	RESERVATION_SERVICE: `http://127.0.0.1:8080/reservationservice`,
+	ALERT_SERVICE: `http://127.0.0.1:5000/alert`,
+	//WEB_SERVICE : `http://127.0.0.1/webservice`,
 };
