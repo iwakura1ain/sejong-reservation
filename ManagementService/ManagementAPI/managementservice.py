@@ -1,31 +1,28 @@
 from flask import request, send_from_directory, current_app
 from flask_restx import Resource, namespace
 from sqlalchemy import select, insert, update, delete
-from werkzeug.utils import secure_filename
-
 from service import Service
-
 from config import model_config, api_config, filepath
 from utils import serialization, check_jwt_exists, check_if_room_identical
-#from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
-
+from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
+from werkzeug.utils import secure_filename
 import os
 
 """
-This code creates a Flask-RestX namespace called "admin" with a name and description. Namespaces are
+This code creates a Flask-RestX namespace called "management" with a name and description. Namespaces are
 used to group related API endpoints together for easier organization and routing.
 namespace for handy routing
 """
 
-admin = namespace.Namespace(
-    name="admin",
+management = namespace.Namespace(
+    name="management",
     description="유저, 회의실, 예약 관리를 위한 API"
 )
 
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['created_at']
 
-@admin.route('')
+@management.route('')
 class ConferenceRoom(Resource, Service):
     """
     The above code is defining a Flask RESTful API endpoint for managing conference rooms. It includes a
@@ -63,13 +60,11 @@ class ConferenceRoom(Resource, Service):
         indicate that the room creation failed.
         """
         
-        # request body data, need to be validated
-        req = request.json
-        
         # check user if has authorization.
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
 
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
@@ -77,6 +72,15 @@ class ConferenceRoom(Resource, Service):
                 "status": False,
                 "msg": "No authorization"
             }, 200
+        
+        # # get token info
+        #     auth_info = self.query_api(
+        #         "get_auth_info", "get", headers=request.headers)
+        #     if not is_valid_token(auth_info):
+        #         return {
+        #             "status": False,
+        #             "msg": "Unauthenticated"
+        #         }, 400
 
         try:
             with self.query_model("Room") as (conn, Room):
@@ -89,7 +93,7 @@ class ConferenceRoom(Resource, Service):
                         "invalid": invalid_data
                     }, 200
                 
-                # res = conn.execute(select(Room)).mappings().all()
+                res = conn.execute(select(Room)).mappings().all()
                 # print(valid_data, res)
                 
                 # if validated data is already in table, 
@@ -110,12 +114,11 @@ class ConferenceRoom(Resource, Service):
                 # CREATE room
                 return{
                     "status": True,
-                    "msg": "Room Created",
-                    "created_room": req
+                    "msg": "Room Created"
                 }, 200
         
         # error
-        except Exception as e:
+        except OSError as e:
             print(e, flush=True)
             return {
                 "status": False,
@@ -135,15 +138,15 @@ class ConferenceRoom(Resource, Service):
         """
 
         # check if user is logged in.
-        user_status = self.query_api( 
-            "jwt_status", "get", headers=request.headers
-        )
-        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
-        if not check_jwt_exists(user_status):
-            return {
-                "status": False,
-                "msg": "Not logged in",
-            }, 200
+        # user_status = self.query_api( 
+        #     "jwt_status", "get", headers=request.headers
+        # )
+        # # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
+        # if not check_jwt_exists(user_status):
+        #     return {
+        #         "status": False,
+        #         "msg": "Not logged in",
+        #     }, 200
         
         try:
             with self.query_model("Room") as (conn, Room):
@@ -180,7 +183,8 @@ class ConferenceRoom(Resource, Service):
         
         
 # GET, DELETE, UPDATE by room id
-@admin.route('/<int:id>')
+
+@management.route('/<int:id>')
 class ConferenceRoomById(Resource, Service):
     """
     The above code defines a Flask route for handling GET, DELETE, and PATCH requests for a conference
@@ -249,7 +253,7 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error      
-        except Exception as e:
+        except OSError as e:
             print(e, flush=True)
             return {
                 "msg": "Room GET failed"
@@ -272,6 +276,7 @@ class ConferenceRoomById(Resource, Service):
         user_status = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
+        # print("!!!!!!!!!TYPE: ", user_status['User']['type'], "!!!!!!!!!!!!", flush=True)
         if(check_jwt_exists(user_status) 
            and (user_status['User']['type'] != 2)):
             return {
@@ -340,7 +345,8 @@ class ConferenceRoomById(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 # validate data from request body
-                valid_data, invalid_data = Room.validate(request.json, optional=True)
+                valid_data, invalid_data = Room.validate(request.json)
+                
                 if len(invalid_data) > 0:
                     return {
                         "status": False,
@@ -349,7 +355,6 @@ class ConferenceRoomById(Resource, Service):
                     }, 200
 
                 roomById = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
-                
                 # if there's no such room by given id
                 if roomById is None:
                     return {
@@ -357,12 +362,13 @@ class ConferenceRoomById(Resource, Service):
                         "msg": f"Room id:{id} not found"
                     }, 200
                 
-                # if there's already a room with given room name
-                if check_if_room_identical(conn, Room, valid_data):
-                    return{
-                        "statsus": False,
-                        "msg": f"Room {valid_data['room_name']} already exists." 
-                    }, 200
+                # if updated room data already exists in the table
+                for room in valid_data:
+                    if check_if_room_identical(conn, Room, valid_data):
+                        return{
+                            "statsus": False,
+                            "msg": f"Room {room['room_name']} already exists." 
+                        }, 200
 
                 # UPDATE room
                 conn.execute(
@@ -378,7 +384,7 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error
-        except OSError as e:
+        except Exception as e:
             print(e, flush=True)
             return {
                 "status": False,
@@ -386,7 +392,7 @@ class ConferenceRoomById(Resource, Service):
             }, 500
 
 
-@admin.route('/<int:id>/image')
+@management.route('/<int:id>/image')
 class ConferenceRoomImage(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
@@ -406,27 +412,20 @@ class ConferenceRoomImage(Resource, Service):
         return True
 
     def get(self, id):
-        filepath_with_id = os.path.join(filepath, str(id))
         try:
             with self.query_model("Room") as (conn, Room):
                 room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
-                if room is None:
+                if len(room) == 0:
                     return {
                         "status": False,
-                        "msg": f"Room id:{id} not found"
-                    }, 200
-                
-                if room['preview_image_name'] == 'no-image.png':
-                    return {
-                        "status": False,
-                        "msg": f"No file in room id:{id}"
+                        "msg": "Room not found"
                     }, 200
                 
                 return send_from_directory(
-                    filepath_with_id, room["preview_image_name"]
+                    filepath, room["preview_image_name"]
                 )
             
-        except OSError as e:
+        except Exception as e:
             print(e, flush=True)
             return {
                 "status": False,
@@ -437,9 +436,9 @@ class ConferenceRoomImage(Resource, Service):
     def post(self, id):
         max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
         uploaded_image = request.files['image']
-        filepath_with_id = os.path.join(filepath, str(id))
+    
         filename = secure_filename(uploaded_image.filename)
-        joined_path = os.path.join(filepath_with_id, filename)
+        joined_path = os.path.join(filepath, filename)
         
         # check user if has authorization.
         user_status = self.query_api( 
@@ -465,7 +464,7 @@ class ConferenceRoomImage(Resource, Service):
                 "status": False,
                 "msg": "Invalid file extension",
                 "filename": filename
-            }, 200
+            }
 
         # error checking: is file unique
         if not self.check_if_file_unique(joined_path):
@@ -485,24 +484,11 @@ class ConferenceRoomImage(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 # insert file path into the data
-                room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
-                
-                if room is None:
-                    return {
-                        "status": False,
-                        "msg": f"Room id:{id} not found"
-                    }, 200
-                
                 conn.execute(
                     update(Room).where(Room.id == id), {
                         "preview_image_name": filename
                     }
                 )
-
-                # create image saving folder for each room
-                # if there's no folder in thumbnail
-                if not os.path.exists(filepath_with_id):
-                    os.makedirs(filepath_with_id)
 
                 # save image
                 uploaded_image.save(joined_path)
@@ -513,10 +499,8 @@ class ConferenceRoomImage(Resource, Service):
                     "msg": "Image uploaded",
                     #"uploaded": filename,
                     # "uploadedPath": joined_path
-                }, 200
-            
+                }
         except Exception as e:
-            print(e)
             return {
                 "status": False,
                 "msg": "Uploading image failed"

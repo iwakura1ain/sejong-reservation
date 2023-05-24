@@ -70,7 +70,7 @@ class Register(Service, Resource):
 
     @jwt_required()
     @admin_only()
-    def create_admin_user(*args, **kwargs):
+    def admin_credentials_required(*args, **kwargs):
         pass
 
     def post(self):
@@ -92,12 +92,12 @@ class Register(Service, Resource):
         try:
             with self.query_model("User") as (conn, User):
                 # validate request body arguments
-
                 req, invalidated = User.validate(request.json)
                 if len(invalidated) != 0:
                     return {
                         "status": False,
-                        "msg": "key:value pair wrong"
+                        "msg": "key:value pair wrong",
+                        "invalid": invalidated
                     }, 200
 
                 # check if user exists
@@ -132,8 +132,8 @@ class Register(Service, Resource):
                     "User": serialize(res, exclude=exclude)
                 }, 200
 
-        except OSError as e:
-            print(e)
+        except Exception as e:
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Register Failed",
@@ -182,11 +182,13 @@ class Login(Service, Resource):
             with self.query_model("User") as (conn, User):
                 # validate request body
 
-                req, invalidated = User.validate(request.json)
+                req, invalidated = User.validate(request.json, optional=True)
+                print(req, invalidated)
                 if len(invalidated) != 0:
                     return {
                         "status": False,
-                        "msg": "key:value pair wrong"
+                        "msg": "key:value pair wrong",
+                        "invalid": invalidated
                     }, 200
 
                 # get user
@@ -225,7 +227,7 @@ class Login(Service, Resource):
                 }, 200
 
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Login Failed"
@@ -350,7 +352,7 @@ class JWTStatus(Service, Resource):
                 }, 200
 
         except Exception as e:
-            print(e)
+            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "jwt status Failed"

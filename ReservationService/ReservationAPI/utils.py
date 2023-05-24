@@ -151,3 +151,56 @@ def check_date_constraints(user_type, reservation_date):
     
     diff = date.fromisoformat(reservation_date) - date.today()
     return True if diff < reservation_limit[user_type] else False
+
+
+def create_confirmation_email(
+    reservation, room, creator,
+    # sender="reservationsys_admin@sejong.ac.kr",
+    sender="",
+    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다",
+    template_name="template.txt"
+):
+    """
+    Generates an alert email for when new reservation is created.
+    sender: email address that sends out alert emails
+    title: email title
+    template_name: email body template file name
+
+    Returns a dict for POST alertservice/alert body
+    """
+    # TODO: refactor to account for cases when some info are missing
+
+    members_emails = [member["email"] for member in reservation["members"]]
+    receivers = [creator["email"]]
+
+    template_data = {
+        # reservation info
+        "reservation_date": reservation["reservation_date"],
+        "start_time": reservation["start_time"],
+        "end_time": reservation["end_time"],
+        "members_len": len(members_emails),
+        "members_emails": ", ".join(members_emails),
+        "code": reservation["reservation_code"],
+        "reservation_topic": reservation["reservation_topic"],
+        # room info
+        "room_name": room["room_name"],
+        "room_address1": room["room_address1"],
+        "room_address2": room["room_address2"],
+        # creator info
+        "creator": creator["name"],
+        "creator_email": creator["email"],
+    }
+
+    with open(template_name, "r") as f:
+        template = f.read()
+
+    return {
+        "title": title,
+        "text": template.format(**template_data),
+        "sender": sender,
+        "receivers": receivers
+    }
+
+
+
+

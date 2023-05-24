@@ -10,7 +10,7 @@ from os import getenv
 #     'autocommit': True
 # }
 
-# orm config
+#orm config
 ORM = {
     "username": getenv("DB_USERNAME"),
     "password": getenv("DB_PASSWORD"),
@@ -22,3 +22,12 @@ ORM = {
 API = {
     "send_email": "http://alertservice:5000/alert",
 }
+
+# # local orm config
+# ORM = {
+#     "username": "development",
+#     "password": "1234",
+#     "host": "127.0.0.1",
+#     "port": 3306,
+#     "database": "sejong"
+# }
