@@ -358,7 +358,8 @@ class ReservationByID(Resource, Service):
                 # validate model
                 valid, invalid = Reservation.validate(request.json, exclude=["members"])
                 # and validate members data
-                if not validate_members(valid["members"]):
+                if ("members" in valid.keys() 
+                    and not validate_members(valid["members"])):
                     invalid["members"] = valid["members"]
                 if invalid != {}:
                     return {
@@ -426,8 +427,7 @@ class ReservationByID(Resource, Service):
                 "reservation": serialize(row)
             }, 200
 
-        except OSError as e:
-            print(e, flush=True)
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Reservation edit failed"
