@@ -1,12 +1,33 @@
-from flask import request, send_from_directory, current_app
+from flask import request, send_from_directory
 from flask_restx import Resource, namespace
+
 from sqlalchemy import select, insert, update, delete
-from service import Service
-from config import model_config, api_config, filepath
-from utils import serialization, check_jwt_exists, check_if_room_identical
-from validators import room_name_validator, room_address1_validator, room_address2_validator, is_usable_validator, max_users_validator
+
 from werkzeug.utils import secure_filename
 import os
+import json
+
+from service import Service
+
+from config import (
+    model_config, 
+    api_config, 
+    filepath,
+    SENDER
+)
+from utils import (
+    serialize, 
+    check_jwt_exists, 
+    check_if_room_identical,
+    create_confirmation_email
+)
+from validators import (
+    room_name_validator,
+    room_address1_validator, 
+    room_address2_validator,
+    is_usable_validator,
+    max_users_validator
+)
 
 """
 This code creates a Flask-RestX namespace called "management" with a name and description. Namespaces are
@@ -20,7 +41,7 @@ management = namespace.Namespace(
 )
 
 # keys to be excluded when serializing data to GET all rooms
-exclude = ['created_at']
+exclude = ['created_at', 'reservation_date', 'start_time', 'end_time']
 
 @management.route('')
 class ConferenceRoom(Resource, Service):
@@ -61,12 +82,12 @@ class ConferenceRoom(Resource, Service):
         """
         
         # check user if has authorization.
-        user_status = self.query_api( 
+        auth_info = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
 
-        if(check_jwt_exists(user_status) 
-           and (user_status['User']['type'] != 2)):
+        if(check_jwt_exists(auth_info) 
+           and (auth_info['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -101,7 +122,8 @@ class ConferenceRoom(Resource, Service):
                 # CREATE room
                 return{
                     "status": True,
-                    "msg": "Room Created"
+                    "msg": "Room created",
+                    "created_room": request.json
                 }, 200
         
         # error
@@ -125,10 +147,10 @@ class ConferenceRoom(Resource, Service):
         """
 
         # check if user is logged in.
-        # user_status = self.query_api( 
+        # auth_info = self.query_api( 
         #     "jwt_status", "get", headers=request.headers
         # )
-        # if not check_jwt_exists(user_status):
+        # if not check_jwt_exists(auth_info):
         #     return {
         #         "status": False,
         #         "msg": "Not logged in",
@@ -141,7 +163,7 @@ class ConferenceRoom(Resource, Service):
             
                 # serialize each room data in Room table
                 serialized_rooms = [
-                    serialization(room, exclude=exclude)
+                    serialize(room, exclude=exclude)
                     for room in rooms
                 ]
 
@@ -205,10 +227,10 @@ class ConferenceRoomById(Resource, Service):
         """
 
         # # check if user is logged in.
-        # user_status = self.query_api( 
+        # auth_info = self.query_api( 
         #     "jwt_status", "get", headers=request.headers
         # )
-        # if not check_jwt_exists(user_status):
+        # if not check_jwt_exists(auth_info):
         #     return {
         #         "status": False,
         #         "msg": "Not logged in"
@@ -227,7 +249,7 @@ class ConferenceRoomById(Resource, Service):
                         "msg": f"Room id:{id} not found"
                     }, 200
                 
-                serialized_room = serialization(res, exclude=exclude)
+                serialized_room = serialize(res, exclude=exclude)
                 
                 # GET room with given id
                 return {
@@ -257,11 +279,11 @@ class ConferenceRoomById(Resource, Service):
         """
         
         # check user if has authorization.
-        user_status = self.query_api( 
+        auth_info = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(check_jwt_exists(user_status) 
-           and (user_status['User']['type'] != 2)):
+        if(check_jwt_exists(auth_info) 
+           and (auth_info['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -314,12 +336,12 @@ class ConferenceRoomById(Resource, Service):
         """
         
         # check user if has authorization.
-        user_status = self.query_api(
+        auth_info = self.query_api(
             "jwt_status", "get", headers=request.headers
         )
         
-        if (check_jwt_exists(user_status)
-           and (user_status['User']['type'] != 2)):
+        if (check_jwt_exists(auth_info)
+           and (auth_info['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -327,9 +349,10 @@ class ConferenceRoomById(Resource, Service):
         
         try:
             with self.query_model("Room") as (conn, Room):
-                # validate data from request body
+                # validate data i  request body
                 valid_data, invalid_data = Room.validate(request.json, optional=True)
 
+                # check if there's an invalid data in request body
                 if len(invalid_data) > 0:
                     return {
                         "status": False,
@@ -356,6 +379,34 @@ class ConferenceRoomById(Resource, Service):
                             "msg": f"Room {valid_data['room_name']} already exists." 
                         }, 200
 
+                # if room is not usable, cancel reservations of the room                   
+                if (roomById['is_usable'] != 0
+                    and valid_data['is_usable'] == 0):
+                    with self.query_model("Reservation") as (conn, Reservation):
+                        rsrvs = conn.execute(select(Reservation).where(Reservation.room_id == id)).mappings().fetchall()
+                        # print("------------------------------", rsrvs, flush=True)
+                        for _ in rsrvs:
+                            rsrv = conn.execute(select(Reservation.is_valid == 1))
+                            conn.execute(
+                                update(Reservation).where(Reservation.is_valid == 1),{
+                                   "is_valid": 0
+                                }
+                            )
+
+                        for rsrv in rsrvs:
+                            # members_json = json.loads(rsrv['members'])
+                            # members_emails = [member["email"] for member in members_json]
+                            # print(members_emails, flush=True)
+                            email_object = create_confirmation_email(
+                                rsrv, 
+                                roomById, 
+                                auth_info["User"], 
+                                sender=SENDER)
+                            email_resp = self.query_api(
+                                "send_email", "post",
+                                headers=request.headers, body=json.dumps(email_object)
+                            )
+                    
                 # UPDATE room
                 conn.execute(
                     update(Room).where(Room.id == id),{
@@ -426,11 +477,11 @@ class ConferenceRoomImage(Resource, Service):
         joined_path = os.path.join(filepath, filename)
         
         # check user if has authorization.
-        user_status = self.query_api( 
+        auth_info = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(check_jwt_exists(user_status) 
-           and (user_status['User']['type'] != 2)):
+        if(check_jwt_exists(auth_info) 
+           and (auth_info['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -492,8 +543,3 @@ class ConferenceRoomImage(Resource, Service):
             }, 500
 
         
-
-
-
-
-
