@@ -6,6 +6,8 @@ from openpyxl import load_workbook
 from magic import Magic
 from io import BytesIO
 
+from nanoid import generate
+
 from flask import request
 from flask_restx import (
     Resource,
@@ -21,7 +23,7 @@ from flask_jwt_extended import (
 
 from service import Service
 from utils import retrieve_jwt, serialize, protected, admin_only
-from config import ORM
+from config import ORM, API
 
 """
 This code creates a Flask-RESTX namespace object named "AUTH" for handling authentication-related
@@ -206,7 +208,6 @@ class Login(Service, Resource):
                         "msg": "Wrong Password"
                     }, 200
 
-                # TODO: replace names with underscore names
                 identity = serialize(res, include=include)
                 access_token = create_access_token(
                     identity=identity,
@@ -392,7 +393,90 @@ class JWTRefresh(Service, Resource):
             "status": True,
             "access_token": access_token,
         }, 200
-        
-            
 
+# TODO: change to database
+RECOVERY_CODES = []
+
+@AUTH.route("/change-password")
+def PasswordChange(Service, Resource):
+    def __init__(self, *args, **kwargs):
+        Service.__init__(self, model_config=ORM, api_config=API)
+        Resource.__init__(self, *args, **kwargs)
+
+    # TODO: implement redirect or default password change
+    def get(self):
+        recovery_code = request.args.get("code")
+        if (recovery_code is None
+            or recovery_code not in RECOVERY_CODES.keys()):
+            return {
+                "status": False,
+                "msg": "recovery code wrong"
+            }, 200
+
+        recovery_user = RECOVERY_CODES.pop(recovery_code)
+        
+        identity = serialize(recovery_user, include=include)
+        access_token = create_access_token(
+            identity=identity,
+            fresh=True
+        )
+        refresh_token = create_refresh_token(
+            identity=identity
+        )
+
+        return {
+            "status": True,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "redirect": None,
+            "User": serialize(recovery_user, exclude=exclude)
+        }, 200
+        
+        
+    def post(self):
+        recovery_user = request.json.get("user")
+        recovery_email = request.json.get("email")
+
+        try:
+            with self.query_model("User") as (conn, User):
+                res = conn.execute(
+                    select(User).where(User.id == recovery_user)
+                ).mappings().fetchone()
+
+                if res is None:
+                    return {
+                        "status": False,
+                        "msg": "no user of that id found"
+                    }, 200
+
+                if res["email"] != recovery_email:
+                    return {
+                        "status": False,
+                        "msg": "recovery email wrong"
+                    }, 200
+
+                # TODO: use hashing to secure password change request
+                recovery_code = generate(size=20)
+                recovery_link = f"http://127.0.0.1:8080/userservice/change-password?code={recovery_code}"
+                recovery_message = {
+                    "title": "Recovery Email for Sejong-Reservation",
+                    "text": f"Visit this link to recover your account: {recovery_link}",
+                    "sender": "ernie937@gmail.com",
+                    "receivers": [recovery_email]
+                }
+                RECOVERY_CODES[recovery_code] = res
+
+                self.query_api("send_email", "post", headers=request.headers, body=recovery_message)
+
+                return {
+                    "status": True,
+                    "msg": "password reset message sent"
+                }, 200
+
+        except Exception as e:
+            print(e, flush=True)
+            return {
+                "status": False,
+                "msg": "error while reseting password"
+            }, 500
             

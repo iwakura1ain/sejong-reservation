@@ -18,3 +18,7 @@ ORM = {
     "port": getenv("DB_PORT"),
     "database": getenv("DB_NAME")
 }
+
+API = {
+    "send_email": "http://alertservice:5000/alert",
+}

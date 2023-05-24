@@ -9,6 +9,7 @@ from datetime import timedelta
 
 import auth
 import users
+import management
 
 
 def create_app(test_config=None):
@@ -63,4 +64,5 @@ def check_if_token_revoked(jwt_header, jwt_payload):
 if __name__ == "__main__":
     API.add_namespace(auth.AUTH, '/auth')  # add endpoints from auth.py
     API.add_namespace(users.USERS, '/users')  # add endpoints from users.py
+    API.add_namespace(management.MANAGE, "/manage")  # add endpoints from management.py
     APP.run(debug=True, host='0.0.0.0', port=5000)

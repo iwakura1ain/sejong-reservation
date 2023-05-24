@@ -21,7 +21,7 @@ from flask_jwt_extended import (
 
 from service import Service
 from utils import retrieve_jwt, serialize, protected, admin_only
-from config import ORM
+from config import ORM, API
 
 """
 This code creates a Flask-RESTX namespace object named "AUTH" for handling authentication-related
@@ -105,20 +105,4 @@ class UserImport(Service, Resource):
             "imported_count": len(insert_values)
         }, 200
 
-    
-@MANAGE.route("/change-password/<string:key>")
-def ChangePassword(Service, Resource):
-    def __init__(self, *args, **kwargs):
-        Service.__init__(self, model_config=ORM)
-        Resource.__init__(self, *args, **kwargs)
 
-    def post(self):
-        with self.query_model("User") as (conn, User):
-            req, invalid = User.validate(request.json)
-            if len(invalid) != 0 or req.get("password"):
-                return {
-                    "status": False,
-                    "msg": "key:value pair wrong"
-                }
-            
-            password_hash = generate_password_hash(req["password"])
