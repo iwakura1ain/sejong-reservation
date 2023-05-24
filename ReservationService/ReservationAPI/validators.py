@@ -1,91 +1,66 @@
 from datetime import date, time, datetime
-import json
-import re
 
 from service import validator
 
-# @validator("Reservation.reservation_date")
-# def validate_date(reservation_date):    
-#     try:
-#         reservation_date = time.fromisoformat(reservation_date)
-#     except ValueError:
-#         print("unable to convert date", flush=True)
-#         return False
 
-#     cur_date = datetime.now().date()
-    
-#     return False if reservation_date < cur_date else True
+@validator("Reservation.reservation_date", "Reservation.start_time")
+def validate_time(reservation_date, start_time):
+    """
+    checks validity of reservation's start_time and end_time 
+    - start_time should be earlier than end_time.
+    """
+    try:
+        start_dt = datetime.combine(
+            date.fromisoformat(reservation_date),
+            time.fromisoformat(start_time)
+        )
+    except Exception:
+        return False
 
+    # if trying to make reservation behind now, return false
+    if start_dt < datetime.now():
+        return False
 
-# @validator("Reservation.start_time")
-# def validate_start_time(start_time):
-#     try:
-#         start_time = time.fromisoformat(start_time)
-#     except ValueError:
-#         print("unable to convert start", flush=True)
-#         return False
-
-#     # check if start time is after time.now()
-#     cur_time = datetime.now().time()
-#     if start_time < cur_time:
-#         return False
-
-#     return True
-
-# @validator("Reservation.end_time")
-# def validate_end_time(end_time):
-#     try:
-#         end_time = time.fromisoformat(end_time)
-#     except ValueError:
-#         print("unable to convert end", flush=True)
-#         return False
-    
-#     return True
-
-# @validator("Reservation.start_time", "Reservation.end_time")
-# def validate_time(start_time, end_time):
-#     """
-#     checks validity of reservation's start_time and end_time 
-#     - start_time should be earlier than end_time.
-#     - reservation should be within open hours.
-#     """
-#     # check if time values are passed in with proper formattng
-#     if start_time >= end_time:
-#         return False
-#     return True
-
-# @validator("Reservation.members")
-# def validate_members_list(members):
-#     """
-#     checks if members are in correct form
-#     """
-#     members = json.loads(members)
-#     for member in members:
-#         # check if only these keys exist
-#         if member.keys() != ["name", "email"]:
-#             return False
-
-#         # # TODO: maybe use library for email verification
-#         # pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-#         # if not (re.match(pattern, member["email"])):
-#         #     return False
-
-#     return True
-
-# @validator("Reservation.reservation_topic")
-# def validate_reservation_topic(reservation_topic):
-#     """
-#     reservation_topic string len check
-#     """
-#     if len(reservation_topic) > 100:
-#         return False
-#     return True
+    return True
 
 
+@validator("Reservation.reservation_date", "Reservation.end_time")
+def validate_time(reservation_date, end_time):
+    try:
+        end_dt = datetime.combine(
+            date.fromisoformat(reservation_date),
+            time.fromisoformat(end_time)
+        )
+    except ValueError:
+        return False
+
+    # if trying to make reservation behind now, return false
+    if end_dt < datetime.now():
+        return False
+
+    return True
 
 
+@validator("Reservation.reservation_date", "Reservation.start_time", "Reservation.end_time")
+def validate_time(reservation_date, start_time, end_time):
+    """
+    checks validity of reservation's start_time and end_time 
+    - start_time should be earlier than end_time.
+    """
+    try:
+        start_dt = datetime.combine(
+            date.fromisoformat(reservation_date),
+            time.fromisoformat(start_time)
+        )
+        end_dt = datetime.combine(
+            date.fromisoformat(reservation_date),
+            time.fromisoformat(end_time)
+        )
+    except ValueError:
+        return False
 
+    # if start_time is ahead of end_time, return false
+    if start_dt >= end_dt:
+        return False
 
-
-
-
+    return True
