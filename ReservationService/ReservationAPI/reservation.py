@@ -16,6 +16,7 @@ from utils import (
     check_date_constraints,
     check_time_conflict,
     create_confirmation_email,
+    validate_members,
 )
 
 ns = Namespace(
@@ -159,6 +160,10 @@ class ReservationList(Resource, Service):
                 for reservation in reservations:
                     # validate model
                     valid, invalid = Reservation.validate(reservation, exclude=["members"])
+                    # and validate members data
+                    if not validate_members(valid["members"]):
+                        invalid["members"] = valid["members"]
+
                     if invalid != {}:
                         return {
                             "status": False,
@@ -219,14 +224,12 @@ class ReservationList(Resource, Service):
                 # insert
                 conn.execute(insert(Reservation), valid_reservaitons)
 
-                # TODO: get inserted values from insert statement instead of selecting again
-                retval = []
-                for v in valid_reservaitons:
-                    res = conn.execute(
-                        select(Reservation)
-                        .where(Reservation.reservation_code == v["reservation_code"])
-                    ).mappings().fetchone()
-                    retval.append(serialize(res))
+                # get inserted values from insert statement instead of selecting again
+                rows = conn.execute(
+                    select(Reservation)
+                    .where(Reservation.reservation_code == reservation_code)
+                ).mappings().fetchall()
+                retval = [serialize(row) for row in rows]
 
                 # create and send email object
                 email_object = create_confirmation_email(
@@ -295,17 +298,7 @@ class ReservationByID(Resource, Service):
                 }, 400
 
             with self.query_model("Reservation") as (conn, Reservation):
-                stmt = None
-
-                # return columns based on user type
-                if is_admin(auth_info):  # full table
-                    stmt = select(Reservation)
-                # only relevant columns
-                else:
-                    select_cols = {
-                        getattr(Reservation, col) for col in MINIMIZED_COLS
-                    }
-                    stmt = select(*select_cols)
+                stmt = select(Reservation)
 
                 row = conn.execute(
                     stmt.where(Reservation.id == id)
@@ -318,9 +311,16 @@ class ReservationByID(Resource, Service):
                         "msg": "Reservation not found"
                     }, 400
 
+            reservation = serialize(row)
+            if not is_authorized(auth_info, reservation):
+                return {
+                    "status": False,
+                    "msg": "Unauthorized"
+                }, 400
+
             return {
                 "status": True,
-                "reservation": serialize(row)
+                "reservation": reservation
             }, 200
 
         except Exception as e:
@@ -356,7 +356,10 @@ class ReservationByID(Resource, Service):
 
             with self.query_model("Reservation") as (conn, Reservation):
                 # validate model
-                valid, invalid = Reservation.validate(request.json, optional=True, exclude=["members"])
+                valid, invalid = Reservation.validate(request.json, exclude=["members"])
+                # and validate members data
+                if not validate_members(valid["members"]):
+                    invalid["members"] = valid["members"]
                 if invalid != {}:
                     return {
                         "status": False,
