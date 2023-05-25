@@ -6,7 +6,7 @@
 			<h2 class="logotext-en">Meeting Room Reservation System</h2>
 		</article>
 
-		<form class="form-container">
+		<form class="form-container" @keydown.enter="handleLogin">
 			<div class="field-set">
 				<span class="label">계정</span>
 				<text-input v-model="id"></text-input>
