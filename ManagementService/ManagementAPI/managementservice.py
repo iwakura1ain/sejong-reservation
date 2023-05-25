@@ -144,17 +144,6 @@ class ConferenceRoom(Resource, Service):
         indicating that the room was not found. If there is an error, it returns a message indicating
         that the room GET failed.
         """
-
-        # check if user is logged in.
-        # auth_info = self.query_api( 
-        #     "jwt_status", "get", headers=request.headers
-        # )
-        # if not check_jwt_exists(auth_info):
-        #     return {
-        #         "status": False,
-        #         "msg": "Not logged in",
-        #     }, 200
-        
         try:
             with self.query_model("Room") as (conn, Room):
                 # get all json data from Room table as list with dicts
