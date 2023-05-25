@@ -127,8 +127,7 @@ class ConferenceRoom(Resource, Service):
                 }, 200
         
         # error
-        except OSError as e:
-            print(e, flush=True)
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Room CREATE failed"
@@ -184,7 +183,6 @@ class ConferenceRoom(Resource, Service):
 
         # error
         except Exception as e:
-            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Failed to get room data"
@@ -314,7 +312,6 @@ class ConferenceRoomById(Resource, Service):
 
         # error
         except Exception as e:
-            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Delete Failed"
@@ -384,7 +381,7 @@ class ConferenceRoomById(Resource, Service):
                     and valid_data['is_usable'] == 0):
                     with self.query_model("Reservation") as (conn, Reservation):
                         rsrvs = conn.execute(select(Reservation).where(Reservation.room_id == id)).mappings().fetchall()
-                        # print("------------------------------", rsrvs, flush=True)
+
                         for _ in rsrvs:
                             rsrv = conn.execute(select(Reservation.is_valid == 1))
                             conn.execute(
@@ -394,9 +391,6 @@ class ConferenceRoomById(Resource, Service):
                             )
 
                         for rsrv in rsrvs:
-                            # members_json = json.loads(rsrv['members'])
-                            # members_emails = [member["email"] for member in members_json]
-                            # print(members_emails, flush=True)
                             email_object = create_confirmation_email(
                                 rsrv, 
                                 roomById, 
@@ -421,8 +415,7 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error
-        except OSError as e:
-            print(e, flush=True)
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Room Update Failed"
@@ -462,7 +455,6 @@ class ConferenceRoomImage(Resource, Service):
                 )
             
         except Exception as e:
-            print(e, flush=True)
             return {
                 "status": False,
                 "msg": "Download image failed"

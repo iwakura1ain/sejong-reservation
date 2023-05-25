@@ -51,6 +51,8 @@ def create_confirmation_email(
     members_json = json.loads(reservation["members"])
     members_emails = [member["email"] for member in members_json]
     receivers = [creator["email"]]
+    print("--------------------receivers:", receivers, flush=True)
+    print("--------------------memebrs:", members_emails, flush=True)
 
     template_data = {
         # reservation info

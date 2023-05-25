@@ -23,4 +23,4 @@ api_config = {
 
 filepath = "/ManagementAPI/static"
 
-SENDER = "ernie937@gmail.com"
+SENDER = "ernie937@gmail.com" 
