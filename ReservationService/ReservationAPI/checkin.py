@@ -26,7 +26,7 @@ CHECK_IN = Namespace(
 
 REGISTERED_ROOMS = {}
 
-@CHECK_IN.route("/register/<int:room_id>")
+@CHECK_IN.route("/<int:room_id>/register")
 class RegisterCheckIn(Resource, Service):
     def __init__(self, *args, **kwargs):
         """
