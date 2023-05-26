@@ -19,7 +19,8 @@ model_config = {
 
 api_config = {
     "get_auth_info": "http://userservice:5000/auth/jwt-status",
-    "get_rooms_info": "http://adminservice:5000/admin/rooms/{id}",
+    "get_rooms_info": "http://managementservice:5000/admin/rooms/{id}",
+    "send_email": "http://alertservice:5000/alert",
     # "get_auth_info": "http://127.0.0.1:5001/auth/jwt-status",
     # "get_rooms_info": "http://127.0.0.1:5002/admin/rooms/{id}",
 }
@@ -30,6 +31,9 @@ reservation_limit = {
     3: timedelta(weeks=1),
     4: timedelta(days=2)
 }
+
+# email address from which alert emails will be sent
+SENDER = "ernie937@gmail.com" 
 
 MINIMIZED_COLS = [
     "id",

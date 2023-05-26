@@ -7,7 +7,7 @@ from nanoid import generate
 
 import json
 
-from config import model_config, api_config, MINIMIZED_COLS
+from config import model_config, api_config, MINIMIZED_COLS, SENDER
 from service import Service
 
 from utils import (
@@ -15,12 +15,13 @@ from utils import (
     is_valid_token, is_admin, is_authorized,
     check_date_constraints,
     check_time_conflict,
+    create_confirmation_email,
+    validate_members,
 )
 
 ns = Namespace(
     name="reservation",
     description="예약 서비스 API",
-    prefix="/reservation"
 )
 
 
@@ -147,14 +148,28 @@ class ReservationList(Resource, Service):
                 }, 400
 
             reservations = request.json.get("reservations", [])
+            if len(reservations) == 0:
+                return {
+                    "status": False,
+                    "msg": "Empty reservation received"
+                }, 400
 
-            # make regular reservation code
+
+            
+            # reservation_code used to verify individual reservations
+            reservation_code = generate(size=8)
+            # reservation_type used to group regular requests
             reservation_type = generate(size=12) if len(reservations) > 1 else None
+
             valid_reservaitons, invalid_reservaitons = [], []
             with self.query_model("Reservation") as (conn, Reservation):
                 for reservation in reservations:
                     # validate model
                     valid, invalid = Reservation.validate(reservation, exclude=["members"])
+                    # and validate members data
+                    if not validate_members(valid["members"]):
+                        invalid["members"] = valid["members"]
+
                     if invalid != {}:
                         return {
                             "status": False,
@@ -187,6 +202,7 @@ class ReservationList(Resource, Service):
                         headers=request.headers,
                         request_params={"id": valid["room_id"]}
                     )
+                    print("\n\nAAAAA", room, flush=True)
                     if "status" not in room.keys() or not room["status"]:
                         return {
                             "status": False,
@@ -200,7 +216,7 @@ class ReservationList(Resource, Service):
                     else:
                         # insert reservation_type and reservation_code
                         valid["reservation_type"] = reservation_type
-                        valid["reservation_code"] = generate(size=8)
+                        valid["reservation_code"] = reservation_code
                         # insert into valid reservation list
                         valid_reservaitons.append(valid)
 
@@ -214,15 +230,19 @@ class ReservationList(Resource, Service):
                 # insert
                 conn.execute(insert(Reservation), valid_reservaitons)
 
-                # TODO: get inserted values from insert statement instead of selecting again
-                retval = []
-                for v in valid_reservaitons:
-                    res = conn.execute(
-                        select(Reservation)
-                        .where(Reservation.reservation_code == v["reservation_code"])
-                    ).mappings().fetchone()
-                    retval.append(serialize(res))
+                # get inserted values from insert statement instead of selecting again
+                rows = conn.execute(
+                    select(Reservation)
+                    .where(Reservation.reservation_code == reservation_code)
+                ).mappings().fetchall()
+                retval = [serialize(row) for row in rows]
 
+                # create and send email object
+                email_object = create_confirmation_email(
+                    retval[0], room["room"], auth_info["User"], sender=SENDER)
+                email_resp = self.query_api(
+                    "send_email", "post",
+                    headers=request.headers, body=json.dumps(email_object))
             return {
                 "status": True,
                 "reservations": retval,
@@ -284,17 +304,7 @@ class ReservationByID(Resource, Service):
                 }, 400
 
             with self.query_model("Reservation") as (conn, Reservation):
-                stmt = None
-
-                # return columns based on user type
-                if is_admin(auth_info):  # full table
-                    stmt = select(Reservation)
-                # only relevant columns
-                else:
-                    select_cols = {
-                        getattr(Reservation, col) for col in MINIMIZED_COLS
-                    }
-                    stmt = select(*select_cols)
+                stmt = select(Reservation)
 
                 row = conn.execute(
                     stmt.where(Reservation.id == id)
@@ -307,9 +317,16 @@ class ReservationByID(Resource, Service):
                         "msg": "Reservation not found"
                     }, 400
 
+            reservation = serialize(row)
+            if not is_authorized(auth_info, reservation):
+                return {
+                    "status": False,
+                    "msg": "Unauthorized"
+                }, 400
+
             return {
                 "status": True,
-                "reservation": serialize(row)
+                "reservation": reservation
             }, 200
 
         except Exception as e:
@@ -345,7 +362,11 @@ class ReservationByID(Resource, Service):
 
             with self.query_model("Reservation") as (conn, Reservation):
                 # validate model
-                valid, invalid = Reservation.validate(request.json, optional=True, exclude=["members"])
+                valid, invalid = Reservation.validate(request.json, exclude=["members"])
+                # and validate members data
+                if ("members" in valid.keys() 
+                    and not validate_members(valid["members"])):
+                    invalid["members"] = valid["members"]
                 if invalid != {}:
                     return {
                         "status": False,
@@ -412,8 +433,7 @@ class ReservationByID(Resource, Service):
                 "reservation": serialize(row)
             }, 200
 
-        except OSError as e:
-            print(e, flush=True)
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Reservation edit failed"

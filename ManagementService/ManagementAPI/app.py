@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_restx import Api
-import adminservice
+import managementservice
 import os
 
 from flask_cors import CORS
@@ -14,7 +14,7 @@ try:
 except OSError:
     pass
 
-api.add_namespace(adminservice.admin, '/admin/rooms')
+api.add_namespace(managementservice.management, '/admin/rooms')
 
 
 if __name__=="__main__":

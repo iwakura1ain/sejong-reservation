@@ -8,6 +8,7 @@ services:
       dockerfile: ./ReservationService/Dockerfile
     restart: on-failure # always
     environment:
+      TZ: Asia/Seoul
       DB_URL: dbservice
       DB_NAME: sejong
       DB_PORT: 3306
@@ -26,6 +27,7 @@ services:
       dockerfile: ./UserService/Dockerfile
     restart: on-failure # always
     environment:
+      TZ: Asia/Seoul
       DB_URL: dbservice
       DB_NAME: sejong
       DB_PORT: 3306
@@ -33,20 +35,27 @@ services:
       DB_PASSWORD: 1234
     ports:
       - "5001:5000"
+    volumes:
+      - ./UserService/UserAPI:/UserAPI
 
-  adminservice:
+  managementservice:
     build:
       context: .
-      dockerfile: ./AdminService/Dockerfile
+      dockerfile: ./ManagementService/Dockerfile
     restart: on-failure # always
     environment:
+      TZ: Asia/Seoul
       DB_URL: dbservice
       DB_NAME: sejong
       DB_PORT: 3306
       DB_USERNAME: development
       DB_PASSWORD: 1234
+    networks:
+      default:
+        aliases:
+          - adminservice
     volumes:
-      - ./AdminService/thumbnails:/AdminAPI/static:rw
+      - ./ManagementService/thumbnails:/ManagementAPI/static:rw
     ports:
       - "5002:5000"
 
@@ -55,6 +64,10 @@ services:
       context: .
       dockerfile: ./AlertService/dockerfile
     restart: on-failure
+    environment:
+      TZ: Asia/Seoul
+    volumes:
+      - ./AlertService/AlertAPI:/AlertAPI
     ports:
       - "5003:5000"
 
@@ -62,6 +75,8 @@ services:
     #container_name: dbmanager
     image: adminer:latest
     restart: on-failure #always
+    environment:
+      TZ: Asia/Seoul
     ports:
       - "9999:8080"
 
@@ -88,13 +103,7 @@ services:
       # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.pem:/etc/nginx/cert/star_xx_com.pem
       # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.key:/etc/nginx/cert/star_xx_com.key
       # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.crt:/etc/nginx/cert/star_xx_com.crt
+    environment:
+      TZ: Asia/Seoul
     ports:
       - 8080:8080
-
-# volumes:
-#   adminStatic:
-#     driver: local
-#     driver_opts:
-#       type: none
-#       o: bind
-#       device: /Users/chow/Documents/GitHub/sejong-reservation/AdminService/AdminAPI/static

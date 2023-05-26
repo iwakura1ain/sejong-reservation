@@ -1,7 +1,9 @@
 from sqlalchemy import select, and_
 
+import re
 import json
 from datetime import datetime, date, time
+
 
 def serialize(row):
     """
@@ -26,6 +28,7 @@ def serialize(row):
             ret[k] = v
     return ret
 
+
 def is_valid_token(auth_info):
     """
     The function checks if a token is valid by verifying if the "status" key is present in the
@@ -39,9 +42,10 @@ def is_valid_token(auth_info):
     to be a boolean value indicating whether the token is valid or not.
     """
     if ("status" not in auth_info.keys()
-        or not auth_info["status"]):
+            or not auth_info["status"]):
         return False
     return True
+
 
 def is_authorized(auth_info, reservation):
     """
@@ -54,9 +58,10 @@ def is_authorized(auth_info, reservation):
     if user["id"] == reservation["creator_id"]:
         return True
     # user is admin
-    if user["type"] == 2:
+    if user["type"] == 1:
         return True
     return False
+
 
 def is_admin(auth_info):
     """
@@ -69,9 +74,10 @@ def is_admin(auth_info):
     :return: a boolean value indicating whether the user is an admin or not. If the user is an admin,
     the function returns True, otherwise it returns False.
     """
-    if auth_info["User"]["type"] == 2:
+    if auth_info["User"]["type"] == 1:
         return True
     return False
+
 
 def check_time_conflict(reservation_dict, connection=None, model=None, reservation_id=None):
     """
@@ -111,9 +117,10 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
 
     # if this function is called from POST
     if len(rows) == 0:
-        return False 
-    else: 
+        return False
+    else:
         return True
+
 
 def check_start_end_time(new_reservation):
     """
@@ -131,8 +138,8 @@ def check_start_end_time(new_reservation):
     if new_reservation["start_time"] > new_reservation["end_time"]:
         return "End time earlier than start time"
     # check if start_time, end_time within open hours
-    if time.fromisoformat(new_reservation["start_time"]) < time(9, 0) \
-        or time.fromisoformat(new_reservation["end_time"]) > time(18, 0):
+    if (time.fromisoformat(new_reservation["start_time"]) < time(9, 0)
+        or time.fromisoformat(new_reservation["end_time"]) > time(18, 0)):
         return "Open hours: 0900~1800"
     return None
 
@@ -148,6 +155,68 @@ def check_date_constraints(user_type, reservation_date):
     """
 
     from config import reservation_limit
-    
+
     diff = date.fromisoformat(reservation_date) - date.today()
     return True if diff < reservation_limit[user_type] else False
+
+
+def create_confirmation_email(
+    reservation, room, creator,
+    # sender="reservationsys_admin@sejong.ac.kr",
+    sender="",
+    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다",
+    template_name="template.txt"
+):
+    """
+    Generates an alert email for when new reservation is created.
+    sender: email address that sends out alert emails
+    title: email title
+    template_name: email body template file name
+
+    Returns a dict for POST alertservice/alert body
+    """
+    # TODO: refactor to account for cases when some info are missing
+
+    members_emails = [member["email"] for member in reservation["members"]]
+    receivers = [creator["email"]]
+
+    template_data = {
+        # reservation info
+        "reservation_date": reservation["reservation_date"],
+        "start_time": reservation["start_time"],
+        "end_time": reservation["end_time"],
+        "members_len": len(members_emails),
+        "members_emails": ", ".join(members_emails),
+        "code": reservation["reservation_code"],
+        "reservation_topic": reservation["reservation_topic"],
+        # room info
+        "room_name": room["room_name"],
+        "room_address1": room["room_address1"],
+        "room_address2": room["room_address2"],
+        # creator info
+        "creator": creator["name"],
+        "creator_email": creator["email"],
+    }
+
+    with open(template_name, "r") as f:
+        template = f.read()
+
+    return {
+        "title": title,
+        "text": template.format(**template_data),
+        "sender": sender,
+        "receivers": receivers
+    }
+
+
+def validate_members(members):
+    p = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+    if type(members) != list:
+        return False
+    for member in members:
+        # check each member for valid keys and valid email
+        if list(member.keys()) != ["name", "email"]:
+            return False
+        if not p.match(member["email"]):
+            return False
+    return True

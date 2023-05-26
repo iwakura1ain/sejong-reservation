@@ -2,11 +2,11 @@ FROM python:3.11.2-buster
 
 ENV PYTHONBUFFERED 1
 
-COPY ./AdminService/AdminAPI /AdminAPI/
+COPY ./ManagementService/ManagementAPI /ManagementAPI/
 
-COPY ./Common/service.py /AdminAPI/service.py
+COPY ./Common/service.py /ManagementAPI/service.py
 
-WORKDIR /AdminAPI
+WORKDIR /ManagementAPI
 
 RUN ls .
 

@@ -17,13 +17,13 @@ CREATE TABLE Room (
 ) DEFAULT CHARSET=utf8;
 
 CREATE TABLE User (
-	   id INT NOT NULL PRIMARY KEY,
+	   id VARCHAR(10) NOT NULL PRIMARY KEY,
 	   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	   password VARCHAR(128),
 	   name VARCHAR(20),
 	   dept INT NOT NULL,
 	   phone VARCHAR(20),
-	   email VARCHAR(50) DEFAULT '',
+	   email VARCHAR(50) NOT NULL,
 	   type INT NOT NULL,
 	   no_show INT DEFAULT 0
 ) DEFAULT CHARSET=utf8;
@@ -40,10 +40,14 @@ CREATE TABLE Reservation (
 	   end_time TIME NOT NULL,
 	   room_id INT NOT NULL,
 	   CONSTRAINT reservation_to_room
-	   FOREIGN KEY (room_id) REFERENCES Room(id),
-	   creator_id INT NOT NULL,
+	   FOREIGN KEY (room_id) REFERENCES Room(id)
+	   ON UPDATE CASCADE
+	   ON DELETE CASCADE,
+	   creator_id VARCHAR(10) NOT NULL,
 	   CONSTRAINT reservation_to_user
-	   FOREIGN KEY (creator_id) REFERENCES User(id),
+	   FOREIGN KEY (creator_id) REFERENCES User(id)
+	   ON UPDATE CASCADE
+	   ON DELETE CASCADE,
 	   members JSON NOT NULL DEFAULT '{}'
 	   CHECK (JSON_VALID(members)),
 	   room_used BOOLEAN NOT NULL DEFAULT 0
@@ -54,9 +58,11 @@ CREATE TABLE Token_Blocklist (
 	   jti VARCHAR(36) NOT NULL,
 	   type VARCHAR(16) NOT NULL,
 	   blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	   user_id INT NOT NULL,
+	   user_id VARCHAR(10) NOT NULL,
 	   CONSTRAINT blocklist_to_user
 	   FOREIGN KEY (user_id) REFERENCES User(id)
+	   ON UPDATE CASCADE
+	   ON DELETE CASCADE
 ) DEFAULT CHARSET=utf8;
 
 CREATE USER 'development'@'%' IDENTIFIED BY '1234';

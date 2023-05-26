@@ -68,7 +68,7 @@ class Register(Service, Resource):
 
     @jwt_required()
     @admin_only()
-    def create_admin_user(*args, **kwargs):
+    def admin_credentials_required(*args, **kwargs):
         pass
 
     def post(self):
@@ -94,7 +94,8 @@ class Register(Service, Resource):
                 if len(invalidated) != 0:
                     return {
                         "status": False,
-                        "msg": "key:value pair wrong"
+                        "msg": "key:value pair wrong",
+                        "invalid": invalidated
                     }, 200
 
                 # check if user exists
@@ -184,7 +185,8 @@ class Login(Service, Resource):
                 if len(invalidated) != 0:
                     return {
                         "status": False,
-                        "msg": "key:value pair wrong"
+                        "msg": "key:value pair wrong",
+                        "invalid": invalidated
                     }, 200
 
                 # get user
