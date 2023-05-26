@@ -21,13 +21,6 @@ from utils import (
     check_if_room_identical,
     create_confirmation_email
 )
-from validators import (
-    room_name_validator,
-    room_address1_validator,
-    room_address2_validator,
-    is_usable_validator,
-    max_users_validator
-)
 
 """
 This code creates a Flask-RestX namespace called "management" with a name and description. Namespaces are
@@ -37,11 +30,11 @@ namespace for handy routing
 
 management = namespace.Namespace(
     name="management",
-    description="유저, 회의실, 예약 관리를 위한 API"
+    description="회의실 관리를 위한 API"
 )
 
 # keys to be excluded when serializing data to GET all rooms
-exclude = ['created_at', 'reservation_date', 'start_time', 'end_time']
+exclude = ['created_at', 'reservation_date', 'open_time', 'close_time']
 
 @management.route('/rooms')
 class ConferenceRoom(Resource, Service):

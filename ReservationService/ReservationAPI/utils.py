@@ -4,6 +4,9 @@ import re
 import json
 from datetime import datetime, date, time
 
+from flask import request
+from functools import wraps
+
 
 def serialize(row):
     """
@@ -29,7 +32,7 @@ def serialize(row):
     return ret
 
 
-def is_valid_token(auth_info):
+def is_valid_token(response):
     """
     The function checks if a token is valid by verifying if the "status" key is present in the
     authentication information dictionary.
@@ -41,8 +44,8 @@ def is_valid_token(auth_info):
     returns False. Otherwise, it returns the value associated with the "status" key, which is expected
     to be a boolean value indicating whether the token is valid or not.
     """
-    if ("status" not in auth_info.keys()
-            or not auth_info["status"]):
+    if ("status" not in response.keys()
+            or not response["status"]):
         return False
     return True
 
@@ -53,7 +56,7 @@ def is_authorized(auth_info, reservation):
     - returns True if user is creator of reservation or admin
     - returns False otherwise
     """
-    user = auth_info["User"]
+    user = auth_info
     # user is creator of reservation
     if user["id"] == reservation["creator_id"]:
         return True
@@ -74,7 +77,7 @@ def is_admin(auth_info):
     :return: a boolean value indicating whether the user is an admin or not. If the user is an admin,
     the function returns True, otherwise it returns False.
     """
-    if auth_info["User"]["type"] == 1:
+    if auth_info["type"] == 1:
         return True
     return False
 
@@ -223,3 +226,44 @@ def validate_members(members):
         if not p.match(member["email"]):
             return False
     return True
+
+
+
+
+def protected():
+    """
+    decorator which protects endpoints that require authorization
+    """
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            try:
+                _self = args[0]
+
+                auth_info = _self.query_api(
+                    "get_auth_info", "get", headers=request.headers
+                )
+
+                if not is_valid_token(auth_info):
+                    return {
+                        "status": False,
+                        "msg": "Unauthenticated"
+                    }, 400
+
+                else:
+                    _self.auth_info = auth_info["User"]
+
+                return fn(*args, **kwargs)
+
+            except Exception as e:
+                print(e, flush=True)
+                return {
+                    "status": False,
+                    "msg": "Reservation failed"
+                }, 400
+
+
+        return decorator
+    return wrapper
+
+
