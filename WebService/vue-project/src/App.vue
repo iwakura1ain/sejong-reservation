@@ -36,13 +36,23 @@ async function fetchRooms() {
 	// 모든 회의실을 불러오는 함수
 	try {
 		const res = await adminService.getAllRooms();
-		if (res.status) {
-			fetchedRoomStore.value.setAll(res.data);
-			console.log('rooms are fetched', fetchedRoomStore.value);
+
+		if (!res.status) {
+			throw new Error(res.msg);
 		}
+
+		fetchedRoomStore.setAll(res.data);
+		console.log('rooms are fetched', fetchedRoomStore.data);
 	} catch (err) {
-		alert('회의실 목록을 불러오는 중 문제가 생겼습니다.');
-		console.error(err);
+		const msg = err.message;
+		console.error(err, msg);
+		if (msg === 'Not logged in') {
+			makeToast('로그인 정보가 없습니다', 'error');
+		} else if (msg === 'Room not found') {
+			makeToast('등록된 회의실이 없습니다', 'error');
+		} else {
+			makeToast('예기치 못한 오류입니다', 'error');
+		}
 	}
 }
 

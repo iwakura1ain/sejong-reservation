@@ -166,7 +166,7 @@ function updateMonth(type, unit) {
 
 // 일반 함수 -------------------------
 function getRoomDescString(roomId) {
-	const info = fetchedRoomStore.value.getById(roomId);
+	const info = fetchedRoomStore.getById(roomId);
 	return `${info.address1} ${info.address2} ${info.name}`;
 }
 

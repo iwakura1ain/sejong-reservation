@@ -7,10 +7,10 @@ RoomCard의 '선택'버튼이 클릭되면 선택된 room의 id를 받습니다.
 <template>
 	<div class="room-selector">
 		<room-card
-			v-for="room in rooms"
+			v-for="room in fetchedRoomStore.getAll()"
 			:key="room.id"
 			:contents="room"
-			:selected="room.id === selectedRoom.id"
+			:selected="room.id === makeRsvFormStore.common.roomId"
 			@update-selected-room="updateSelectedRoom"
 		></room-card>
 	</div>
@@ -18,31 +18,14 @@ RoomCard의 '선택'버튼이 클릭되면 선택된 room의 id를 받습니다.
 
 <script setup>
 import RoomCard from '@/components/atoms/RoomCard.vue';
-import RoomImgTest_1 from '@/assets/images/test/roomimg_1.jpg';
-import RoomImgTest_2 from '@/assets/images/test/roomimg_2.jpg';
-import { selectedRoom } from '@/stores/reservation.js';
-
-const rooms = [
-	{
-		id: 0,
-		roomImg: RoomImgTest_1,
-		buildingName: '대양AI센터',
-		roomName: '835호',
-		maxUser: 8,
-		openingHour: ['09:00', '18:00'],
-	},
-	{
-		id: 1,
-		roomImg: RoomImgTest_2,
-		buildingName: '대양AI센터',
-		roomName: '836호',
-		maxUser: 4,
-		openingHour: ['09:00', '18:00'],
-	},
-];
+import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
+import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
 
 function updateSelectedRoom(id) {
-	selectedRoom.value = rooms[id];
+	makeRsvFormStore.common.roomId = id;
+	// if (makeRsvFormStore.formState.step < 2) {
+	// 	makeRsvFormStore.formState.step = 2;
+	// }
 }
 </script>
 

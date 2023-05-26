@@ -15,9 +15,11 @@ export default function convertRoomRes(res) {
 		address2: res.room_address2, // String
 		isUsable: res.is_usable, // int -- 0(사용불가), 1(사용가능)
 		maxUsers: res.max_users, // int
+
+		// TODO: 시각은 아직 백엔드에서 지원안함.
 		time: {
-			open: res.open_time, // String -- HH:mm
-			close: res.close_time, // String -- HH:mm
+			open: res.open_time ? res.open_time : '09:00', // String -- HH:mm
+			close: res.close_time ? res.close_time : '18:00', // String -- HH:mm
 		},
 		img: res.preview_image, // String -- http link (https://example.com/image.jpg)
 	};

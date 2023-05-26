@@ -18,6 +18,9 @@
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import checkImg from '@/assets/images/icons/tick_white.png';
 import FilledButton from '@/components/atoms/FilledButton.vue';
+import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
+
+makeRsvFormStore.clear();
 </script>
 
 <style lang="scss" scoped>

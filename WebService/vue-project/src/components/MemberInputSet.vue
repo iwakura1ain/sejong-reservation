@@ -1,10 +1,7 @@
 <template>
 	<div class="member-input-set">
-		<template v-if="readonly">
-			<p class="name readonly">{{ name }}</p>
-			<p class="email readonly">{{ email }}</p>
-		</template>
-		<template v-else>
+		<x-circle-button class="btn" @click="removeMember" />
+		<div>
 			<text-input
 				class="name"
 				:value="name"
@@ -17,13 +14,12 @@
 				@input="updateEmail"
 				placeholder="이메일"
 			/>
-			<minus-round-button @click="removeMember" />
-		</template>
+		</div>
 	</div>
 </template>
 
 <script setup>
-import MinusRoundButton from '@/components/MinusRoundButton.vue';
+import XCircleButton from '@/components/XCircleButton.vue';
 import TextInput from '@/components/atoms/TextInput.vue';
 const props = defineProps({
 	name: {
@@ -66,28 +62,49 @@ function removeMember() {
 <style lang="scss" scoped>
 .member-input-set {
 	display: flex;
+	align-items: center;
 	margin-bottom: 8px;
-	.name {
-		width: 64px;
+	width: 100%;
+	// flex-wrap: wrap;
+
+	.btn {
+		width: 32px;
+		height: 32px;
 	}
-	.email {
-		width: 512px;
-		margin-left: 8px;
+	> div {
+		display: flex;
+
+		.name,
+		.email {
+			margin: 2px 0;
+		}
+
+		.name {
+			margin-left: 8px;
+		}
+		.email {
+			margin-left: 8px;
+			width: 50vw;
+		}
 	}
 
-	.readonly {
-		border-radius: $box-radius;
-		border: 1px solid $sejong-grey;
-		background-color: lightgrey;
-		color: $sejong-grey;
-		padding: 8px;
-	}
+	// .readonly {
+	// 	border-radius: $box-radius;
+	// 	border: 1px solid $sejong-grey;
+	// 	background-color: lightgrey;
+	// 	color: $sejong-grey;
+	// 	padding: 8px;
+	// }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 546px) {
 	.member-input-set {
-		.email {
-			flex: 1;
+		> div {
+			flex-direction: column;
+			align-items: stretch;
+			.email {
+				width: auto;
+			}
 		}
 	}
 }

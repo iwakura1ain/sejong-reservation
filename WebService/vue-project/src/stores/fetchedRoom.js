@@ -1,6 +1,6 @@
-import { ref } from 'vue';
+import { reactive } from 'vue';
 
-export const fetchedRoomStore = ref({
+export const fetchedRoomStore = reactive({
 	data: [],
 	init: function () {
 		this.data = [];
@@ -9,7 +9,7 @@ export const fetchedRoomStore = ref({
 		this.data = rooms;
 	},
 	getAll: function () {
-		return fetchedRoomStore.value;
+		return this.data;
 	},
 	getById: function (id) {
 		return this.data.find(elem => elem.id === id);

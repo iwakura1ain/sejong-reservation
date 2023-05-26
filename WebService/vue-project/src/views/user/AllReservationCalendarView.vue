@@ -13,7 +13,7 @@
 import { ref, watch, computed } from 'vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import MonthCalendar from '@/components/MonthCalendar.vue';
-// import { userInfoStore } from '@/stores/userInfo.js';
+import { userTokenStore } from '@/stores/userToken.js';
 import { reservationService } from '@/assets/scripts/requests/request.js';
 
 import getLastDayInMonth from '@/assets/scripts/utils/getLastDayInMonth.js';
@@ -52,10 +52,14 @@ watch(
 // 일반함수 -------------------
 async function fetchReservationsInMonth() {
 	try {
-		const res = await reservationService.get({
-			after: `${targetMonthInfo.value.firstDate}`,
-			before: `${targetMonthInfo.value.lastDate}`,
-		});
+		const accessToken = userTokenStore.getAccessToken();
+		const res = await reservationService.get(
+			{
+				after: `${targetMonthInfo.value.firstDate}`,
+				before: `${targetMonthInfo.value.lastDate}`,
+			},
+			accessToken,
+		);
 
 		if (!res.status) {
 			throw new Error('INVALID_STATUS', res.status);

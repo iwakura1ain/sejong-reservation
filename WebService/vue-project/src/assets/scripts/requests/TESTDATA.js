@@ -12,7 +12,7 @@ const TESTDATA = {
 	// room (회의실)
 	rooms_1: [
 		{
-			id: 0,
+			id: 1,
 			room_name: '835호',
 			room_address1: '대양AI센터',
 			room_address2: '8층',
@@ -21,7 +21,7 @@ const TESTDATA = {
 			preview_image: null,
 		},
 		{
-			id: 1,
+			id: 2,
 			room_name: '836호',
 			room_address1: '대양AI센터',
 			room_address2: '8층',
@@ -39,7 +39,7 @@ const TESTDATA = {
 			reservation_date: in3dateStr.today,
 			start_time: '10:00:00',
 			end_time: '18:00:00',
-			room_id: 0,
+			room_id: 2,
 			room_used: 0,
 			is_valid: 1,
 		},
@@ -84,7 +84,7 @@ const TESTDATA = {
 			reservation_date: '2023-05-21',
 			start_time: '10:00:00',
 			end_time: '18:00:00',
-			room_id: 0,
+			room_id: 2,
 			creator_id: 0,
 			members: [
 				{ name: 'name1', email: 'mail1' },
@@ -158,7 +158,7 @@ const TESTDATA = {
 			reservation_date: '2023-05-21',
 			start_time: '10:00:00',
 			end_time: '18:00:00',
-			room_id: 0,
+			room_id: 2,
 			creator_id: 0,
 			members: [
 				{ name: 'name1', email: 'mail1' },
@@ -176,7 +176,7 @@ const TESTDATA = {
 			reservation_date: '2023-05-22',
 			start_time: '10:00:00',
 			end_time: '18:00:00',
-			room_id: 0,
+			room_id: 2,
 			creator_id: 0,
 			members: [
 				{ name: 'name1', email: 'mail1' },
@@ -194,7 +194,7 @@ const TESTDATA = {
 			reservation_date: in3dateStr.today,
 			start_time: '10:00:00',
 			end_time: '23:00:00',
-			room_id: 0,
+			room_id: 2,
 			creator_id: 0,
 			members: [
 				{ name: 'name1', email: 'mail1' },
@@ -212,7 +212,7 @@ const TESTDATA = {
 			reservation_date: in3dateStr.tomorrow,
 			start_time: '10:00:00',
 			end_time: '18:00:00',
-			room_id: 0,
+			room_id: 2,
 			creator_id: 0,
 			members: [
 				{ name: 'name1', email: 'mail1' },
@@ -231,7 +231,7 @@ const TESTDATA = {
 		reservation_date: in3dateStr.today,
 		start_time: '10:00:00',
 		end_time: '22:00:00',
-		room_id: 0,
+		room_id: 2,
 		creator_id: 0,
 		members: [
 			{ name: 'name1', email: 'mail1' },
@@ -249,7 +249,7 @@ const TESTDATA = {
 		reservation_date: in3dateStr.tomorrow,
 		start_time: '10:00:00',
 		end_time: '18:00:00',
-		room_id: 0,
+		room_id: 2,
 		creator_id: 0,
 		members: [
 			{ name: 'name1', email: 'mail1' },

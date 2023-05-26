@@ -1,6 +1,7 @@
 <template>
 	<div class="week-calendar">
 		<div class="control-container">
+			<!-- 컨트롤바 -->
 			<div class="week-selector-container">
 				<div
 					class="week-btn prev-month noselect"
@@ -15,8 +16,8 @@
 					{{ '<' }}
 				</div>
 				<div class="current-week-text">
-					<span>{{ year }}년 {{ month }}월 </span>
-					<span>{{ week }}주차</span>
+					<span>{{ modelValue.year }}년 {{ modelValue.month }}월 </span>
+					<span>{{ modelValue.week }}주차</span>
 				</div>
 				<div class="week-btn next-week noselect" @click="updateWeek(1, 'week')">
 					{{ '>' }}
@@ -31,6 +32,7 @@
 		</div>
 
 		<div class="week-calendar-innerwrap">
+			<!-- 요일 표시 공간 -->
 			<div class="header-container">
 				<div class="header-cell sun">일</div>
 				<div class="header-cell mon">월</div>
@@ -41,9 +43,10 @@
 				<div class="header-cell sat">토</div>
 			</div>
 
+			<!--  -->
 			<div class="body-container">
 				<div
-					v-for="(dayObj, index) in calendarArr[week - 1]"
+					v-for="(dayObj, index) in calendarArr[modelValue.week - 1]"
 					:key="index"
 					class="day"
 					:class="{ today: dayObj.dateStr === todayStr }"
@@ -83,17 +86,28 @@
 						>
 							<div
 								class="block"
-								:class="{ single: item.type === 0, multi: item.type === 1 }"
+								:class="{
+									single: item.reservationType === null,
+									regular: item.type !== null,
+								}"
 								v-for="(item, index) in dayObj.reservations"
 								:key="index"
 								:style="`height:${getTimeBlockHeight(
-									item.startTime,
-									item.endTime,
-								)}px; top:${getTimeBlockPosition(item.startTime)}px`"
-							></div>
+									item.meetingDatetime.startTime,
+									item.meetingDatetime.endTime,
+								)}px; top:${getTimeBlockPosition(
+									item.meetingDatetime.startTime,
+								)}px`"
+							>
+								<p>
+									{{
+										`${item.meetingDatetime.startTime}-${item.meetingDatetime.endTime}`
+									}}
+								</p>
+							</div>
 
 							<!-- 테스트 엘리먼트 -->
-							<div
+							<!-- <div
 								class="block single"
 								:style="`height:${getTimeBlockHeight(
 									'06:00',
@@ -114,7 +128,7 @@
 								<p>15:00</p>
 								<p>-</p>
 								<p>22:11</p>
-							</div>
+							</div> -->
 
 							<!-- 테스트 엘리먼트 -->
 						</div>
@@ -126,44 +140,67 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { unref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import getCalendarArray from '@/assets/scripts/utils/getCalendarArray.js';
 import getWeekNumber from '@/assets/scripts/utils/getWeekNumber.js';
 
-defineProps({
+const props = defineProps({
 	showRoomName: {
 		required: false,
 		type: Boolean,
 		default: true,
 	},
+	reservationList: {
+		required: false,
+		type: Array,
+	},
+	modelValue: {
+		required: false,
+		type: Object,
+
+		default() {
+			const nowDateObj = new Date();
+			const now = {
+				year: nowDateObj.getFullYear(),
+				month: nowDateObj.getMonth() + 1,
+				day: nowDateObj.getDate(),
+				week: getWeekNumber(
+					`${nowDateObj.getFullYear()}-${
+						nowDateObj.getMonth() + 1
+					}-${nowDateObj.getDate()}`,
+				),
+			};
+			return now;
+		},
+	},
 });
 
-const router = useRouter();
+const emits = defineEmits(['update:modelValue']);
 
+// 초기화 ----------------------------
+const router = useRouter();
 const minutePerPx = 3; // 표에서 높이 1픽셀당 3분을 나타냄.
 
-const nowDateObj = new Date();
-const now = {
-	y: nowDateObj.getFullYear(),
-	m: nowDateObj.getMonth() + 1,
-	d: nowDateObj.getDate(),
-};
-now.w = getWeekNumber(`${now.y}-${now.m}-${now.d}`);
-
-const formattedMonth = now.m < 10 ? `0${now.m}` : now.m;
-const formattedDay = now.d < 10 ? `0${now.d}` : now.d;
-const todayStr = `${now.y}-${formattedMonth}-${formattedDay}`;
-
-const year = ref(now.y);
-const month = ref(now.m);
-const week = ref(now.w);
+const formattedMonth =
+	props.modelValue.month < 10
+		? `0${props.modelValue.month}`
+		: props.modelValue.month;
+const formattedDay =
+	props.modelValue.day < 10 ? `0${props.modelValue.day}` : props.modelValue.day;
+const todayStr = `${props.modelValue.year}-${formattedMonth}-${formattedDay}`;
 
 const calendarArr = computed(() => {
-	const arr = getCalendarArray(year.value, month.value);
+	const arr = getCalendarArray(props.modelValue.year, props.modelValue.month);
 	// reservations객체 주입
 	// const thisMonthReservations = fetchedReservations.getThisMonth
-
+	console.log(props.reservationList);
+	props.reservationList.forEach(rsv => {
+		const dateObj = new Date(rsv.meetingDatetime.date);
+		const weekNum = getWeekNumber(rsv.meetingDatetime.date);
+		arr[weekNum - 1][dateObj.getDay()].reservations.push(rsv);
+	});
+	console.log(arr);
 	return arr;
 });
 
@@ -198,26 +235,38 @@ function getTimeBlockPosition(startTime) {
 // event handlers
 function updateWeek(type, unit) {
 	// type : -1이면 prev, 1이면 next
+	let _year = unref(props.modelValue.year);
+	let _month = unref(props.modelValue.month);
+	let _week = unref(props.modelValue.week);
+	console.log(_year, _month, _week);
+
 	if (unit === 'week') {
-		week.value += type;
-		if (week.value <= 0) {
-			month.value -= 1;
-			week.value = maxWeek.value;
-		} else if (week.value > maxWeek.value) {
-			month.value += 1;
-			week.value = 1;
+		_week += type;
+		if (_week <= 0) {
+			_month -= 1;
+			_week = maxWeek.value;
+		} else if (_week > maxWeek.value) {
+			_month += 1;
+			_week = 1;
 		}
 	} else if (unit === 'month') {
-		month.value += type;
+		_month += type;
 	}
 
-	if (month.value <= 0) {
-		year.value -= 1;
-		month.value = 12;
-	} else if (month.value >= 13) {
-		year.value += 1;
-		month.value = 1;
+	if (_month <= 0) {
+		_year -= 1;
+		_month = 12;
+	} else if (_month >= 13) {
+		_year += 1;
+		_month = 1;
 	}
+
+	emits('update:modelValue', {
+		year: _year,
+		month: _month,
+		day: props.modelValue.day,
+		week: _week,
+	});
 }
 
 function selectDayNumber(dateStr) {
@@ -364,7 +413,7 @@ function selectDayNumber(dateStr) {
 						color: white;
 						background-color: $sejong-grey-80;
 					}
-					.block.multi {
+					.block.regular {
 						background-color: #ffffff80;
 						border: 2px solid $sejong-grey;
 					}
@@ -374,9 +423,6 @@ function selectDayNumber(dateStr) {
 				.day-number {
 					background-color: $sejong-red-30;
 					color: $sejong-red;
-					// &::after {
-					// 	content: '(오늘)';
-					// }
 				}
 			}
 		}

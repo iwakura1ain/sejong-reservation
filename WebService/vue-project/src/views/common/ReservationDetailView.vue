@@ -326,7 +326,7 @@ async function init() {
 	reservationCommonField.value.createdAt = sampledReservation.createdAt;
 	reservationCommonField.value.members = sampledReservation.members;
 
-	const room = fetchedRoomStore.value.getById(sampledReservation.roomId);
+	const room = fetchedRoomStore.getById(sampledReservation.roomId);
 	reservationCommonField.value.roomInfo.address1 = room.address1;
 	reservationCommonField.value.roomInfo.address2 = room.address2;
 	reservationCommonField.value.roomInfo.name = room.name;

@@ -1,23 +1,27 @@
 <template>
 	<div class="room-card" :class="{ selected: selected }">
 		<div class="info-container">
-			<img class="room-img" :src="contents.roomImg" alt="회의실 사진" />
+			<img class="room-img" :src="contents.img" alt="회의실 사진" />
 			<div>
-				<span class="building">{{ contents.buildingName }}</span>
-				<span class="room">{{ contents.roomName }}</span>
+				<span class="room-address">{{
+					`${contents.address1} ${contents.address2}`
+				}}</span>
+				<!-- <span class="room-address2">{{ contents.address2 }}</span> -->
+				<span class="room-name">{{ contents.name }}</span>
 				<div class="max-user">
 					<img class="icon" :src="groupIcon" alt="최대 수용인원" />
-					<span class="value">{{ contents.maxUser }}명</span>
+					<span class="value">{{ contents.maxUsers }}명</span>
 				</div>
 				<div class="opening-hour">
 					<img class="icon" :src="clockIcon" alt="개방시간" />
-					<span class="value"
-						>{{ contents.openingHour[0] }} ─ {{ contents.openingHour[1] }}</span
-					>
+					<span class="value">
+						{{ contents.time.open }}
+						─ {{ contents.time.close }}
+					</span>
 				</div>
-				<filled-button class="select-room-btn" @click="selectRoom"
-					>선택</filled-button
-				>
+				<filled-button class="select-room-btn" @click="selectRoom">
+					선택
+				</filled-button>
 			</div>
 		</div>
 		<div class="reservation-viewer">
@@ -69,6 +73,7 @@ function selectRoom() {
 			width: 192px;
 			height: 192px;
 			border-radius: $box-radius;
+			object-fit: cover;
 		}
 
 		> div {
@@ -85,11 +90,11 @@ function selectRoom() {
 				margin-right: 8px;
 			}
 
-			.building {
+			.room-address {
 				display: block;
 				font-weight: bold;
 			}
-			.room {
+			.room-name {
 				display: block;
 				font-size: 1.6rem;
 				padding: 12px 0;

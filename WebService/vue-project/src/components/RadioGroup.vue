@@ -25,7 +25,7 @@ import FilledButton from '@/components/atoms/FilledButton.vue';
 const props = defineProps({
 	modelValue: {
 		required: false,
-		type: [Number, String, null],
+		type: [Number, String, Boolean, null],
 		default: null,
 	},
 	buttons: {

@@ -38,20 +38,20 @@ const props = defineProps({
 const emits = defineEmits(['update:modelValue']);
 
 // states
-const localPickedTime = ref({
-	HH: '',
-	mm: '',
-});
+// const localPickedTime = ref({
+// 	HH: '',
+// 	mm: '',
+// });
+const localPickedTime = ref(props.modelValue);
 
-const refPickedTime = toRefs(props).modelValue;
-watch(refPickedTime, () => {
-	// console.log('wathced', refPickedTime.value);
-	localPickedTime.value.HH = refPickedTime.value.HH;
-	localPickedTime.value.mm = refPickedTime.value.mm;
-});
+// const refPickedTime = toRefs(props).modelValue;
+// watch(refPickedTime, () => {
+// 	localPickedTime.value.HH = refPickedTime.value.HH;
+// 	localPickedTime.value.mm = refPickedTime.value.mm;
+// });
+
 // event handelrs
 function updateTime() {
-	// console.log(`[Vue3TimepickerWrapper] pickedTime = ${localPickedTime.value}`);
 	emits('update:modelValue', localPickedTime.value);
 }
 </script>

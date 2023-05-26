@@ -32,6 +32,7 @@ import ReservationCard from '@/components/atoms/ReservationCard.vue';
 
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
 import { userInfoStore } from '@/stores/userInfo.js';
+import { userTokenStore } from '@/stores/userToken.js';
 import { reservationService } from '@/assets/scripts/requests/request.js';
 import getDateStringInThreeDays from '@/assets/scripts/utils/getDateStringInThreeDays';
 
@@ -48,7 +49,7 @@ const reservationList = ref([]);
 // 초기화 --------------------------------------
 const router = useRouter();
 init();
-
+console.log(fetchedRoomStore);
 // 상태 감시 -----------------------------------
 // watch(
 // 	targetDate,
@@ -63,11 +64,16 @@ async function fetchReservationsInThreeDays() {
 	// 예정된 회의 (오늘, 내일, 모레의 내가 생성한 예약)를 불러오는 함수
 	try {
 		const { today, afterTomorrow } = getDateStringInThreeDays();
-		const res = await reservationService.getMyFullData({
-			after: today,
-			before: afterTomorrow,
-			creator: userInfoStore.get().id,
-		});
+		const accessToken = userTokenStore.getAccessToken();
+		await userInfoStore.setFromBackend(accessToken);
+		const res = await reservationService.getMyFullData(
+			{
+				after: today,
+				before: afterTomorrow,
+				creator: userInfoStore.get().id,
+			},
+			accessToken,
+		);
 
 		if (!res.status) {
 			throw new Error('INVALID_STATUS', res.status);

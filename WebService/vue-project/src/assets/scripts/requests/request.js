@@ -27,78 +27,62 @@ import convertReservationRes from '@/assets/scripts/requests/responseConverters/
 import convertRoomRes from '@/assets/scripts/requests/responseConverters/convertRoomRes.js';
 import convertUserRes from '@/assets/scripts/requests/responseConverters/convertUserRes.js';
 
-// --------------------------------------
+////////////////////////////////////////////
+// -------------------------------------- //
+// -------------------------------------- //
+// -------------------------------------- //
 // admin service
 // - getRoom(id)
 // - createRoom(reqBody)
 // - updateRoom(id, reqBody)
 // - deleteRoom(id)
+// - uploadRoomImage()
+// - downloadRoomImage(id)
 // - getAllRooms()
-// --------------------------------------
+// -------------------------------------- //
 const adminService = {
-	getRoom: function (id) {},
+	getRoom: async function (id) {},
 	// --------------------------------------------------------------------------
-	createRoom: function (reqBody) {},
+	createRoom: async function (reqBody) {},
 	// --------------------------------------------------------------------------
-	updateRoom: function (id, reqBody) {},
+	updateRoom: async function (id, reqBody) {},
 	// --------------------------------------------------------------------------
-	deleteRoom: function (id) {},
+	deleteRoom: async function (id) {},
+	// --------------------------------------------------------------------------
+	uploadRoomImage: async function () {},
+	// --------------------------------------------------------------------------
+	downloadRoomImage: function (id) {
+		return `${BASE_URL.ADMIN_SERVICE}/admin/rooms/${id}/image`;
+	},
 	// --------------------------------------------------------------------------
 	getAllRooms: async function () {
 		try {
-			// fetch data
-			// const res = await axios.get(`${BASE_URL.ADMIN_SERVICE}/admin/rooms`);
-			const res = {
-				// test res
-				status: 200,
-				data: {
-					status: true,
-					allRooms: TESTDATA.rooms_1,
-					msg: 'Room found',
-				},
-			};
+			// 통신
+			const res = await axios.get(`${BASE_URL.ADMIN_SERVICE}/admin/rooms`);
 
-			// check axios's status
-			if (res.status !== 200) {
-				return {
-					status: true,
-					data: null,
-					msg: 'INVALID_STATUS',
-				};
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
 			}
 
-			// get res body (axios's data property)
-			const data = res.data;
-
-			// check body's status
-			if (data.status) {
-				const converted = data.allRooms.map(room => convertRoomRes(room));
-				return {
-					status: true,
-					data: converted,
-				};
-			} else {
-				if (data.msg === 'Not logged in') {
-					return {
-						status: true,
-						data: null,
-						msg: 'NOT_LOGGED_IN',
-					};
-				} else if (data.msg === 'Room not found') {
-					return {
-						status: true,
-						data: null,
-						msg: 'ROOM_NOT_FOUND',
-					};
-				}
-			}
-
-			// convert raw data to frontend-format data
+			// 받아온 회의실 데이터 프론트엔드 포맷으로 컨버팅
+			const data = res.data; // response body
 			const converted = data.allRooms.map(room => convertRoomRes(room));
+
+			// 회의실 각각의 이미지 다운로드받아서 converted에 주입
+			for (let room of converted) {
+				const _img = this.downloadRoomImage(room.id);
+				room.img = _img;
+			}
+
+			// 반환
 			return {
 				status: true,
 				data: converted,
-				msg: 'nice',
 			};
 		} catch (err) {
 			console.error(err);
@@ -107,7 +91,10 @@ const adminService = {
 	},
 };
 
-// --------------------------------------
+////////////////////////////////////////////
+// -------------------------------------- //
+// -------------------------------------- //
+// -------------------------------------- //
 // user service
 // - login()
 // - getAuthInfo()
@@ -118,7 +105,7 @@ const adminService = {
 // - update()
 // - delete()
 // - getAll()
-// --------------------------------------
+// -------------------------------------- //
 const userService = {
 	login: async function (reqBody) {
 		try {
@@ -342,12 +329,14 @@ const userService = {
 		}
 	},
 	// --------------------------------------------------------------------------
-	// --------------------------------------------------------------------------
 	getAll: async function () {},
 	// --------------------------------------------------------------------------
 };
 
-// --------------------------------------
+////////////////////////////////////////////
+// -------------------------------------- //
+// -------------------------------------- //
+// -------------------------------------- //
 // reservation service
 // - get(options)
 // - getById(id)
@@ -355,7 +344,7 @@ const userService = {
 // - create(reqBody)
 // - update(id, reqBody)
 // - delete(id)
-// --------------------------------------
+// -------------------------------------- //
 const reservationService = {
 	// --------------------------------------------------------------------------
 	get: async function (
@@ -366,6 +355,7 @@ const reservationService = {
 			creator: null,
 			reservationType: null,
 		},
+		accessToken,
 	) {
 		// ** options object schema.
 		// {
@@ -403,41 +393,49 @@ const reservationService = {
 			}
 			reqUrl = reqUrl + queryStr;
 
-			// 데이터 불러오기 fetch data
-			// const res = await axios.get(reqUrl);
-			/*
-			res schema = {
-				status : int, // axios의 http status code
-				data : {
-					status : Boolean, // response body의 status field
-					reservations : [{}], // status===true일 때 있음
-					msg : String , // status===false일 때 있음
-				}
-			}
-			*/
-			const res = {
-				// test res
-				status: 200,
-				data: {
-					status: true,
-					reservations: TESTDATA.reservations_min_1, // 일반 사용자
-					// reservations : TESTDATA.reservation_max_1, // 어드민
-				},
-			};
+			// 통신
+			// res schema = {
+			// 	status : int, // axios의 http status code
+			// 	data : {
+			// 		status : Boolean, // response body의 status field
+			// 		reservations : [{}], // status===true일 때 있음
+			// 		msg : String , // status===false일 때 있음
+			// 	}
+			// }
+			const res = await axios
+				.get(reqUrl, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				})
+				.catch(function (err) {
+					console.error(err);
+					if (err.response.status !== 400) {
+						throw new Error(err);
+					} else {
+						return err.response;
+					}
+					// < err.response.data.msg 내용 >
+					// "Unauthenticated" : 토큰이 invalid
+					// {
+					// 	"status": False,
+					// 	"msg": "Unauthenticated"
+					// }
+					//
+					// "Get reservation list failed" : 백엔드 예외처리
+					// {
+					// 	"status": False,
+					// 	"msg": "Get reservation list failed"
+					// }
+				});
 
-			// 응답 정상여부 확인
-			if (res.status !== 200 || !res.data) {
-				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
-			}
-			if (!res.data.status) {
-				console.error(res.data);
-				return res.data;
-			}
-
-			// get res body (axios's data property)
+			// status code 400인 경우 바디 반환.
 			const data = res.data;
+			if (!data.status) {
+				return data;
+			}
 
-			// convert raw data to frontend-format data
+			// 데이터 컨버팅. 반환.
 			const fieldNum =
 				data.reservations.length === 0
 					? 0
@@ -459,41 +457,42 @@ const reservationService = {
 		}
 	},
 	// --------------------------------------------------------------------------
-	getById: function (id) {
+	getById: async function (id, accessToken) {
 		try {
-			// 데이터 불러오기 fetch data
-			// const res = await axios.get(`${BASE_URL.RESERVATION_SERVICE}/reservation/${id}}`);
-			/*
-			res schema = {
-				status : int, // axios의 http status code
-				data : {
-					status : Boolean, // response body의 status field
-					reservation : {}, // status===true일 때 있음
-					msg : String , // status===false일 때 있음
-				}
-			}
-			*/
-			const res = {
-				// test res
-				status: 200,
-				data: {
-					status: true,
-					// reservation: TESTDATA.a_reservation_max_1_single,
-					reservation: TESTDATA.a_reservation_max_2_regular,
-				},
-			};
+			// 통신
+			// res schema = {
+			// 	status : int, // axios의 http status code
+			// 	data : {
+			// 		status : Boolean, // response body의 status field
+			// 		reservation : {}, // status===true일 때 있음
+			// 		msg : String , // status===false일 때 있음
+			// 	}
+			// }
+			const res = await axios
+				.get(`${BASE_URL.RESERVATION_SERVICE}/reservation/${id}`, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				})
+				.catch(function (err) {
+					console.error(err);
+					if (err.response.status !== 400) {
+						throw new Error(err);
+					} else {
+						return err.response;
+					}
+					// < err.response.data.msg 내용 >
+					// "Reservation not found" 그런예약은 없어
+					// {
+					// 	"status": false,
+					// 	"msg": "Reservation not found"
+					// }
+				});
 
-			// 응답 정상여부 확인
-			if (res.status !== 200 || !res.data) {
-				throw new Error(`INVALID_STATUS:${res.status}:${res}`);
-			}
-			if (!res.data.status) {
-				console.error(res.data);
-				return res.data;
-			}
-
-			// get res body (axios's data property)
 			const data = res.data;
+			if (!data.status) {
+				return data;
+			}
 
 			// convert raw data to frontend-format data
 			const converted = convertReservationRes(data.reservation, 'max');
@@ -507,11 +506,12 @@ const reservationService = {
 		}
 	},
 	// --------------------------------------------------------------------------
-	getMyFullData: async function (options) {
+	// 내가 생성한 예약의 Full정보를 가져오는 API의 조합입니다.
+	getMyFullData: async function (options, accessToken) {
 		// options객체 스키마 : reservationService.get() 참고
 		try {
 			// 내가 생성한 예약들의 최소정보 예약객체 불러오기
-			const resGet = await reservationService.get(options);
+			const resGet = await reservationService.get(options, accessToken);
 			if (!resGet.status) {
 				console.error(resGet.data);
 				return resGet.data;
@@ -520,7 +520,7 @@ const reservationService = {
 			// 각 최소정보 예약객체의 id로 최대정보 예약객체 불러오기
 			const resData = [];
 			const getByIdPromises = resGet.data.map(item =>
-				reservationService.getById(item.id),
+				reservationService.getById(item.id, accessToken),
 			);
 			await Promise.all(getByIdPromises).then(responses => {
 				for (let res of responses) {
@@ -544,11 +544,166 @@ const reservationService = {
 		}
 	},
 	// --------------------------------------------------------------------------
-	create: function (reqBody) {},
+	create: async function (reqBody, accessToken) {
+		try {
+			console.log(reqBody);
+			// 통신
+			const res = await axios
+				.post(`${BASE_URL.RESERVATION_SERVICE}/reservation`, reqBody, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				})
+				.catch(function (err) {
+					console.error(err);
+					if (err.status !== 400) {
+						throw new Error(err);
+					} else {
+						return err.response;
+					}
+					// < err.response.data.msg 내용 >
+					//
+					// 'Conflict in reservations' : 예약 충돌
+					// {
+					// 	status: false,
+					// 	reservations : [],
+					// 	msg: 'Conflict in reservations',
+					// }
+
+					// 'Invalid reservation' : 폼데이터 검증 통과못함
+					// {
+					// 	status: false,
+					// 	invalid: { },
+					// 	msg: 'Invalid reservation',
+					// }
+
+					// "Reservation failed" : 유효하지 않은 사용자id일 때
+					// "Invalid room ID" : 회의실 정보가 잘못된 경우
+					// "User cannot reserve that far into future" : 사용자 권한에 맞지 않은 예약
+					// "Unauthenticated" : invalid한 토큰
+				});
+
+			const data = res.data;
+			if (!data.status) {
+				return data;
+			}
+
+			// 응답데이터-->프론트엔드 데이터 컨버팅, 반환.
+			console.log(data);
+			const converted = data.reservations.map(item =>
+				convertReservationRes(item, 'max'),
+			);
+
+			return {
+				status: true,
+				data: converted,
+				msg: '',
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
-	update: function (id, reqBody) {},
+	update: async function (id, reqBody, accessToken) {
+		try {
+			// 통신
+			const res = await axios
+				.patch(`${BASE_URL.RESERVATION_SERVICE}/reservation/${id}`, reqBody, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				})
+				.catch(function (err) {
+					console.error(err);
+					if (err.response.status !== 400) {
+						throw new Error(err);
+					} else {
+						return err.response;
+					}
+					// < err.response.data.msg 내용 >
+					//
+					// 'Conflict in reservations' : 예약 충돌
+					// {
+					// 	status: false,
+					// 	reservations : [],
+					// 	msg: 'Conflict in reservations',
+					// }
+
+					// 'Invalid reservation' : 폼데이터 검증 통과못함
+					// {
+					// 	status: false,
+					// 	invalid: { },
+					// 	msg: 'Invalid reservation',
+					// }
+
+					// "Reservation edit failed" : 유효하지 않은 사용자id일 때
+					// "Invalid room ID" : 회의실 정보가 잘못된 경우
+					// "User cannot reserve that far into future" : 사용자 권한에 맞지 않은 예약
+					// "Unauthenticated" : invalid한 토큰
+				});
+
+			const data = res.data;
+			if (!data.status) {
+				return data;
+			}
+
+			// 응답데이터-->프론트엔드 데이터 컨버팅, 반환.
+			const converted = data.reservations.map(item =>
+				convertReservationRes(item, 'max'),
+			);
+
+			return {
+				status: true,
+				data: converted,
+				msg: '',
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
-	delete: function (id) {},
+	delete: async function (id, accessToken) {
+		try {
+			// 통신
+			const res = await axios
+				.delete(`${BASE_URL.RESERVATION_SERVICE}/reservation/${id}`, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				})
+				.catch(function (err) {
+					console.error(err);
+					if (err.response.status !== 400) {
+						throw new Error(err);
+					} else {
+						return err.response;
+					}
+					// < err.response.data.msg 내용 >
+					// "Unauthenticated" 토큰이 무효할때
+					// "Reservation not found" ID가 같은 예약이 없을때
+					// "Unauthorized" 어드민, 예약자가 아닌데 삭제시도
+					// "Server error" 서버 오류
+				});
+
+			const data = res.data;
+			if (!data.status) {
+				return data;
+			}
+
+			// 반환
+
+			return {
+				status: true,
+				data: null,
+				msg: data.msg,
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 
 	// ---------------------------
 	// ---------------------------
@@ -564,14 +719,20 @@ const reservationService = {
 	},
 };
 
-// --------------------------------------
+////////////////////////////////////////////
+// -------------------------------------- //
+// -------------------------------------- //
+// -------------------------------------- //
 // alert service
-// --------------------------------------
+// -------------------------------------- //
 const alertService = {
 	// empty
 };
 
-// --------------------------------------
+////////////////////////////////////////////
+// -------------------------------------- //
+// -------------------------------------- //
+// -------------------------------------- //
 // export
-// --------------------------------------
+// -------------------------------------- //
 export { adminService, userService, reservationService, alertService };

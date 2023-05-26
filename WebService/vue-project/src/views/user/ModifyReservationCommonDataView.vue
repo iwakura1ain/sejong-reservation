@@ -9,7 +9,6 @@
 
 <script setup>
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
-
 const { reservationIds, reservationType } = history.state;
 </script>
 

@@ -31,7 +31,7 @@
 	cursor: pointer;
 
 	transition: all 0.1s;
-
+	word-break: keep-all;
 	&:active {
 		transform: scale(1.1);
 	}
