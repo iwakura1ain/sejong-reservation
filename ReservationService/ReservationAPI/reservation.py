@@ -73,13 +73,17 @@ class ReservationList(Resource, Service):
 
                 # return columns based on user type
                 if is_admin(auth_info):  # full table
-                    stmt = select(Reservation)
+                    stmt = (select(Reservation)
+                        .order_by(Reservation.reservation_date, Reservation.start_time)
+                    )
                 # only relevant columns
                 else:
                     select_cols = {
                         getattr(Reservation, col) for col in MINIMIZED_COLS
                     }
-                    stmt = select(*select_cols)
+                    stmt = (select(*select_cols)
+                        .order_by(Reservation.reservation_date, Reservation.start_time)
+                    )
 
                 # query parameters
                 params = request.args
@@ -234,6 +238,7 @@ class ReservationList(Resource, Service):
                 rows = conn.execute(
                     select(Reservation)
                     .where(Reservation.reservation_code == reservation_code)
+                    .order_by(Reservation.reservation_date, Reservation.start_time)
                 ).mappings().fetchall()
                 retval = [serialize(row) for row in rows]
 
@@ -308,6 +313,7 @@ class ReservationByID(Resource, Service):
 
                 row = conn.execute(
                     stmt.where(Reservation.id == id)
+                    .order_by(Reservation.reservation_date, Reservation.start_time)
                 ).mappings().fetchone()
 
                 # if reservation with this id doesn't exist
@@ -364,7 +370,8 @@ class ReservationByID(Resource, Service):
                 # validate model
                 valid, invalid = Reservation.validate(request.json, exclude=["members"])
                 # and validate members data
-                if not validate_members(valid["members"]):
+                if ("members" in valid.keys() 
+                    and not validate_members(valid["members"])):
                     invalid["members"] = valid["members"]
                 if invalid != {}:
                     return {
@@ -432,8 +439,7 @@ class ReservationByID(Resource, Service):
                 "reservation": serialize(row)
             }, 200
 
-        except OSError as e:
-            print(e, flush=True)
+        except Exception as e:
             return {
                 "status": False,
                 "msg": "Reservation edit failed"
