@@ -15,6 +15,7 @@ from utils import (
     is_valid_token, is_admin, is_authorized,
     check_date_constraints,
     check_time_conflict,
+    check_start_end_time,
     create_confirmation_email,
     validate_members,
 )
@@ -206,12 +207,17 @@ class ReservationList(Resource, Service):
                         headers=request.headers,
                         request_params={"id": valid["room_id"]}
                     )
-                    print("\n\nAAAAA", room, flush=True)
                     if "status" not in room.keys() or not room["status"]:
                         return {
                             "status": False,
                             "msg": "Invalid room ID"
                         }, 400
+
+                    if not check_start_end_time(valid, room):
+                        return {
+                            "status": False,
+                            "msg": "reservation not in room open hours"
+                        }
 
                     # check time conflict
                     if check_time_conflict(valid, connection=conn, model=Reservation):
@@ -411,12 +417,25 @@ class ReservationByID(Resource, Service):
                             "msg": "Invalid room ID"
                         }, 400
 
-                if ("start_time" in valid.keys() and "end_time" in valid.keys()
-                        and check_time_conflict(row, connection=conn, model=Reservation)):
-                    return {
-                        "status": False,
-                        "msg": "Conflict in reservations"
-                    }
+                if "start_time" in valid.keys() and "end_time" in valid.keys():
+                    
+
+                    if check_time_conflict(row, connection=conn, model=Reservation):
+                        return {
+                            "status": False,
+                            "msg": "Conflict in reservations"
+                        }
+
+                    room = self.query_api(
+                        "get_rooms_info", "get",
+                        headers=request.headers,
+                        request_params={"id": row["id"]}
+                    )
+                    if not check_start_end_time(row, room):
+                        return {
+                            "status": False,
+                            "msg": "reservation not in room open hours"
+                        }
 
                 # update reservation
                 # if members data exist in data, serialize to string for db

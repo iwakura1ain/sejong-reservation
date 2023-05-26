@@ -122,7 +122,7 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
         return True
 
 
-def check_start_end_time(new_reservation):
+def check_start_end_time(new_reservation, room):
     """
     This function checks the validity of a reservation's start and end times, ensuring they are within
     open hours and the start time is earlier than the end time.
@@ -134,14 +134,17 @@ def check_start_end_time(new_reservation):
     the end_time or if the reservation is not within the open hours, or it returns None if the
     reservation's start_time and end_time are valid and within the open hours.
     """
-    # check if start < end
-    if new_reservation["start_time"] > new_reservation["end_time"]:
-        return "End time earlier than start time"
-    # check if start_time, end_time within open hours
-    if (time.fromisoformat(new_reservation["start_time"]) < time(9, 0)
-        or time.fromisoformat(new_reservation["end_time"]) > time(18, 0)):
-        return "Open hours: 0900~1800"
-    return None
+
+    convert = lambda t: time.fromisoformat(t)
+    
+    reservation_start = convert(new_reservation["start_time"])
+    reservation_end = convert(new_reservation["end_time"])
+    room_open = convert(room["open_time"])
+    room_close = convert(room["close_time"])
+    
+    if room_open < reservation_start and reservation_end < room_close:
+        return True
+    return False
 
 # check date constraints
 def check_date_constraints(user_type, reservation_date):
