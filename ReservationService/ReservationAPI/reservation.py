@@ -73,13 +73,17 @@ class ReservationList(Resource, Service):
 
                 # return columns based on user type
                 if is_admin(auth_info):  # full table
-                    stmt = select(Reservation)
+                    stmt = (select(Reservation)
+                        .order_by(Reservation.reservation_date, Reservation.start_time)
+                    )
                 # only relevant columns
                 else:
                     select_cols = {
                         getattr(Reservation, col) for col in MINIMIZED_COLS
                     }
-                    stmt = select(*select_cols)
+                    stmt = (select(*select_cols)
+                        .order_by(Reservation.reservation_date, Reservation.start_time)
+                    )
 
                 # query parameters
                 params = request.args
@@ -148,6 +152,12 @@ class ReservationList(Resource, Service):
                 }, 400
 
             reservations = request.json.get("reservations", [])
+            if len(reservations) == 0:
+                return {
+                    "status": False,
+                    "msg": "Empty reservation received"
+                }, 400
+
 
             
             # reservation_code used to verify individual reservations
@@ -228,6 +238,7 @@ class ReservationList(Resource, Service):
                 rows = conn.execute(
                     select(Reservation)
                     .where(Reservation.reservation_code == reservation_code)
+                    .order_by(Reservation.reservation_date, Reservation.start_time)
                 ).mappings().fetchall()
                 retval = [serialize(row) for row in rows]
 
@@ -302,6 +313,7 @@ class ReservationByID(Resource, Service):
 
                 row = conn.execute(
                     stmt.where(Reservation.id == id)
+                    .order_by(Reservation.reservation_date, Reservation.start_time)
                 ).mappings().fetchone()
 
                 # if reservation with this id doesn't exist
