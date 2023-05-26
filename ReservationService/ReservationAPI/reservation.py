@@ -148,6 +148,12 @@ class ReservationList(Resource, Service):
                 }, 400
 
             reservations = request.json.get("reservations", [])
+            if len(reservations) == 0:
+                return {
+                    "status": False,
+                    "msg": "Empty reservation received"
+                }, 400
+
 
             
             # reservation_code used to verify individual reservations
