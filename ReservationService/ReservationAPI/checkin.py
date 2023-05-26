@@ -4,6 +4,7 @@ from flask_restx import Resource, Namespace
 from sqlalchemy import select, insert, update, delete, and_
 
 import json
+import hashlib
 
 from datetime import date, time, datetime
 
@@ -23,7 +24,45 @@ CHECK_IN = Namespace(
     prefix="/check-in"
 )
 
-@CHECK_IN.route("/<int:id>")
+REGISTERED_ROOMS = {}
+
+@CHECK_IN.route("/register/<int:room_id>")
+class RegisterCheckIn(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, passing arguments to their respective initialization functions.
+        """
+        Service.__init__(self, model_config=model_config,
+                         api_config=api_config)
+        Resource.__init__(self, *args, **kwargs)
+
+    def get(self, room_id):
+        room = self.query_api(
+            "get_rooms_info", "get",
+            headers=request.headers,
+            request_params={"id": room_id}
+        )
+        if room is None:
+            return {
+                "status": False,
+                "msg": "no room found"
+            }
+        
+        room_hash = hashlib.sha256(str(room).encode('utf-8')).hexdigest()
+        room_location_hash = hashlib.sha256(
+            str(request.remote_addr + room_hash).encode("utf-8")
+        ).hexdigest()
+        REGISTERED_ROOMS[room_id] = room_location_hash
+        
+        return {
+            "status": True,
+            "msg": "room registered",
+            "room_hash": room_hash
+        }
+    
+
+@CHECK_IN.route("/<int:room_id>")
 class CheckIn(Resource, Service):
     """
     The ReservationList class defines methods for getting a list of reservations and making a new
@@ -38,7 +77,7 @@ class CheckIn(Resource, Service):
         Service.__init__(self, model_config=model_config,
                          api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
-
+        
 
     @staticmethod
     def get_current_reservation(conn, model, room_id):
@@ -58,21 +97,31 @@ class CheckIn(Resource, Service):
 
         return res
 
-    @staticmethod
-    def validate(data):
-        code = data.get("reservation_code")
-        if len(code) == 8:
-            return {"reservation_code": code}
-        return None
+
+    # @staticmethod
+    # def validate(data):
+    #     code = data.get("reservation_code")
+    #     room_hash = data.get("room_hash")
+
+    #     retval = {}
+    #     if type(code) == str and len(code) == 8:
+    #         retval["reservation_code"] = code
+
+    #     if type(room_hash) == str:
+    #         retval["room_hash"] = room_hash
+        
+        
+    #     return None
             
+
     # get reservation at current time
-    def get(self, id):
+    def get(self, room_id):
         with self.query_model("Reservation") as (conn, Reservation):
             try:
                 room = self.query_api(
                     "get_rooms_info", "get",
                     headers=request.headers,
-                    request_params={"id": id}
+                    request_params={"id": room_id}
                 )
                 if "status" not in room.keys() or not room["status"]:
                     return {
@@ -80,7 +129,7 @@ class CheckIn(Resource, Service):
                         "msg": "Invalid room ID"
                     }, 400
                 
-                res = self.get_current_reservation(conn, Reservation, id)
+                res = self.get_current_reservation(conn, Reservation, room_id)
                 
                 if res is None:
                     return {
@@ -99,16 +148,16 @@ class CheckIn(Resource, Service):
                     "status": False,
                     "msg": "error retrieving reservation for current time"
                 }, 200
-                
-
+            
+            
     # verify reservation_code(no_show code)
-    def post(self, id):
+    def post(self, room_id):
         with self.query_model("Reservation") as (conn, Reservation):
             try:
                 room = self.query_api(
                     "get_rooms_info", "get",
                     headers=request.headers,
-                    request_params={"id": id}
+                    request_params={"id": room_id}
                 )
                 
                 if "status" not in room.keys() or not room["status"]:
@@ -117,16 +166,24 @@ class CheckIn(Resource, Service):
                         "msg": "Invalid room ID"
                     }, 400
 
-                code = self.validate(request.json)
-                res = self.get_current_reservation(conn, Reservation, id)
-                
+                res = self.get_current_reservation(conn, Reservation, room_id)
                 if res is None:
                     return {
                         "status": False,
                         "msg": "no reservation for current time"
                     }, 200
+
+
+                print(f"REQUEST ORIGIN: {request.remote_addr}", flush=True)
                 
-                if res["reservation_code"] == code["reservation_code"]:
+                reservation_code = request.json.get("reservation_code")
+                room_hash = hashlib.sha256(str(room).encode('utf-8')).hexdigest()
+                room_location_hash = hashlib.sha256(
+                    str(request.remote_addr + room_hash).encode("utf-8")
+                ).hexdigest()
+                
+                if (res["reservation_code"] == reservation_code
+                    and REGISTERED_ROOMS[room_id] == room_location_hash):
                     conn.execute(
                         update(Reservation)
                         .where(Reservation.id == res["id"])

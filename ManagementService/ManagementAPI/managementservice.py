@@ -23,7 +23,7 @@ from utils import (
 )
 from validators import (
     room_name_validator,
-    room_address1_validator, 
+    room_address1_validator,
     room_address2_validator,
     is_usable_validator,
     max_users_validator
@@ -43,7 +43,7 @@ management = namespace.Namespace(
 # keys to be excluded when serializing data to GET all rooms
 exclude = ['created_at', 'reservation_date', 'start_time', 'end_time']
 
-@management.route('')
+@management.route('/rooms')
 class ConferenceRoom(Resource, Service):
     """
     The above code is defining a Flask RESTful API endpoint for managing conference rooms. It includes a
@@ -107,7 +107,7 @@ class ConferenceRoom(Resource, Service):
                 # if validated data is already in table, 
                 # send message 'data already exists'
                 if check_if_room_identical(conn, Room, valid_data):
-                    return { 
+                    return {
                         "status": False,
                         "msg": "Room already exists"
                     }, 200
@@ -178,7 +178,7 @@ class ConferenceRoom(Resource, Service):
             }, 500
                 
 # GET, DELETE, UPDATE by room id
-@management.route('/<int:id>')
+@management.route('/rooms/<int:id>')
 class ConferenceRoomById(Resource, Service):
     """
     The above code defines a Flask route for handling GET, DELETE, and PATCH requests for a conference
@@ -410,7 +410,7 @@ class ConferenceRoomById(Resource, Service):
                 "msg": "Room Update Failed"
             }, 500
 
-@management.route('/<int:id>/image')
+@management.route('/rooms/<int:id>/image')
 class ConferenceRoomImage(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
