@@ -1,0 +1,106 @@
+# docker compose -f prod.yaml build
+# docker compose -f prod.yaml up
+
+version: "3.9"
+
+services:
+  reservationservice:
+    build:
+      context: .
+      dockerfile: ./ReservationService/Dockerfile
+    command: gunicorn --bind 0.0.0.0:5000 app:app
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+      DB_URL: dbservice
+      DB_NAME: sejong
+      DB_PORT: 3306
+      DB_USERNAME: development
+      DB_PASSWORD: 1234
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ReservationService/ReservationAPI:/ReservationAPI
+
+  userservice:
+    build:
+      context: .
+      dockerfile: ./UserService/Dockerfile
+    command: gunicorn --bind 0.0.0.0:5000 app:APP
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+      DB_URL: dbservice
+      DB_NAME: sejong
+      DB_PORT: 3306
+      DB_USERNAME: development
+      DB_PASSWORD: 1234
+    ports:
+      - "5001:5000"
+
+  managementservice:
+    build:
+      context: .
+      dockerfile: ./ManagementService/Dockerfile
+    command: gunicorn --bind 0.0.0.0:5000 app:app
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+      DB_URL: dbservice
+      DB_NAME: sejong
+      DB_PORT: 3306
+      DB_USERNAME: development
+      DB_PASSWORD: 1234
+    networks:
+      default:
+        aliases:
+          - adminservice
+    volumes:
+      - ./ManagementService/thumbnails:/ManagementAPI/static:rw
+    ports:
+      - "5002:5000"
+
+  alertservice:
+    build:
+      context: .
+      dockerfile: ./AlertService/Dockerfile
+    command: gunicorn --bind 0.0.0.0:5000 app:APP
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+    ports:
+      - "5003:5000"
+
+  dbmanager:
+    image: adminer:latest
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+    ports:
+      - "9999:8080"
+
+  dbservice:
+    image: mariadb:11.0-rc-jammy
+    restart: always
+    env_file:
+      ./DBService/maria-env
+    environment:
+      TZ: Asia/Seoul
+    volumes:
+      - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
+    ports:
+      - "3306:3306"
+
+  gatewayservice:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./Common/nginx_reverse_proxy.conf:/etc/nginx/conf.d/default.conf
+      - ./Common/nginx_proxy_params.conf:/etc/nginx/proxy_params
+        # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.pem:/etc/nginx/cert/star_xx_com.pem
+        # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.key:/etc/nginx/cert/star_xx_com.key
+        # - /home/xx/Desktop/cust/xx/Docker/nginx/cert/star_xx_com.crt:/etc/nginx/cert/star_xx_com.crt
+    environment:
+      TZ: Asia/Seoul
+    ports:
+      - "8080:8080"
