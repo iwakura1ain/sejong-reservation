@@ -144,11 +144,11 @@ class ReservationList(Resource, Service):
         return valid, invalid
 
 
-    @staticmethod
-    def send_email(reservations, room, auth_info):
+    
+    def send_email(self, reservations, room):
         # create and send email object
         email_object = create_confirmation_email(
-            reservations[0], room["room"], auth_info, sender=SENDER
+            reservations[0], room["room"], self.auth_info, sender=SENDER
         )
         
         try:
@@ -222,13 +222,13 @@ class ReservationList(Resource, Service):
                         headers=request.headers,
                         request_params={"id": valid["room_id"]}
                     )
-                    if "status" not in room.keys() or not room["status"]:
+                    if not room["status"]:
                         return {
                             "status": False,
                             "msg": "Invalid room ID"
                         }, 400
 
-                    if not check_start_end_time(valid, room):
+                    if not check_start_end_time(valid, room["room"]):
                         return {
                             "status": False,
                             "msg": "reservation not in room open hours"
@@ -265,14 +265,14 @@ class ReservationList(Resource, Service):
                 retval = [serialize(row) for row in rows]
 
                 # send email to reservee
-                _ = self.send_email(retval, room, self.auth_info)
+                _ = self.send_email(retval, room)
                     
             return {
                 "status": True,
                 "reservations": retval,
             }, 200
 
-        except Exception as e:
+        except OSError as e:
             print(e, flush=True)
             return {
                 "status": False,

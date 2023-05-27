@@ -142,6 +142,9 @@ def check_start_end_time(new_reservation, room):
     
     reservation_start = convert(new_reservation["start_time"])
     reservation_end = convert(new_reservation["end_time"])
+
+    print(room, flush=True)
+    
     room_open = convert(room["open_time"])
     room_close = convert(room["close_time"])
     
@@ -255,13 +258,12 @@ def protected():
 
                 return fn(*args, **kwargs)
 
-            except Exception as e:
+            except OSError as e:
                 print(e, flush=True)
                 return {
                     "status": False,
                     "msg": "Reservation failed"
                 }, 400
-
 
         return decorator
     return wrapper
