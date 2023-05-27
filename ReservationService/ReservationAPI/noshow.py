@@ -11,6 +11,7 @@ def check_room_used(room_id, service=None):
         with service.query_model("Reservation") as (conn, Reservation):
             now_date = datetime.now().date()
             now_time = datetime.now().time()
+            print("current time:", now_date, now_time)
 
             stmt = (select(Reservation)
                     # select for a room
@@ -51,15 +52,23 @@ def check_room_used(room_id, service=None):
 
 
 if __name__ == "__main__":
-    print(datetime.now())
-    service = Service(model_config=model_config,
-                      api_config=api_config)
+    print("# LOG: ",datetime.now())
+    try:
+        service = Service(model_config=model_config,
+                        api_config=api_config)
 
-    with service.query_model("Room") as (conn, Room):
-        rows = conn.execute(select(Room.id)).mappings().fetchall()
-        room_ids = [row["id"] for row in rows]
-    if not room_ids:
-        print("No rooms exist.")
+        with service.query_model("Room") as (conn, Room):
+            rows = conn.execute(select(Room.id)).mappings().fetchall()
+            room_ids = [row["id"] for row in rows]
+        print(room_ids)
+        if not room_ids:
+            print("No rooms exist.")
+            exit()
+    except Exception as e:
+        print(f"Error in setting up: {e}")
+        print("Exiting...\n")
         exit()
+
     for id in room_ids:
         check_room_used(id, service=service)
+    print("\n")
