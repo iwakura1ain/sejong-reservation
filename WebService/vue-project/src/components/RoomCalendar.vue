@@ -1,6 +1,6 @@
 <template>
 	<div class="room-calendar">
-		<div v-if="!isCalendarShown">
+		<div v-if="!isOpened">
 			<filled-button @click="showCalendar"> 달력 열기 </filled-button>
 		</div>
 		<template v-else>
@@ -50,17 +50,19 @@ import formatDate from '@/assets/scripts/utils/formatDate.js';
 import getWeekNumber from '@/assets/scripts/utils/getWeekNumber.js';
 import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
 
-const calendarType = ref('month'); // month, week
-
-const isCalendarShown = ref(false);
-function showCalendar() {
-	isCalendarShown.value = true;
-}
-function unshowCalendar() {
-	isCalendarShown.value = false;
-}
+//
+defineProps({
+	isOpened: {
+		required: false,
+		type: Boolean,
+		default: false,
+	},
+});
+const emits = defineEmits(['update:is-opened']);
 
 // 상태, computed
+const calendarType = ref('month'); // month, week
+
 const nowDateObj = new Date();
 const targetDate = ref({
 	year: nowDateObj.getFullYear(),
@@ -91,7 +93,6 @@ init();
 watch(
 	[targetDate, makeRsvFormStore.common],
 	() => {
-		console.log('asdf');
 		fetchReservationsInMonth();
 	},
 	{ deep: true },
@@ -124,6 +125,16 @@ async function fetchReservationsInMonth() {
 
 async function init() {
 	await fetchReservationsInMonth();
+}
+
+// 이벤트 핸들러 --------------------
+function showCalendar() {
+	// isCalendarShown.value = true;
+	emits('update:is-opened', true);
+}
+function unshowCalendar() {
+	// isCalendarShown.value = false;
+	emits('update:is-opened', false);
 }
 </script>
 

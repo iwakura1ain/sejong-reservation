@@ -8,6 +8,10 @@
 // 1. 백엔드 응답 데이터 --> 프론트엔드 데이터 Mapping.
 // --------------------------------------------
 export default function convertRoomRes(res) {
+	const splitted = {
+		open_time: res.open_time ? res.open_time.split(':') : '00:00',
+		close_time: res.close_time ? res.close_time.split(':') : '00:00',
+	};
 	const obj = {
 		id: res.id, // int -- 0,1,2,...
 		name: res.room_name, // String
@@ -18,8 +22,8 @@ export default function convertRoomRes(res) {
 
 		// TODO: 시각은 아직 백엔드에서 지원안함.
 		time: {
-			open: res.open_time ? res.open_time : '09:00', // String -- HH:mm
-			close: res.close_time ? res.close_time : '18:00', // String -- HH:mm
+			open: `${splitted.open_time[0]}:${splitted.open_time[1]}`, // String -- HH:mm
+			close: `${splitted.close_time[0]}:${splitted.close_time[1]}`, // String -- HH:mm
 		},
 		img: res.preview_image, // String -- http link (https://example.com/image.jpg)
 	};

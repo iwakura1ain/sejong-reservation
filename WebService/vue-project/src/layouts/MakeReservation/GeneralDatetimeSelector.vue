@@ -333,7 +333,7 @@ async function validateRsvConflict(targetIdxArr) {
 
 		// 모든 예약이 생성 가능한지 확인 (create시도)
 		const res = await reservationService.create(req, accessToken);
-
+		console.log(res);
 		if (res.status) {
 			// 만들어졌으면 확인했으니 만든 예약 삭제함.
 			const ids = res.data.map(item => item.id);
@@ -370,8 +370,19 @@ async function validateRsvConflict(targetIdxArr) {
 				});
 
 				makeToast('시간이 겹쳐 예약할 수 없는 항목이 있습니다', 'error');
+			} else if (res.msg === 'reservation not in room open hours') {
+				targetIdxArr.forEach(idx => {
+					makeRsvFormStore.each[idx].conflict = true;
+				});
+				makeToast(
+					`선택한 예약 시간이 회의실 운영시간을 벗어났습니다.`,
+					'error',
+				);
 			} else if (res.msg === 'Invalid reservation') {
 				// 폼 검증을 통과하지 못함
+				targetIdxArr.forEach(idx => {
+					makeRsvFormStore.each[idx].conflict = true;
+				});
 				makeToast(`형식에 적합하지 않은 입력값이 있습니다`, 'error');
 			} else if (res.msg === 'User cannot reserve that far into future') {
 				makeToast(

@@ -205,11 +205,11 @@ async function validateRsvConflict(targetIdxArr) {
 
 		const req = { reservations };
 		const accessToken = userTokenStore.getAccessToken();
-		console.log(req);
-		console.log(targetIdxArr);
+		// console.log(req);
+		// console.log(targetIdxArr);
 		// 모든 예약이 생성 가능한지 확인 (create시도)
 		const res = await reservationService.create(req, accessToken);
-
+		console.log(res);
 		if (res.status) {
 			// 만들어졌으면 확인했으니 만든 예약 삭제함.
 			const ids = res.data.map(item => item.id);
@@ -226,6 +226,8 @@ async function validateRsvConflict(targetIdxArr) {
 			targetIdxArr.forEach(idx => {
 				makeRsvFormStore.each[idx].conflict = false;
 			});
+
+			return true;
 		} else {
 			if (res.msg === 'Conflict in reservations') {
 				// 시간이 충돌하는 예약이 있음.
@@ -246,8 +248,19 @@ async function validateRsvConflict(targetIdxArr) {
 				});
 
 				makeToast('시간이 겹쳐 예약할 수 없는 항목이 있습니다', 'error');
+			} else if (res.msg === 'reservation not in room open hours') {
+				targetIdxArr.forEach(idx => {
+					makeRsvFormStore.each[idx].conflict = true;
+				});
+				makeToast(
+					`선택한 예약 시간이 회의실 운영시간을 벗어났습니다.`,
+					'error',
+				);
 			} else if (res.msg === 'Invalid reservation') {
 				// 폼 검증을 통과하지 못함
+				targetIdxArr.forEach(idx => {
+					makeRsvFormStore.each[idx].conflict = true;
+				});
 				makeToast(`형식에 적합하지 않은 입력값이 있습니다`, 'error');
 			} else if (res.msg === 'User cannot reserve that far into future') {
 				makeToast(
@@ -256,9 +269,11 @@ async function validateRsvConflict(targetIdxArr) {
 				);
 			} else {
 				makeToast('알 수 없는 오류입니다', 'error');
+				console.error(res);
 				throw new Error(res);
 			}
 		}
+		return false;
 	} catch (err) {
 		const msg = err.message;
 		console.error(err, msg);
@@ -331,10 +346,12 @@ async function handleModifyDate() {
 		selectedIdx.value.map(idx => {
 			makeRsvFormStore.each[idx].date = newDate.value;
 		});
-		await validateRsvConflict(selectedIdx.value);
-		selectedIdx.value.splice(0);
-		modifyContainerShow.value = false;
-		makeToast('날짜가 변경되었습니다', 'info');
+		const res = await validateRsvConflict(selectedIdx.value);
+		if (res) {
+			selectedIdx.value.splice(0);
+			modifyContainerShow.value = false;
+			makeToast('날짜가 변경되었습니다', 'info');
+		}
 	} catch (err) {
 		console.error(err);
 	}
@@ -348,10 +365,12 @@ async function handleModifyTime() {
 			}
 			makeRsvFormStore.each[idx].time = newTime.value;
 		}
-		await validateRsvConflict(selectedIdx.value);
-		selectedIdx.value.splice(0);
-		modifyContainerShow.value = false;
-		makeToast('시간이 변경되었습니다', 'info');
+		const res = await validateRsvConflict(selectedIdx.value);
+		if (res) {
+			selectedIdx.value.splice(0);
+			modifyContainerShow.value = false;
+			makeToast('시간이 변경되었습니다', 'info');
+		}
 	} catch (err) {
 		console.error(err);
 	}

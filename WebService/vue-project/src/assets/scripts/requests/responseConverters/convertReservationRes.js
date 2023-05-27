@@ -56,7 +56,7 @@ export default function convertReservationRes(res, minmaxType) {
 			topic: res.reservation_topic, // "string"
 			members: res.members, // [ {name:'string', email:'string'} ]
 
-			creatorId: res.creatorId, // 0, 1, 2, ...
+			creatorId: res.creator_id, // 0, 1, 2, ...
 			createdAt: {
 				date: splitted.created_at[0], // YYYY-MM-DD
 				time: splitted.created_at[1], // HH:mm:ss

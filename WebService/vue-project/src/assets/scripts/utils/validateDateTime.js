@@ -13,7 +13,7 @@ export default function validateDateTime(dateObj, timepickerObj) {
 	const { start, end } = timepickerObj;
 	const startTimeToSec = parseInt(start.HH) * 60 + parseInt(start.mm);
 	const endTimeToSec = parseInt(end.HH) * 60 + parseInt(end.mm);
-	if (startTimeToSec > endTimeToSec) {
+	if (startTimeToSec >= endTimeToSec) {
 		result = false;
 		makeToast('종료시각은 시작시각 이후여야 합니다', 'warning');
 	}

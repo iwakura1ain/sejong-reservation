@@ -1,9 +1,7 @@
 <template>
 	<div id="make-reservation-view">
 		<section-header>예약하기</section-header>
-		<!--  -->
 		<div id="top-header"></div>
-		<!--  -->
 		<!-- STEP 1 : 회의실 선택 -->
 		<template v-if="makeRsvFormStore.formState.step === 1">
 			<Transition>
@@ -14,26 +12,21 @@
 			</Transition>
 		</template>
 
-		<!-- 선택한 회의실의 예약현황을 보여주는 달력 : STEP 1~3에 표시됨 -->
+		<!-- 선택한 회의실의 예약현황을 보여주는 달력 : STEP 1에 표시됨 -->
 		<template v-if="makeRsvFormStore.formState.step === 1 && isRoomSelected">
 			<Transition>
 				<div style="width: 100%">
 					<div
 						v-if="isRoomSelected"
 						class="reserved-time-display-calendar-container"
-						style="
-							display: flex;
-							flex-direction: column;
-							align-items: center;
-							width: 100%;
-						"
 					>
 						<section-header size="small">회의실 예약현황</section-header>
-						<RoomCalendar />
+						<RoomCalendar v-model:is-opened="isCalendarOpened" />
 					</div>
 				</div>
 			</Transition>
 		</template>
+
 		<div class="step" v-if="makeRsvFormStore.formState.step === 1">
 			<div class="step-btn-container">
 				<section-header></section-header>
@@ -51,13 +44,16 @@
 		</div>
 
 		<!--  -->
+		<!--  -->
+		<!-- 선택한 회의실의 예약현황을 보여주는 달력 : STEP 2~3에 표시됨 -->
 		<div
+			class="reserved-time-display-calendar-container"
 			v-if="
 				1 < makeRsvFormStore.formState.step &&
 				makeRsvFormStore.formState.step < 4
 			"
 		>
-			<RoomCalendar />
+			<RoomCalendar v-model:is-opened="isCalendarOpened" />
 		</div>
 
 		<!-- STEP 2 : 회의 일정의 큰 틀 선택 -->
@@ -173,7 +169,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
@@ -187,10 +183,13 @@ import FormConfirmator from '@/layouts/MakeReservation/FormConfirmator.vue';
 
 import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
 import validateDateTime from '@/assets/scripts/utils/validateDateTime.js';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
 // 초기화 -------------------------------------
 // const router = useRouter();
 
 // 상태, computed -----------------------------
+const isCalendarOpened = ref(false);
+
 const isRoomSelected = computed(() => {
 	return makeRsvFormStore.common.roomId > 0; // db의 회의실 id는 1부터 시작함.
 });
@@ -227,12 +226,17 @@ function handleGoPrevStep() {
 }
 function handleGoNextStep() {
 	if (makeRsvFormStore.formState.step === 2) {
-		if (
-			!validateDateTime(
-				makeRsvFormStore.common.startDate,
-				makeRsvFormStore.defaultTime,
-			)
-		) {
+		const startDate = makeRsvFormStore.common.startDate;
+		const defaultTime = makeRsvFormStore.defaultTime;
+		const isValid = validateDateTime(startDate, defaultTime);
+		if (!isValid) return;
+	} else if (makeRsvFormStore.formState.step === 4) {
+		const isValid = makeRsvFormStore.checkMeetingInfoFormValid();
+		if (!isValid) {
+			makeToast(
+				'비어있는 항목이 있거나, 이메일의 형식이 올바르지 않습니다',
+				'warning',
+			);
 			return;
 		}
 	}
@@ -257,6 +261,13 @@ function handleGoNextStep() {
 		.step-btn {
 			// width: 80%;
 		}
+	}
+
+	.reserved-time-display-calendar-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
 	}
 }
 </style>

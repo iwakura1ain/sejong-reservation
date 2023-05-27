@@ -113,6 +113,7 @@ function buildReqBodyElement(rsv) {
 		room_id: makeRsvFormStore.common.roomId,
 		creator_id: userInfoStore.get().id,
 		members: makeRsvFormStore.common.members,
+		reservation_topic: makeRsvFormStore.common.topic,
 	};
 }
 

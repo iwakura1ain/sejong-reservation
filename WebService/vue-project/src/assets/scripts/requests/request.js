@@ -71,6 +71,7 @@ const adminService = {
 
 			// 받아온 회의실 데이터 프론트엔드 포맷으로 컨버팅
 			const data = res.data; // response body
+
 			const converted = data.allRooms.map(room => convertRoomRes(room));
 
 			// 회의실 각각의 이미지 다운로드받아서 converted에 주입
@@ -380,7 +381,7 @@ const reservationService = {
 				queryStr += `&room=${options.room}`;
 			}
 			if (options.creator) {
-				queryStr += `&room=${options.creator}`;
+				queryStr += `&creator=${options.creator}`;
 			}
 			if (options.reservationType) {
 				queryStr += `&reservation_type=${options.reservationType}`;
@@ -556,7 +557,7 @@ const reservationService = {
 				})
 				.catch(function (err) {
 					console.error(err);
-					if (err.status !== 400) {
+					if (err.response.status !== 400) {
 						throw new Error(err);
 					} else {
 						return err.response;
@@ -577,6 +578,7 @@ const reservationService = {
 					// 	msg: 'Invalid reservation',
 					// }
 
+					// "reservation not in room open hours" : 방 사용가능시간 밖 예약.
 					// "Reservation failed" : 유효하지 않은 사용자id일 때
 					// "Invalid room ID" : 회의실 정보가 잘못된 경우
 					// "User cannot reserve that far into future" : 사용자 권한에 맞지 않은 예약
@@ -584,6 +586,7 @@ const reservationService = {
 				});
 
 			const data = res.data;
+			console.log(res);
 			if (!data.status) {
 				return data;
 			}

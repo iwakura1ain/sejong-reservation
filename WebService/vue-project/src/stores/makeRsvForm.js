@@ -159,6 +159,41 @@ const isGeneralFormRequirementFulfilled = computed(() => {
 	}
 });
 
+function checkMeetingInfoFormValid() {
+	let valid = true;
+	let regex = new RegExp('[a-z0-9]+@[a-z0-9]+.[a-z0-9]');
+
+	makeRsvFormStore.common.topic = makeRsvFormStore.common.topic.trim();
+	if (!makeRsvFormStore.common.topic) {
+		valid = false;
+		console.log(valid);
+		return valid;
+	}
+
+	const len = makeRsvFormStore.common.members.length;
+	for (let i = 0; i < len; i++) {
+		makeRsvFormStore.common.members[i].name =
+			makeRsvFormStore.common.members[i].name.trim();
+		makeRsvFormStore.common.members[i].email =
+			makeRsvFormStore.common.members[i].email.trim();
+
+		const name = makeRsvFormStore.common.members[i].name;
+		const email = makeRsvFormStore.common.members[i].email;
+
+		if (!name || !email) {
+			valid = false;
+			break;
+		}
+		if (!regex.test(email)) {
+			valid = false;
+
+			break;
+		}
+	}
+	console.log(valid);
+	return valid;
+}
+
 function clear() {
 	formState.step = 1;
 	common.roomId = 0;
@@ -186,6 +221,7 @@ export const makeRsvFormStore = {
 	defaultTime,
 	each,
 	isGeneralFormRequirementFulfilled,
+	checkMeetingInfoFormValid,
 	clear,
 };
 

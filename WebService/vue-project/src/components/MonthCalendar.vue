@@ -1,5 +1,6 @@
 <template>
 	<div class="month-calendar">
+		<!-- 상단 컨트롤 컨테이너 -->
 		<div class="control-container">
 			<div class="month-selector-container">
 				<div
@@ -31,6 +32,8 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- 달력 본문 -->
 		<div class="month-calendar-innerwrap">
 			<div class="header-container">
 				<div class="header-cell sun">일</div>
@@ -76,6 +79,39 @@
 							</div>
 						</div>
 					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 하단 컨트롤 컨테이너 -->
+		<div class="control-container">
+			<div class="month-selector-container">
+				<div
+					class="month-btn prev-year noselect"
+					@click="updateMonth(-1, 'year')"
+				>
+					{{ '<<' }}
+				</div>
+				<div
+					class="month-btn prev-month noselect"
+					@click="updateMonth(-1, 'month')"
+				>
+					{{ '<' }}
+				</div>
+				<div class="current-month-text">
+					{{ modelValue.year }}년 {{ modelValue.month }}월
+				</div>
+				<div
+					class="month-btn next-month noselect"
+					@click="updateMonth(1, 'month')"
+				>
+					{{ '>' }}
+				</div>
+				<div
+					class="month-btn next-year noselect"
+					@click="updateMonth(1, 'year')"
+				>
+					{{ '>>' }}
 				</div>
 			</div>
 		</div>
@@ -158,6 +194,7 @@ function updateMonth(type, unit) {
 	}
 
 	emits('update:modelValue', {
+		...props.modelValue,
 		year: _year,
 		month: _month,
 		day: props.modelValue.day,
@@ -198,7 +235,7 @@ function selectReservation(reservationId) {
 		padding: 4px 0;
 		border: 2px solid lightgrey;
 		border-radius: $box-radius;
-		margin-bottom: 8px;
+		margin: 8px 0;
 		.month-selector-container {
 			display: flex;
 			justify-content: center;

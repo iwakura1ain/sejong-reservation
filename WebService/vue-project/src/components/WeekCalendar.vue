@@ -1,7 +1,7 @@
 <template>
 	<div class="week-calendar">
+		<!-- 상단 컨트롤바 -->
 		<div class="control-container">
-			<!-- 컨트롤바 -->
 			<div class="week-selector-container">
 				<div
 					class="week-btn prev-month noselect"
@@ -31,9 +31,13 @@
 			</div>
 		</div>
 
+		<!-- 달력 -->
 		<div class="week-calendar-innerwrap">
 			<!-- 요일 표시 공간 -->
 			<div class="header-container">
+				<!-- 가로선별 시각표시 공간 헤더-->
+				<div class="header-cell hour-tip"></div>
+				<!-- 이하 요일별 헤더 -->
 				<div class="header-cell sun">일</div>
 				<div class="header-cell mon">월</div>
 				<div class="header-cell tue">화</div>
@@ -45,6 +49,28 @@
 
 			<!--  -->
 			<div class="body-container">
+				<div class="day hour-tip">
+					<div class="day-number hour-tip"></div>
+					<div class="reservation-container hour-tip">
+						<div
+							class="lines hour-tip"
+							style="width: 100%; position: relative; top: 0; left: 0"
+						>
+							<div
+								class="timeline hour-tip"
+								v-for="index in Array.from({ length: 24 }, (v, i) => i)"
+								:key="index"
+								:style="`position:absolute; top:${
+									(60 / minutePerPx) * index - 6
+								}px; width: 100%; font-size : 0.8rem; text-align:right; padding-right : 4px`"
+							>
+								{{ index }}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 실제 예약내용 표시 -->
 				<div
 					v-for="(dayObj, index) in calendarArr[modelValue.week - 1]"
 					:key="index"
@@ -65,7 +91,7 @@
 						>
 							<div
 								class="timeline"
-								v-for="index in Array.from({ length: 25 }, (v, i) => i)"
+								v-for="index in Array.from({ length: 24 }, (v, i) => i)"
 								:key="index"
 								:style="`position:absolute; top:${
 									(60 / minutePerPx) * index
@@ -88,7 +114,7 @@
 								class="block"
 								:class="{
 									single: item.reservationType === null,
-									regular: item.type !== null,
+									regular: item.reservationType !== null,
 								}"
 								v-for="(item, index) in dayObj.reservations"
 								:key="index"
@@ -98,41 +124,56 @@
 								)}px; top:${getTimeBlockPosition(
 									item.meetingDatetime.startTime,
 								)}px`"
+								:title="`${item.meetingDatetime.startTime}-${item.meetingDatetime.endTime}`"
 							>
-								<p>
+								<p
+									style="font-size: 0.75rem"
+									v-if="
+										getTimeBlockHeight(
+											item.meetingDatetime.startTime,
+											item.meetingDatetime.endTime,
+										) > 16
+									"
+								>
 									{{
 										`${item.meetingDatetime.startTime}-${item.meetingDatetime.endTime}`
 									}}
 								</p>
 							</div>
-
-							<!-- 테스트 엘리먼트 -->
-							<!-- <div
-								class="block single"
-								:style="`height:${getTimeBlockHeight(
-									'06:00',
-									'11:35',
-								)}px; top:${getTimeBlockPosition('06:00')}px`"
-							>
-								<p>06:00</p>
-								<p>-</p>
-								<p>11:35</p>
-							</div>
-							<div
-								class="block multi"
-								:style="`height:${getTimeBlockHeight(
-									'15:00',
-									'22:11',
-								)}px; top:${getTimeBlockPosition('15:00')}px`"
-							>
-								<p>15:00</p>
-								<p>-</p>
-								<p>22:11</p>
-							</div> -->
-
-							<!-- 테스트 엘리먼트 -->
 						</div>
 					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 하단 컨트롤바 -->
+		<div class="control-container">
+			<!-- 상단 컨트롤바 -->
+			<div class="week-selector-container">
+				<div
+					class="week-btn prev-month noselect"
+					@click="updateWeek(-1, 'month')"
+				>
+					{{ '<<' }}
+				</div>
+				<div
+					class="week-btn prev-week noselect"
+					@click="updateWeek(-1, 'week')"
+				>
+					{{ '<' }}
+				</div>
+				<div class="current-week-text">
+					<span>{{ modelValue.year }}년 {{ modelValue.month }}월 </span>
+					<span>{{ modelValue.week }}주차</span>
+				</div>
+				<div class="week-btn next-week noselect" @click="updateWeek(1, 'week')">
+					{{ '>' }}
+				</div>
+				<div
+					class="week-btn next-month noselect"
+					@click="updateWeek(1, 'month')"
+				>
+					{{ '>>' }}
 				</div>
 			</div>
 		</div>
@@ -193,14 +234,11 @@ const todayStr = `${props.modelValue.year}-${formattedMonth}-${formattedDay}`;
 const calendarArr = computed(() => {
 	const arr = getCalendarArray(props.modelValue.year, props.modelValue.month);
 	// reservations객체 주입
-	// const thisMonthReservations = fetchedReservations.getThisMonth
-	console.log(props.reservationList);
 	props.reservationList.forEach(rsv => {
 		const dateObj = new Date(rsv.meetingDatetime.date);
 		const weekNum = getWeekNumber(rsv.meetingDatetime.date);
 		arr[weekNum - 1][dateObj.getDay()].reservations.push(rsv);
 	});
-	console.log(arr);
 	return arr;
 });
 
@@ -220,7 +258,8 @@ function getTimeBlockHeight(startTime, endTime) {
 	const diffAsMinute = endTimeAsMinute - startTimeAsMinute;
 	const blockPixelHeight = parseInt(diffAsMinute / minutePerPx);
 
-	return blockPixelHeight;
+	const minHeight = 5;
+	return blockPixelHeight > minHeight ? blockPixelHeight : minHeight;
 }
 
 function getTimeBlockPosition(startTime) {
@@ -238,7 +277,6 @@ function updateWeek(type, unit) {
 	let _year = unref(props.modelValue.year);
 	let _month = unref(props.modelValue.month);
 	let _week = unref(props.modelValue.week);
-	console.log(_year, _month, _week);
 
 	if (unit === 'week') {
 		_week += type;
@@ -262,6 +300,7 @@ function updateWeek(type, unit) {
 	}
 
 	emits('update:modelValue', {
+		...props.modelValue,
 		year: _year,
 		month: _month,
 		day: props.modelValue.day,
@@ -292,7 +331,7 @@ function selectDayNumber(dateStr) {
 		padding: 4px 0;
 		border: 2px solid lightgrey;
 		border-radius: $box-radius;
-		margin-bottom: 8px;
+		margin: 8px 0;
 		.week-selector-container {
 			display: flex;
 			justify-content: center;
@@ -333,39 +372,48 @@ function selectDayNumber(dateStr) {
 	}
 
 	.week-calendar-innerwrap {
-		overflow-x: auto;
+		border-radius: $box-radius;
+
+		border: 2px solid lightgrey;
+		background-color: $sejong-red;
+		overflow-x: scroll;
 		.header-container {
 			display: flex;
 
-			border-top-left-radius: $box-radius;
-			border-top-right-radius: $box-radius;
-			border: 1px solid lightgrey;
+			// border-top-left-radius: $box-radius;
+			// border-top-right-radius: $box-radius;
+			// border: 1px solid lightgrey;
 			border-bottom: none;
-
+			// background-color: $sejong-red;
 			.header-cell {
 				flex: 1;
 				display: flex;
 				justify-content: center;
 				// padding: 12px 4px;
 				padding: 12px 0;
-				border: 1px solid $sejong-red;
-				background-color: $sejong-red;
+				// border: 1px solid $sejong-red;
+				// background-color: $sejong-red;
 				color: white;
 				font-size: 1.2rem;
 
 				min-width: $cell-min-width;
 			}
+			.hour-tip.header-cell {
+				min-width: 32px;
+				border: none;
+			}
 		}
 		.body-container {
 			border-bottom-left-radius: $box-radius;
 			border-bottom-right-radius: $box-radius;
-			border: 1px solid lightgrey;
-			border-top: none;
+			// border: 1px solid red;
+			// border-top: none;
 			display: flex;
 
 			.day {
 				flex: 1;
-				border: 1px solid lightgrey;
+				border-left: 2px solid lightgrey;
+
 				// padding: 0 2px;
 				background-color: white;
 
@@ -406,7 +454,7 @@ function selectDayNumber(dateStr) {
 					@media (max-width: 450px) {
 						.block {
 							font-size: 0.75rem;
-							width: 100%;
+							// width: 100%;
 						}
 					}
 					.block.single {
@@ -419,6 +467,15 @@ function selectDayNumber(dateStr) {
 					}
 				}
 			}
+
+			.hour-tip.day {
+				min-width: 32px;
+				border: none;
+				.day-number {
+					min-height: 24px;
+				}
+			}
+
 			.today {
 				.day-number {
 					background-color: $sejong-red-30;

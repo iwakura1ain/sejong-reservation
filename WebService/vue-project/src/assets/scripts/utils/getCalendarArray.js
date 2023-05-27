@@ -1,8 +1,11 @@
+import getWeekNumber from '@/assets/scripts/utils/getWeekNumber.js';
+
 export default function getCalendarArray(year, month) {
 	const calendarArr = getCalDateArr(year, month).map(week => {
 		return week.map(day => {
 			return {
 				day: day,
+				week: getWeekNumber(formatDate(year, month, day)),
 				dateStr: day == 0 ? null : formatDate(year, month, day),
 				reservations: [],
 			};

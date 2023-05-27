@@ -163,13 +163,17 @@ function endTimeIsOvered({ date, endTime }) {
 
 async function getMyReservationStat() {
 	try {
-		const res = await reservationService.get({ creator: userInfo.value.id });
+		const accessToken = userTokenStore.getAccessToken();
+		const res = await reservationService.get(
+			{ creator: userInfo.value.id },
+			accessToken,
+		);
 		if (!res.status) {
 			if (res.msg) throw new Error(res.msg);
 			else throw new Error(res);
 		}
 		const reservationList = res.data ? res.data : [];
-		console.log(reservationList);
+
 		// 완료
 		const beforeNow = reservationList.filter(rsv =>
 			endTimeIsOvered(rsv.meetingDatetime),
@@ -253,7 +257,7 @@ async function handleDeleteUser() {
 		userInfoStore.clear();
 		router.push({ name: 'Login', state: { userDeleted: true } });
 	} catch (err) {
-		console.log(err, err.message);
+		console.error(err, err.message);
 		makeToast('예상치 못한 오류가 발생했습니다', 'error');
 	}
 }
