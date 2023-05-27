@@ -2,17 +2,7 @@ FROM python:3.11.2-buster
 
 ENV PYTHONBUFFERED 1
 
-COPY ./ManagementService/ManagementAPI /ManagementAPI/
-
-COPY ./Common/service.py /ManagementAPI/service.py
-
 WORKDIR /ManagementAPI
-
-RUN ls .
-
-RUN apt update
-
-RUN apt install wget
 
 RUN wget https://r.mariadb.com/downloads/mariadb_repo_setup
 
@@ -22,13 +12,14 @@ RUN chmod +x mariadb_repo_setup
 
 RUN ./mariadb_repo_setup --mariadb-server-version="mariadb-10.6"
 
-RUN apt install libmariadb3 libmariadb-dev --yes
+RUN apt install libmariadb3 libmariadb-dev -y
 
-RUN python3 -m pip install --upgrade pip
+COPY ./ManagementService/ManagementAPI/requirements.txt /ManagementAPI/requirements.txt
 
-RUN python3 -m pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /ManagementAPI/requirements.txt
 
-EXPOSE 5000
+COPY ./ManagementService/ManagementAPI /ManagementAPI/
+
+COPY ./Common/service.py /ManagementAPI/service.py
 
 CMD ["python3", "app.py"]
-

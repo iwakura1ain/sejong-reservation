@@ -61,7 +61,7 @@ services:
   alertservice:
     build:
       context: .
-      dockerfile: ./AlertService/dockerfile
+      dockerfile: ./AlertService/Dockerfile
     restart: on-failure
     environment:
       TZ: Asia/Seoul
