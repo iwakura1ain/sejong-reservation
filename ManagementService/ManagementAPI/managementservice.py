@@ -89,7 +89,6 @@ class ConferenceRoom(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 valid_data, invalid_data = Room.validate(request.json, optional=True)
-
                 if len(invalid_data) > 0:
                     return {
                         "status": False,
@@ -111,12 +110,18 @@ class ConferenceRoom(Resource, Service):
                         **valid_data
                     }
                 )
+                room = conn.execute(select(Room).where(Room.room_name == request.json['room_name'] 
+                                                                and Room.room_address1 == request.json['room_address1']
+                                                                and Room.room_address2 == request.json['room_address2'])
+                                                                ).mappings().fetchone()
+                
+                created_room = serialize(room, exclude=exclude)
 
                 # CREATE room
                 return{
                     "status": True,
                     "msg": "Room created",
-                    "created_room": request.json
+                    "created_room": created_room
                 }, 200
         
         # error
