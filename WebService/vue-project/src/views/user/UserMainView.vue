@@ -7,18 +7,10 @@
 				:key="item.id"
 				:rsv-data="item"
 				:room-data="fetchedRoomStore.getById(item.roomId)"
+				:user-name="userInfoStore.get().name"
 				@click="goDetailPage(item.id, item.reservationType)"
 			/>
 		</div>
-
-		<!-- <section-header>예정된 회의</section-header> -->
-		<!-- <div style="width: fit-content">
-			<month-calendar
-				v-model="targetDate"
-				:reservation-list="reservationList"
-				:show-room-name="true"
-			/>
-		</div> -->
 	</div>
 </template>
 
@@ -35,29 +27,15 @@ import { userInfoStore } from '@/stores/userInfo.js';
 import { userTokenStore } from '@/stores/userToken.js';
 import { reservationService } from '@/assets/scripts/requests/request.js';
 import getDateStringInThreeDays from '@/assets/scripts/utils/getDateStringInThreeDays';
+import { loadingStore } from '@/stores/loading.js';
 
-// 상태 ----------------------------------------
-// const nowDateObj = new Date();
-// const targetDate = ref({
-// 	year: nowDateObj.getFullYear(),
-// 	month: nowDateObj.getMonth() + 1,
-// 	day: nowDateObj.getDate(),
-// });
-
+// 상태 ---------------------------------------
 const reservationList = ref([]);
 
 // 초기화 --------------------------------------
 const router = useRouter();
 init();
 console.log(fetchedRoomStore);
-// 상태 감시 -----------------------------------
-// watch(
-// 	targetDate,
-// 	() => {
-// 		fetchReservationsInThreeDays();
-// 	},
-// 	{ deep: true },
-// );
 
 // 일반 함수 -----------------------------------
 async function fetchReservationsInThreeDays() {
@@ -88,7 +66,14 @@ async function fetchReservationsInThreeDays() {
 }
 
 async function init() {
-	await fetchReservationsInThreeDays();
+	try {
+		loadingStore.start();
+		await fetchReservationsInThreeDays();
+	} catch (err) {
+		console.error(err);
+	} finally {
+		loadingStore.stop();
+	}
 }
 
 // 이벤트 핸들러 ---------------------------------

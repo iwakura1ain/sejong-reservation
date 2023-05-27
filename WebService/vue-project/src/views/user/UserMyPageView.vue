@@ -163,6 +163,8 @@ function endTimeIsOvered({ date, endTime }) {
 
 async function getMyReservationStat() {
 	try {
+		loadingStore.start();
+
 		const accessToken = userTokenStore.getAccessToken();
 		const res = await reservationService.get(
 			{ creator: userInfo.value.id },

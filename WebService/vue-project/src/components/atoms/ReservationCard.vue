@@ -23,7 +23,7 @@
 			<div class="members">
 				<img :src="groupIcon" alt="구성원을 의미하는 한 무리의 사람 아이콘" />
 				<span class="title" style="margin-left: 2px">
-					{{ rsvData.members.length + '명' }}
+					{{ rsvData.members.length + 1 + '명' }}
 				</span>
 				<span class="value">
 					{{ membersNameString }}
@@ -81,6 +81,11 @@ const props = defineProps({
 			};
 		},
 	},
+	userName: {
+		required: false,
+		type: String,
+		default: '',
+	},
 });
 
 // 초기화 --------------------------------------------------
@@ -98,8 +103,9 @@ const timeContainerStyleObject = computed(() => ({
 }));
 
 const membersNameString = computed(() => {
-	let names = props.rsvData.members.map(item => item.name);
-	return names.toString().split(',').join(' ');
+	const names = props.rsvData.members.map(item => item.name);
+	const creatorName = props.userName;
+	return `${creatorName} ${names.toString().split(',').join(' ')}`;
 });
 
 // 일반 함수 ------------------------------------------
