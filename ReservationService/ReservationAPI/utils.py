@@ -28,7 +28,7 @@ def serialize(row):
             
         elif type(v) in [datetime, date, time]:
             datetime_format = str(v).split(":")
-            concat = lambda l: "".join(l)
+            concat = lambda l: ":".join(l)
             ret[k] = concat(datetime_format[:-1]) if len(datetime_format) == 3 else concat(datetime_format)
             
         else:
