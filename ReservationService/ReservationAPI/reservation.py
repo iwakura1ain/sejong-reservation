@@ -127,7 +127,7 @@ class ReservationList(Resource, Service):
             return {
                 "status": False,
                 "msg": "Get reservation list failed"
-            }, 400
+            }, 500
 
 
     @staticmethod
@@ -232,7 +232,7 @@ class ReservationList(Resource, Service):
                         return {
                             "status": False,
                             "msg": "reservation not in room open hours"
-                        }
+                        }, 400
 
                     # check time conflict
                     if check_time_conflict(valid, connection=conn, model=Reservation):
@@ -251,7 +251,7 @@ class ReservationList(Resource, Service):
                         "status": False,
                         "msg": "Conflict in reservations",
                         "reservations": [serialize(r) for r in invalid_reservaitons]
-                    }
+                    }, 400
 
                 # insert
                 conn.execute(insert(Reservation), valid_reservaitons)
@@ -277,7 +277,7 @@ class ReservationList(Resource, Service):
             return {
                 "status": False,
                 "msg": "Reservation failed"
-            }, 400
+            }, 500
 
 
 @ns.route("/<int:id>")
@@ -355,7 +355,7 @@ class ReservationByID(Resource, Service):
             return {
                 "status": False,
                 "msg": "Get reservation by ID failed"
-            }, 400
+            }, 500
 
 
     @protected()
@@ -423,13 +423,13 @@ class ReservationByID(Resource, Service):
                         return {
                             "status": False,
                             "msg": "reservation not in room open hours"
-                        }
+                        }, 400
                     
                     if check_time_conflict(updated, connection=conn, model=Reservation):
                         return {
                             "status": False,
                             "msg": "Conflict in reservations"
-                        }
+                        }, 400
                     
                 # update reservation
                 # if members data exist in data, serialize to string for db
@@ -456,7 +456,7 @@ class ReservationByID(Resource, Service):
             return {
                 "status": False,
                 "msg": "Reservation edit failed"
-            }, 400
+            }, 500
 
 
     @protected()
@@ -475,13 +475,14 @@ class ReservationByID(Resource, Service):
         # - DELETE /reservation/1: id==1인 예약을 삭제
 
         # get token info
+
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 # check if reservation with id exist.
                 rows = conn.execute(
                     select(Reservation).where(Reservation.id == id)
-                ).mappings().fetchone()
-                if rows:
+                ).mappings().fetchall()
+                if len(rows) == 0:
                     return {
                         "status": False,
                         "msg": "Reservation not found"
@@ -510,4 +511,4 @@ class ReservationByID(Resource, Service):
             return {
                 "status": False,
                 "msg": "Server error"
-            }, 400
+            }, 500

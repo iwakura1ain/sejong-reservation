@@ -377,7 +377,8 @@ class ConferenceRoomById(Resource, Service):
                                 rsrv, 
                                 roomById, 
                                 auth_info["User"], 
-                                sender=SENDER)
+                                sender=SENDER
+                            )
                             email_resp = self.query_api(
                                 "send_email", "post",
                                 headers=request.headers, body=json.dumps(email_object)
@@ -474,7 +475,7 @@ class ConferenceRoomImage(Resource, Service):
                 "status": False,
                 "msg": "Invalid file extension",
                 "filename": filename
-            }
+            }, 200
 
         # error checking: is file unique
         if not self.check_if_file_unique(joined_path):
@@ -509,7 +510,8 @@ class ConferenceRoomImage(Resource, Service):
                     "msg": "Image uploaded",
                     # "uploaded": filename,
                     # "uploadedPath": joined_path
-                }
+                }, 200
+            
         except Exception as e:
             return {
                 "status": False,
