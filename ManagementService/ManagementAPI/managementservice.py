@@ -115,13 +115,15 @@ class ConferenceRoom(Resource, Service):
                                                                 and Room.room_address2 == request.json['room_address2'])
                                                                 ).mappings().fetchone()
                 
-                created_room = serialize(room, exclude=exclude)
+                room = serialize(room, exclude=exclude)
+                del room['location_hash']
+                del room['preview_image_name']
 
                 # CREATE room
                 return{
                     "status": True,
                     "msg": "Room created",
-                    "created_room": created_room
+                    "created_room": room
                 }, 200
         
         # error
