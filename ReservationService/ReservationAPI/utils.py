@@ -25,8 +25,12 @@ def serialize(row):
     for k, v in row.items():
         if k == "members":
             ret[k] = json.loads(v)
+            
         elif type(v) in [datetime, date, time]:
-            ret[k] = str(v)
+            datetime_format = str(v).split(":")
+            concat = lambda l: "".join(l)
+            ret[k] = concat(datetime_format[:-1]) if len(datetime_format) == 3 else concat(datetime_format)
+            
         else:
             ret[k] = v
     return ret
@@ -148,7 +152,7 @@ def check_start_end_time(new_reservation, room):
     room_open = convert(room["open_time"])
     room_close = convert(room["close_time"])
     
-    if room_open < reservation_start and reservation_end < room_close:
+    if room_open <= reservation_start and reservation_end <= room_close:
         return True
     return False
 
