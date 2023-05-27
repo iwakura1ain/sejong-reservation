@@ -52,18 +52,22 @@ def check_room_used(room_id, service=None):
 
 
 if __name__ == "__main__":
-    print("# LOG: ",datetime.now())
+    print("# LOG: ", datetime.now())
     try:
-        service = Service(model_config=model_config,
-                        api_config=api_config)
+        service = Service(
+            model_config=model_config,
+            api_config=api_config
+        )
 
         with service.query_model("Room") as (conn, Room):
             rows = conn.execute(select(Room.id)).mappings().fetchall()
             room_ids = [row["id"] for row in rows]
         print(room_ids)
+
         if not room_ids:
             print("No rooms exist.")
             exit()
+
     except Exception as e:
         print(f"Error in setting up: {e}")
         print("Exiting...\n")

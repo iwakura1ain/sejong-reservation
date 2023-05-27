@@ -12,7 +12,8 @@ from datetime import timedelta
 model_config = {
     "username": getenv("DB_USERNAME"),
     "password": getenv("DB_PASSWORD"),
-    "host": getenv("DB_URL"),
+    # "host": getenv("DB_URL"),
+    "host": "dbservice",
     "port": getenv("DB_PORT"),
     "database": getenv("DB_NAME")
 }

@@ -28,9 +28,14 @@ COPY ./ReservationService/ReservationAPI/cronfile /etc/cron.d/cronfile
 
 RUN chmod 0644 /etc/cron.d/cronfile
 
-RUN touch /var/log/cron.log
+#RUN touch /var/log/cron.log
 
-RUN crontab /etc/cron.d/cronfile
+#RUN crontab /etc/cron.d/cronfile
 
-# CMD ["python3","app.py"]
-CMD cron && flask run
+#RUN cron &
+
+#CMD ["python3","app.py"]
+RUN chmod 777 start.sh 
+
+CMD ./start.sh
+
