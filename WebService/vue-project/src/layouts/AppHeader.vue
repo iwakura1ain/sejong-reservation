@@ -7,7 +7,7 @@
 			</div>
 		</router-link>
 
-		<div class="l-container">
+		<div v-if="userIsLogin" class="l-container">
 			<!-- <router-link :to="{ name: 'MakeQuickReservation' }">
 				<text-button color="white">빠른예약</text-button>
 			</router-link> -->
@@ -24,11 +24,14 @@
 		</div>
 
 		<div v-if="userIsLogin" class="r-container">
-			<router-link :to="{ name: 'UserMyPage' }">
+			<router-link :to="{ name: 'UserMyPage' }" class="username-text">
 				<text-button color="white">{{ userinfoString }}</text-button>
 			</router-link>
-			<div>
-				<router-link :to="{ name: 'ManageMain' }">
+			<div class="r-container-btns">
+				<router-link
+					v-if="userInfoStore.get().type === 1"
+					:to="{ name: 'ManageMain' }"
+				>
 					<filled-button color="white">관리</filled-button>
 				</router-link>
 				<filled-button color="red" @click="handleLogout"
@@ -108,6 +111,13 @@ async function handleLogout() {
 		display: flex;
 
 		align-items: center;
+
+		.username-text {
+			word-break: break-all;
+		}
+		.r-container-btns {
+			display: flex;
+		}
 	}
 
 	.logo-container {

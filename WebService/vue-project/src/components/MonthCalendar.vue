@@ -323,7 +323,7 @@ function selectReservation(reservationId) {
 						}
 					}
 					.reservation-container {
-						min-height: 100px;
+						min-height: 32px;
 						.reservation {
 							display: flex;
 							flex-wrap: wrap;

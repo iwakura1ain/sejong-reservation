@@ -18,13 +18,12 @@ import ReservationDetailView from '@/views/common/ReservationDetailView.vue';
 import UserMainView from '@/views/user/UserMainView.vue';
 import MakeQuickReservationView from '@/views/user/MakeQuickReservationView.vue';
 import MakeReservationView from '@/views/user/MakeReservationView.vue';
-import ModifyReservationCommonDataView from '@/views/user/ModifyReservationCommonDataView.vue';
-import ModifyReservationTimeDataView from '@/views/user/ModifyReservationTimeDataView.vue';
 import AllReservationCalendarView from '@/views/user/AllReservationCalendarView.vue';
 import ReservationHistoryView from '@/views/user/ReservationHistoryView.vue';
 import UserMyPageView from '@/views/user/UserMyPageView.vue';
 import UserEditProfileView from '@/views/user/UserEditProfileView.vue';
 import SuccessfullyReservedView from '@/views/user/SuccessfullyReservedView.vue';
+import UpdateReservationView from '@/views/user/UpdateReservationView.vue';
 
 // 관리기능 뷰
 import ManageMainView from '@/views/manager/ManageMainView.vue';
@@ -89,16 +88,10 @@ const routes = [
 		component: SuccessfullyReservedView,
 	},
 	{
-		path: '/reservation/modify/common',
-		name: 'ModifyReservationCommonData',
-		component: ModifyReservationCommonDataView,
-		// state push됨
-	},
-	{
-		path: '/reservation/modify/time',
-		name: 'ModifyReservationTimeData',
-		component: ModifyReservationTimeDataView,
-		// state push됨
+		path: '/reservation/update',
+		name: 'UpdateReservation',
+		component: UpdateReservationView,
+		// state
 	},
 	{
 		path: '/reservation/all',
@@ -194,31 +187,38 @@ router.beforeEach(async (to, from, next) => {
 		}
 
 		// 만약 관리자여야 진입가능한 곳인데 일반사용자가 들어갔으면 로그인으로 갑시다
-		const resAuth = await userService.getAuthInfo(accessToken);
-		if (!resAuth.status) {
-			throw new Error(resAuth);
-		}
-		if (RequireAdmin.includes(to.name) && resAuth.data.type !== 1) {
-			await userService.logout(accessToken);
-			throw new Error(
-				`ADMIN권한을 요구하는 페이지이지만 사용자가 ADMIN이 아닙니다(권한유형코드:${resAuth.data.type})`,
-			);
+
+		if (RequireAdmin.includes(to.name)) {
+			const resAuth = await userService.getAuthInfo(accessToken);
+			if (!resAuth.status || resAuth.data.type !== 1) {
+				console.error(resAuth);
+				await userService.logout(accessToken);
+				throw new Error(
+					`ADMIN권한을 요구하는 페이지이지만 사용자가 ADMIN이 아닙니다(권한유형코드:${resAuth.data.type})`,
+				);
+			}
 		}
 
-		if (from.name === undefined) {
-			next();
-			return;
-		}
-
-		// 두 토큰이 저장돼있다면 refresh Auth를 합시다
-		// const res = await userService.refreshAuth(refreshToken);
-		// if (!res.status) {
-		// 	throw new Error();
+		// if (from.name === undefined) {
+		// 	next();
+		// 	return;
 		// }
 
+		// 두 토큰이 저장돼있다면 refresh Auth를 합시다
+		const res = await userService.refreshAuth(refreshToken);
+		if (!res.status) {
+			throw new Error();
+		}
+
 		// 새로운 액세스 토큰을 저장하고 올바른 토큰인지 검사합시다
-		// userTokenStore.setAccessToken(res.data);
-		// console.log('3', to.name, res.data);
+		userTokenStore.setAccessToken(res.data);
+		const resAuthConfirm = await userService.getAuthInfo(
+			userTokenStore.getAccessToken(),
+		);
+		if (!resAuthConfirm.status) {
+			console.error(resAuthConfirm);
+		}
+		console.log('3', to.name, res.data);
 
 		// 모든 시련을 이겨냈다면 이제 가려던 길을 갑시다
 		next();

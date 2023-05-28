@@ -7,7 +7,7 @@
 			<Transition>
 				<article class="step step1-select-room">
 					<section-header size="small">회의실 선택</section-header>
-					<room-selector />
+					<room-selector v-model="makeRsvFormStore.common.roomId" />
 				</article>
 			</Transition>
 		</template>
@@ -21,7 +21,11 @@
 						class="reserved-time-display-calendar-container"
 					>
 						<section-header size="small">회의실 예약현황</section-header>
-						<RoomCalendar v-model:is-opened="isCalendarOpened" />
+						<RoomCalendar
+							v-model:is-opened="isCalendarOpened"
+							:fetch-trigger="makeRsvFormStore.common"
+							:room-id="makeRsvFormStore.common.roomId"
+						/>
 					</div>
 				</div>
 			</Transition>
@@ -53,16 +57,21 @@
 				makeRsvFormStore.formState.step < 4
 			"
 		>
-			<RoomCalendar v-model:is-opened="isCalendarOpened" />
+			<RoomCalendar
+				v-model:is-opened="isCalendarOpened"
+				:fetch-trigger="makeRsvFormStore.common"
+				:room-id="makeRsvFormStore.common.roomId"
+			/>
 		</div>
 
 		<!-- STEP 2 : 회의 일정의 큰 틀 선택 -->
 		<template v-if="makeRsvFormStore.formState.step === 2">
 			<Transition>
 				<article class="step step2-select-general-datetime">
-					<section-header size="small">공통 내용 결정하기</section-header>
-					<general-datetime-selector />
-
+					<div class="center-box">
+						<section-header size="small">공통 내용 결정하기</section-header>
+						<general-datetime-selector />
+					</div>
 					<div class="step-btn-container">
 						<section-header></section-header>
 						<filled-button
@@ -91,9 +100,10 @@
 		<template v-if="makeRsvFormStore.formState.step === 3">
 			<Transition appear>
 				<article class="step step3-select-detailed-datetime">
-					<section-header size="small">세부 일정 선택</section-header>
-					<detailed-datetime-selector />
-
+					<div class="center-box">
+						<section-header size="small">세부 일정 선택</section-header>
+						<detailed-datetime-selector />
+					</div>
 					<div class="step-btn-container">
 						<section-header></section-header>
 						<filled-button
@@ -122,7 +132,7 @@
 		<template v-if="makeRsvFormStore.formState.step === 4">
 			<Transition appear>
 				<article class="step step4-write-topic-members">
-					<section-header size="small">회의 정보 입력</section-header>
+					<section-header size="small">주제/참여자 정보 입력</section-header>
 					<topic-member-writer />
 
 					<div class="step-btn-container">
@@ -148,10 +158,11 @@
 		<!-- STEP 5 : 최종 검토 및 예약 생성 -->
 		<template v-if="makeRsvFormStore.formState.step === 5">
 			<Transition appear>
-				<article class="step-5-comfirm">
-					<section-header size="small">내용 검토</section-header>
-					<form-confirmator />
-
+				<article class="step step-5-comfirm">
+					<div class="center-box">
+						<section-header size="small">내용 검토</section-header>
+						<form-confirmator />
+					</div>
 					<div class="step-btn-container">
 						<section-header></section-header>
 						<filled-button
@@ -175,7 +186,7 @@ import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
 import RoomCalendar from '@/components/RoomCalendar.vue';
 
-import RoomSelector from '@/layouts/MakeReservation/RoomSelector.vue';
+import RoomSelector from '@/components/RoomSelector.vue';
 import GeneralDatetimeSelector from '@/layouts/MakeReservation/GeneralDatetimeSelector.vue';
 import DetailedDatetimeSelector from '@/layouts/MakeReservation/DetailedDatetimeSelector.vue';
 import TopicMemberWriter from '@/layouts/MakeReservation/TopicMemberWriter.vue';
@@ -262,7 +273,11 @@ function handleGoNextStep() {
 			// width: 80%;
 		}
 	}
-
+	.center-box {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
 	.reserved-time-display-calendar-container {
 		display: flex;
 		flex-direction: column;

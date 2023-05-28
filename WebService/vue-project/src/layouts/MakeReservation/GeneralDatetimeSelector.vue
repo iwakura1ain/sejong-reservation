@@ -1,6 +1,6 @@
 <template>
 	<div class="general-datetime-selector">
-		<p>{{ meetingRoomStr }}</p>
+		<!-- <p>{{ meetingRoomStr }}</p> -->
 		<div>
 			<span>일정 유형</span>
 			<!-- 학부생은 단건예약만 가능. 대학원생,교수,관리자는 단건/정기예약 가능. -->
@@ -159,15 +159,15 @@ import makeToast from '@/assets/scripts/utils/makeToast.js';
 // props, event ------------------------------------------
 defineEmits([]);
 // 상태, computed ----------------------------------------
-const roomData = computed(() => {
-	const id = makeRsvFormStore.common.roomId;
-	return fetchedRoomStore.getById(id);
-});
+// const roomData = computed(() => {
+// 	const id = makeRsvFormStore.common.roomId;
+// 	return fetchedRoomStore.getById(id);
+// });
 
-const meetingRoomStr = computed(() => {
-	const { address1, address2, name } = roomData.value;
-	return `${address1} ${address2} ${name}`;
-});
+// const meetingRoomStr = computed(() => {
+// 	const { address1, address2, name } = roomData.value;
+// 	return `${address1} ${address2} ${name}`;
+// });
 
 const formattedDefaultTime = computed(() => {
 	const { start, end } = makeRsvFormStore.defaultTime;

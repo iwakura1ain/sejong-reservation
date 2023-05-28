@@ -96,10 +96,11 @@ import { userInfoStore, userIsLogin } from '@/stores/userInfo.js';
 import { userTokenStore } from '@/stores/userToken.js';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
 import { userService } from '@/assets/scripts/requests/request.js';
+import { loadingStore } from '@/stores/loading.js';
 
 const router = useRouter();
 // local states
-const userInfo = userInfoStore.get();
+let userInfo = {};
 const formdata = reactive({
 	name: userInfo.name,
 	email: userInfo.email,
@@ -111,6 +112,26 @@ const formdata = reactive({
 	newPw: '',
 	newPwConfirm: '',
 });
+
+async function init() {
+	try {
+		loadingStore.start();
+		const accessToken = userTokenStore.getAccessToken();
+		await userInfoStore.setFromBackend(accessToken);
+		userInfo = userInfoStore.get();
+		formdata.name = userInfo.name;
+		formdata.email = userInfo.email;
+		formdata.phone = userInfo.phone;
+		formdata.dept = userInfo.dept;
+	} catch (err) {
+		console.error(err);
+		makeToast('알 수 없는 오류입니다', 'error');
+	} finally {
+		loadingStore.stop();
+	}
+}
+
+init();
 
 // 상태감시
 watch(userIsLogin, () => {
@@ -136,52 +157,44 @@ function togglePwChange() {
 
 async function handleSubmit() {
 	try {
-		if (!validateForm(formdata)) return;
+		loadingStore.start();
 
-		const infoReq = {
-			username: formdata.name,
+		const isValid = await validateForm(formdata);
+		if (!isValid) return;
+
+		const req = {
+			name: formdata.name,
 			email: formdata.email,
 			phone: formdata.phone,
 			dept: formdata.dept,
 		};
-		const pwReq = {
-			current_pasword: formdata.curPw,
-			new_password: formdata.newPw,
-		};
-
-		const infoRes = await userService.update(
+		if (formdata.pwChangeEnabled) {
+			req.password = formdata.newPw;
+		}
+		const res = await userService.update(
 			userInfo.id,
-			infoReq,
+			req,
 			userTokenStore.getAccessToken(),
 		);
-		if (!infoRes.status) {
-			if (infoRes.msg) throw new Error(infoRes.msg);
-			else throw new Error(infoRes);
+		if (!res.status) {
+			console.error(res);
+			if (res.msg) throw new Error(res.msg);
+			else throw new Error(res);
 		}
-
-		// const pwReq = await userService.changePassword();
-		// if (!pwReq.status) {
-		// 	if (pwReq.msg) throw new Error(pwReq.msg);
-		// 	else throw new Error(pwReq);
-		// }
 
 		router.push({ name: 'UserMyPage', state: { userPorfileUpdated: true } });
 	} catch (err) {
 		console.error(err);
+		makeToast('알 수 없는 오류입니다', 'error');
+	} finally {
+		loadingStore.stop();
 	}
 }
 
 // 일반함수
-function validateForm(formdata) {
+async function validateForm(formdata) {
 	let flag = true; // 검증통과여부 (true:통과, false:불통)
 	if (!formdata.name || !formdata.email || !formdata.phone) {
-		makeToast('빈 항목이 있습니다', 'warning');
-		flag = false;
-	}
-	if (
-		formdata.pwChangeEnabled &&
-		(!formdata.curPw || !formdata.newPw || !formdata.newPwConfirm)
-	) {
 		makeToast('빈 항목이 있습니다', 'warning');
 		flag = false;
 	}
@@ -190,13 +203,51 @@ function validateForm(formdata) {
 		makeToast('학과의 선택값이 올바르지 않습니다', 'warning');
 		flag = false;
 	}
-	if (formdata.newPw !== formdata.newPwConfirm) {
-		makeToast('비밀번호와 비밀번호 확인이 일치하지 않습니다.', 'warning');
-		flag = false;
-	}
+
 	if (!formdata.email.includes('@')) {
 		makeToast('이메일의 형식이 올바르지 않습니다', 'warning');
 		flag = false;
+	}
+
+	if (formdata.pwChangeEnabled) {
+		if (!formdata.curPw || !formdata.newPw || !formdata.newPwConfirm) {
+			makeToast('빈 항목이 있습니다', 'warning');
+			flag = false;
+		}
+		if (formdata.curPw < 8 || formdata.newPw < 8 || formdata.newPwConfirm < 8) {
+			makeToast('비밀번호는 8자 이상입니다', 'warning');
+			flag = false;
+		}
+		if (formdata.newPw !== formdata.newPwConfirm) {
+			makeToast('비밀번호와 비밀번호 확인이 일치하지 않습니다', 'warning');
+			flag = false;
+		}
+
+		if (formdata.newPw === formdata.newPwConfirm) {
+			// 비밀번호가 맞는지 검증
+			const checkPwRes = await userService.login({
+				id: userInfo.id,
+				password: formdata.curPw,
+			});
+			if (!checkPwRes.status) {
+				if (
+					checkPwRes.msg === 'key:value pair wrong' &&
+					Object.keys(checkPwRes.invalid).includes('password')
+				) {
+					flag = false;
+					makeToast('비밀번호는 8자 이상입니다', 'error');
+					return;
+				} else if (checkPwRes.msg === 'Wrong Password') {
+					flag = false;
+					makeToast('현재 비밀번호가 틀렸습니다.', 'error');
+					return;
+				} else {
+					flag = false;
+					console.error(checkPwRes, checkPwRes.msg);
+					throw new Error(checkPwRes, checkPwRes.msg);
+				}
+			}
+		}
 	}
 
 	return flag;

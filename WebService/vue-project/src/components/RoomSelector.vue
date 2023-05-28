@@ -10,22 +10,27 @@ RoomCard의 '선택'버튼이 클릭되면 선택된 room의 id를 받습니다.
 			v-for="room in fetchedRoomStore.getAll()"
 			:key="room.id"
 			:contents="room"
-			:selected="room.id === makeRsvFormStore.common.roomId"
+			:selected="room.id === modelValue"
 			@update-selected-room="updateSelectedRoom"
 		></room-card>
 	</div>
 </template>
 
 <script setup>
+defineProps({
+	modelValue: {
+		required: true,
+		type: Number,
+		default: 1,
+	},
+});
+const emits = defineEmits(['update:modelValue']);
+
 import RoomCard from '@/components/atoms/RoomCard.vue';
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
-import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
 
 function updateSelectedRoom(id) {
-	makeRsvFormStore.common.roomId = id;
-	// if (makeRsvFormStore.formState.step < 2) {
-	// 	makeRsvFormStore.formState.step = 2;
-	// }
+	emits('update:modelValue', id);
 }
 </script>
 

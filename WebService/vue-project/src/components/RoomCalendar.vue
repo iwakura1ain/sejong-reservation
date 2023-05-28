@@ -1,22 +1,34 @@
 <template>
 	<div class="room-calendar">
+		<p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 12px">
+			{{ meetingRoomStr }}
+		</p>
 		<div v-if="!isOpened">
 			<filled-button @click="showCalendar"> 달력 열기 </filled-button>
 		</div>
 		<template v-else>
-			<filled-button color="white" @click="unshowCalendar">
-				달력 닫기
-			</filled-button>
+			<div style="display: flex; align-items: center; flex-wrap: wrap">
+				<text-button
+					@click="unshowCalendar"
+					style="margin: 0; height: 36px; vertical-align: text-bottom"
+				>
+					달력 닫기
+				</text-button>
 
-			<div class="calendar-type-selector">
-				<radio-group
-					v-model="calendarType"
-					:buttons="[
-						{ text: '월별 조회', value: 'month' },
-						{ text: '주차별 조회', value: 'week' },
-					]"
-				/>
+				<div
+					class="calendar-type-selector"
+					style="margin: 0 0 2px 8px; height: 36px"
+				>
+					<radio-group
+						v-model="calendarType"
+						:buttons="[
+							{ text: '월별 조회', value: 'month' },
+							{ text: '주차별 조회', value: 'week' },
+						]"
+					/>
+				</div>
 			</div>
+
 			<month-calendar
 				v-if="calendarType === 'month'"
 				v-model="targetDate"
@@ -29,10 +41,11 @@
 				:reservation-list="reservationList"
 				:showRoomName="false"
 			/>
-
-			<filled-button color="white" @click="unshowCalendar">
-				달력 닫기
-			</filled-button>
+			<div style="text-align: right">
+				<text-button @click="unshowCalendar" style="margin-top: 0">
+					달력 닫기
+				</text-button>
+			</div>
 		</template>
 	</div>
 </template>
@@ -43,19 +56,27 @@ import MonthCalendar from '@/components/MonthCalendar.vue';
 import WeekCalendar from '@/components/WeekCalendar.vue';
 import RadioGroup from '@/components/RadioGroup.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
+import TextButton from '@/components/atoms/TextButton.vue';
 import { userTokenStore } from '@/stores/userToken.js';
 import { reservationService } from '@/assets/scripts/requests/request.js';
 import getLastDayInMonth from '@/assets/scripts/utils/getLastDayInMonth.js';
 import formatDate from '@/assets/scripts/utils/formatDate.js';
 import getWeekNumber from '@/assets/scripts/utils/getWeekNumber.js';
-import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
+import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
 
 //
-defineProps({
+const props = defineProps({
 	isOpened: {
 		required: false,
 		type: Boolean,
 		default: false,
+	},
+	fetchTrigger: {
+		required: true,
+	},
+	roomId: {
+		required: true,
+		type: Number,
 	},
 });
 const emits = defineEmits(['update:is-opened']);
@@ -86,12 +107,25 @@ const targetMonthInfo = computed(() => {
 
 const reservationList = ref([]);
 
+// const roomData = computed(() => {
+// 	return fetchedRoomStore.getById(id);
+// });
+
+const meetingRoomStr = computed(() => {
+	if (props.roomId) {
+		const { address1, address2, name } = fetchedRoomStore.getById(props.roomId);
+		return `${address1} ${address2} ${name}`;
+	} else {
+		return '';
+	}
+});
+
 // 초기화 ----------------------
 init();
 
 // 상태 감시 -------------------
 watch(
-	[targetDate, makeRsvFormStore.common],
+	[targetDate, props.fetchTrigger],
 	() => {
 		fetchReservationsInMonth();
 	},
@@ -115,7 +149,7 @@ async function fetchReservationsInMonth() {
 		}
 
 		reservationList.value = res.data.filter(
-			item => item.roomId === makeRsvFormStore.common.roomId,
+			item => item.roomId === props.roomId,
 		);
 	} catch (err) {
 		alert('예약내역을 불러오는 중 문제가 생겼습니다.');

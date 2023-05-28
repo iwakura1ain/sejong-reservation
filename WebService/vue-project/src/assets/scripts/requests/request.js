@@ -153,16 +153,25 @@ const userService = {
 	getAuthInfo: async function (accessToken) {
 		try {
 			// 통신
-			const res = await axios.get(`${BASE_URL.USER_SERVICE}/auth/jwt-status`, {
-				headers: {
-					Authorization: `Bearer ${accessToken}`,
-				},
-			});
+			const res = await axios
+				.get(`${BASE_URL.USER_SERVICE}/auth/jwt-status`, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				})
+				.catch(err => {
+					console.error(err);
+					if (err.response.status === 500) {
+						return err.response;
+					} else {
+						throw new Error(err);
+					}
+				});
 
 			// 응답 정상여부 확인
-			if (res.status !== 200 || !res.data) {
-				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
-			}
+			// if (res.status !== 200 || !res.data) {
+			// 	throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			// }
 			if (!res.data.status) {
 				console.error(res.data);
 				return res.data;
@@ -330,7 +339,69 @@ const userService = {
 		}
 	},
 	// --------------------------------------------------------------------------
-	getAll: async function () {},
+	getAll: async function (accessToken) {
+		try {
+			// 통신
+			const res = await axios.get(`${BASE_URL.USER_SERVICE}/users`, {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 컨버팅, 반환
+			const data = res.data;
+			const converted = data.map(user => convertUserRes(user));
+			return {
+				status: true,
+				data: converted,
+				msg: 'retrieved',
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
+	// --------------------------------------------------------------------------
+	getById: async function (id, accessToken) {
+		try {
+			// 통신
+			const res = await axios.get(`${BASE_URL.USER_SERVICE}/users/${id}`, {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 컨버팅, 반환
+			const data = res.data;
+			const converted = convertUserRes(data);
+			return {
+				status: true,
+				data: converted,
+				msg: 'retrieved',
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
 };
 
@@ -355,6 +426,7 @@ const reservationService = {
 			room: '',
 			creator: null,
 			reservationType: null,
+			onlySingleType: false,
 		},
 		accessToken,
 	) {
@@ -383,7 +455,9 @@ const reservationService = {
 			if (options.creator) {
 				queryStr += `&creator=${options.creator}`;
 			}
-			if (options.reservationType) {
+			if (options.onlySingleType) {
+				queryStr += `&reservation_type=`;
+			} else if (options.reservationType) {
 				queryStr += `&reservation_type=${options.reservationType}`;
 			}
 
@@ -652,9 +726,7 @@ const reservationService = {
 			}
 
 			// 응답데이터-->프론트엔드 데이터 컨버팅, 반환.
-			const converted = data.reservations.map(item =>
-				convertReservationRes(item, 'max'),
-			);
+			const converted = convertReservationRes(data.reservation, 'max');
 
 			return {
 				status: true,

@@ -231,6 +231,9 @@ async function handleDeleteUser() {
 		if (!deleteFormdata.value.pw || !deleteFormdata.value.confirmStr) {
 			makeToast('비어있는 항목이 있습니다', 'warning');
 		}
+		if (deleteFormdata.value.pw < 8 || deleteFormdata.value.confirmStr < 8) {
+			makeToast('비밀번호는 8자 이상입니다', 'warning');
+		}
 		if (deleteFormdata.value.confirmStr !== deleteConfirmString.value) {
 			makeToast('확인 문장이 일치하지 않습니다', 'warning');
 		}
@@ -241,9 +244,14 @@ async function handleDeleteUser() {
 			password: deleteFormdata.value.pw,
 		});
 		if (!checkPwRes.status) {
-			if (checkPwRes.msg === 'Wrong Password') {
-				makeToast('비밀번호가 틀렸습니다', 'error');
+			if (
+				checkPwRes.msg === 'key:value pair wrong' &&
+				Object.keys(checkPwRes.invalid).includes('password')
+			) {
+				makeToast('비밀번호는 8자 이상입니다', 'error');
 				return;
+			} else if (checkPwRes.msg === 'Wrong Password') {
+				makeToast('비밀번호가 틀렸습니다.', 'error');
 			} else {
 				throw new Error(checkPwRes.msg);
 			}

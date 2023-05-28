@@ -28,14 +28,22 @@ import { userTokenStore } from '@/stores/userToken.js';
 import { reservationService } from '@/assets/scripts/requests/request.js';
 import getDateStringInThreeDays from '@/assets/scripts/utils/getDateStringInThreeDays';
 import { loadingStore } from '@/stores/loading.js';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
 
 // 상태 ---------------------------------------
 const reservationList = ref([]);
 
 // 초기화 --------------------------------------
 const router = useRouter();
+
+const historyState = {
+	reservationFullyDeleted: history.state.reservationFullyDeleted,
+};
+if (historyState.reservationFullyDeleted) {
+	makeToast('예약이 삭제되었습니다', 'info');
+}
+
 init();
-console.log(fetchedRoomStore);
 
 // 일반 함수 -----------------------------------
 async function fetchReservationsInThreeDays() {
