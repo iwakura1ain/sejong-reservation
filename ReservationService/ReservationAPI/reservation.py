@@ -196,7 +196,7 @@ class ReservationList(Resource, Service):
                         headers=request.headers,
                         request_params={"id": valid["room_id"]}
                     )
-                    print("\n\nAAAAA", room, flush=True)
+            
                     if "status" not in room.keys() or not room["status"]:
                         return {
                             "status": False,

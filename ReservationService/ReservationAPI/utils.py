@@ -220,3 +220,5 @@ def validate_members(members):
         if not p.match(member["email"]):
             return False
     return True
+
+def 

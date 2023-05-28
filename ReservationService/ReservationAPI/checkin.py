@@ -149,5 +149,3 @@ class CheckIn(Resource, Service):
                     "msg": "error retrieving reservation for current time"
                 }, 200
         
-        
-

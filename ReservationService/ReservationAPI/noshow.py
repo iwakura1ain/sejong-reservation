@@ -6,73 +6,67 @@ from datetime import date, time, datetime
 from config import model_config, api_config
 
 
-def check_room_used(room_id, service=None):
-    try:
-        with service.query_model("Reservation") as (conn, Reservation):
-            now_date = datetime.now().date()
-            now_time = datetime.now().time()
-            print("current time:", now_date, now_time)
+class NoShowCheck(Service):
+    def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from Service
+        class, passing arguments to their respective initialization functions.
+        """
+        Service.__init__(
+            self, model_config=model_config, api_config=api_config
+        )
 
-            stmt = (select(Reservation)
-                    # select for a room
-                    .where(Reservation.room_id == room_id)
+    def check_noshow(self):
+        noshow_counts = self.get_noshow()
+        for creator, count in noshow_counts.items():
+            print("incrementing: ", creator, count, flush=True)
+            res = self.increment_noshow(creator, count)
+            print(res)
+
+    
+    def increment_noshow(self, creator, count):
+        try:
+            res = self.query_api(
+                "increment_noshow", "post",
+                request_params={"user_id": creator},
+                body={"noshow_count": count}
+            )
+            return res.get("status")
+
+        except Exception:
+            return False
+
+    def get_noshow(self):
+        try:
+            with self.query_model("Reservation") as (conn, Reservation):
+                now_date = datetime.now().date()
+                now_time = datetime.now().time()
+
+                stmt = (
+                    select(Reservation)
                     # for today
                     .where(Reservation.reservation_date == now_date)
                     # only reservations from the past
                     .where(Reservation.end_time < now_time)
                     # room not used
                     .where(Reservation.room_used == 0)
-                    )
-            rows = conn.execute(stmt).mappings().fetchall()
-            print(rows)
-
-            no_show_users = []
-            for row in rows:
-                if row["room_used"] == 0:
-                    no_show_users.append(row["creator_id"])
-                    print(
-                        f"no_show user_id: {row['creator_id']}, reservation_id:{row['id']}")
-
-        with service.query_model("User") as (conn, User):
-            for user_id in no_show_users:
-                stmt = (
-                    update(User)
-                    .where(User.id == user_id)
-                    .values(no_show=User.no_show+1)
                 )
-                conn.execute(stmt)
+                rows = conn.execute(stmt).mappings().fetchall()
 
-                # sanity check
-                row = conn.execute(select(User).where(User.id == user_id))
-                print(row.mappings().fetchone())
-        return True
+            noshow_counts = {}
+            for r in rows:
+                creator = r["creator_id"]
+                if creator in noshow_counts.keys():
+                    noshow_counts[creator] += 1
+                else:
+                    noshow_counts[creator] = 1
 
-    except Exception:
-        return False
+            return noshow_counts
+
+        except Exception:
+            return {}
 
 
+no_show_check = NoShowCheck()
 if __name__ == "__main__":
-    print("# LOG: ", datetime.now())
-    try:
-        service = Service(
-            model_config=model_config,
-            api_config=api_config
-        )
-
-        with service.query_model("Room") as (conn, Room):
-            rows = conn.execute(select(Room.id)).mappings().fetchall()
-            room_ids = [row["id"] for row in rows]
-        print(room_ids)
-
-        if not room_ids:
-            print("No rooms exist.")
-            exit()
-
-    except Exception as e:
-        print(f"Error in setting up: {e}")
-        print("Exiting...\n")
-        exit()
-
-    for id in room_ids:
-        check_room_used(id, service=service)
-    print("\n")
+    no_show_check.check_noshow()
