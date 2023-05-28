@@ -1,6 +1,8 @@
 from sqlalchemy import select, insert, update
 from sqlalchemy import delete as remove
 
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from flask import request
 from flask_restx import (
     Resource,
@@ -176,6 +178,9 @@ class UserDetail(Service, Resource):
                         "status": False,
                         "msg": "user not found"
                     }, 200
+
+                if "password" in req.keys():
+                    req["password"] = generate_password_hash(req["password"])
 
                 conn.execute(
                     update(User).where(User.id == id).values(**req)
