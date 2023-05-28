@@ -28,7 +28,7 @@ a description "사용자 CRUD 위한 API" (which means "API for user CRUD" in Ko
 """
 
 
-# namespace for "/auth"
+# namespace for "/users"
 USERS = Namespace(
     name="users",
     description="사용자 CRUD 위한 API",
@@ -260,3 +260,47 @@ class UserDetail(Service, Resource):
                 "status": False,
                 "msg": "error while deleting user"
             }, 200
+
+
+
+@USERS.route("/<string:id>/no-show")
+class UserNoShowIncrement(Service, Resource):
+    def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, passing ORM as a model configuration parameter to the Service class.
+        """
+        Service.__init__(self, model_config=ORM)
+        Resource.__init__(self, *args, **kwargs)
+
+    def post(self, id):
+        noshow_count = request.json.get("noshow_count")
+        if noshow_count is None:
+            return {
+                "status": False,
+                "msg": "wrong key:value pair"
+            }, 200
+            
+        with self.query_model("User") as (conn, User):
+            res = conn.execute(
+                select(User).where(User.id == id)
+            ).mappings().fetchone()
+
+            if res is None:
+                return {
+                    "status": False,
+                    "msg": "User not found"
+                }, 200
+
+            noshow_count = res["no_show"] + noshow_count
+
+            conn.execute(
+                update(User).where(User.id == id)
+                .values(no_show=noshow_count)
+            )
+
+            return {
+                "status": True,
+                "msg": "User noshow incremented"
+            }, 200
+

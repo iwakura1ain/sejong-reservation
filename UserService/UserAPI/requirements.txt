@@ -29,3 +29,4 @@ pymysql==1.0.3
 python-magic==0.4.27
 openpyxl==3.1.2
 flask-cors==3.0.10
+gunicorn

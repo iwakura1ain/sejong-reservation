@@ -2,17 +2,7 @@ FROM python:3.11.2-buster
 
 ENV PYTHONBUFFERED 1
 
-COPY ./UserService/UserAPI /UserAPI/
-
-COPY ./Common/service.py/ /UserAPI/service.py
-
 WORKDIR /UserAPI
-
-RUN ls .
-
-RUN apt update
-
-RUN apt install wget
 
 RUN wget https://r.mariadb.com/downloads/mariadb_repo_setup
 
@@ -24,14 +14,13 @@ RUN ./mariadb_repo_setup --mariadb-server-version="mariadb-10.6"
 
 RUN apt install libmariadb3 libmariadb-dev --yes
 
-RUN python3 -m pip install --upgrade pip
+COPY ./UserService/UserAPI/requirements.txt /UserAPI/requirements.txt
 
-RUN python3 -m pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /UserAPI/requirements.txt
 
-EXPOSE 5000
+COPY ./UserService/UserAPI /UserAPI/
 
+COPY ./Common/service.py/ /UserAPI/service.py
 
-CMD ["python", "app.py"]
-
-
-
+# CMD ["python3", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:APP"]

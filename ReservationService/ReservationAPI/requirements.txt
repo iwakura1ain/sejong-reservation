@@ -29,3 +29,4 @@ Werkzeug==2.2.3
 pymysql==1.0.3
 nanoid==2.0.0
 flask-cors==3.0.10
+gunicorn
