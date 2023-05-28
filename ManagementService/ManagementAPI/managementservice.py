@@ -21,13 +21,6 @@ from utils import (
     check_if_room_identical,
     create_confirmation_email
 )
-from validators import (
-    room_name_validator,
-    room_address1_validator, 
-    room_address2_validator,
-    is_usable_validator,
-    max_users_validator
-)
 
 """
 This code creates a Flask-RestX namespace called "management" with a name and description. Namespaces are
@@ -37,13 +30,13 @@ namespace for handy routing
 
 management = namespace.Namespace(
     name="management",
-    description="유저, 회의실, 예약 관리를 위한 API"
+    description="회의실 관리를 위한 API"
 )
 
 # keys to be excluded when serializing data to GET all rooms
-exclude = ['created_at', 'reservation_date', 'start_time', 'end_time']
+exclude = ['created_at', 'reservation_date', 'open_time', 'close_time']
 
-@management.route('')
+@management.route('/rooms')
 class ConferenceRoom(Resource, Service):
     """
     The above code is defining a Flask RESTful API endpoint for managing conference rooms. It includes a
@@ -96,7 +89,6 @@ class ConferenceRoom(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 valid_data, invalid_data = Room.validate(request.json, optional=True)
-
                 if len(invalid_data) > 0:
                     return {
                         "status": False,
@@ -107,7 +99,7 @@ class ConferenceRoom(Resource, Service):
                 # if validated data is already in table, 
                 # send message 'data already exists'
                 if check_if_room_identical(conn, Room, valid_data):
-                    return { 
+                    return {
                         "status": False,
                         "msg": "Room already exists"
                     }, 200
@@ -118,12 +110,20 @@ class ConferenceRoom(Resource, Service):
                         **valid_data
                     }
                 )
+                room = conn.execute(select(Room).where(Room.room_name == request.json['room_name'] 
+                                                                and Room.room_address1 == request.json['room_address1']
+                                                                and Room.room_address2 == request.json['room_address2'])
+                                                                ).mappings().fetchone()
+                
+                room = serialize(room, exclude=exclude)
+                del room['location_hash']
+                del room['preview_image_name']
 
                 # CREATE room
                 return{
                     "status": True,
                     "msg": "Room created",
-                    "created_room": request.json
+                    "created_room": room
                 }, 200
         
         # error
@@ -178,7 +178,7 @@ class ConferenceRoom(Resource, Service):
             }, 500
                 
 # GET, DELETE, UPDATE by room id
-@management.route('/<int:id>')
+@management.route('/rooms/<int:id>')
 class ConferenceRoomById(Resource, Service):
     """
     The above code defines a Flask route for handling GET, DELETE, and PATCH requests for a conference
@@ -384,7 +384,8 @@ class ConferenceRoomById(Resource, Service):
                                 rsrv, 
                                 roomById, 
                                 auth_info["User"], 
-                                sender=SENDER)
+                                sender=SENDER
+                            )
                             email_resp = self.query_api(
                                 "send_email", "post",
                                 headers=request.headers, body=json.dumps(email_object)
@@ -410,7 +411,7 @@ class ConferenceRoomById(Resource, Service):
                 "msg": "Room Update Failed"
             }, 500
 
-@management.route('/<int:id>/image')
+@management.route('/rooms/<int:id>/image')
 class ConferenceRoomImage(Resource, Service):
     def __init__(self, *args, **kwargs):
         Service.__init__(self, model_config=model_config, api_config=api_config)
@@ -481,7 +482,7 @@ class ConferenceRoomImage(Resource, Service):
                 "status": False,
                 "msg": "Invalid file extension",
                 "filename": filename
-            }
+            }, 200
 
         # error checking: is file unique
         if not self.check_if_file_unique(joined_path):
@@ -516,7 +517,8 @@ class ConferenceRoomImage(Resource, Service):
                     "msg": "Image uploaded",
                     # "uploaded": filename,
                     # "uploadedPath": joined_path
-                }
+                }, 200
+            
         except Exception as e:
             return {
                 "status": False,

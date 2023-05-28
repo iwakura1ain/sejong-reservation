@@ -1,6 +1,8 @@
 from sqlalchemy import select, insert, update
 from sqlalchemy import delete as remove
 
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from flask import request
 from flask_restx import (
     Resource,
@@ -177,6 +179,9 @@ class UserDetail(Service, Resource):
                         "msg": "user not found"
                     }, 200
 
+                if "password" in req.keys():
+                    req["password"] = generate_password_hash(req["password"])
+
                 conn.execute(
                     update(User).where(User.id == id).values(**req)
                 )
@@ -287,11 +292,11 @@ class UserNoShowIncrement(Service, Resource):
                     "msg": "User not found"
                 }, 200
 
-            noshow_count = res["noshow"] + noshow_count
+            noshow_count = res["no_show"] + noshow_count
 
             conn.execute(
                 update(User).where(User.id == id)
-                .values(noshow=noshow_count)
+                .values(no_show=noshow_count)
             )
 
             return {

@@ -276,7 +276,7 @@ class Service:
             api_name,
             request_method,
             request_params={},
-            headers=None,
+            headers={"Content-Type": "application/json", "Connection": "keep-alive"},
             body=None
     ):
         """

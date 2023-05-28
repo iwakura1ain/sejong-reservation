@@ -12,19 +12,21 @@ from datetime import timedelta
 model_config = {
     "username": getenv("DB_USERNAME"),
     "password": getenv("DB_PASSWORD"),
-    # "host": getenv("DB_URL"),
-    "host": "dbservice",
+    "host": getenv("DB_URL"),
     "port": getenv("DB_PORT"),
     "database": getenv("DB_NAME")
 }
 
 api_config = {
+    # docker config
     "get_auth_info": "http://userservice:5000/auth/jwt-status",
     "increment_noshow": "http://userservice:5000/users/{user_id}/no-show",
     "get_rooms_info": "http://managementservice:5000/admin/rooms/{id}",
     "send_email": "http://alertservice:5000/alert",
+    # local config
     # "get_auth_info": "http://127.0.0.1:5001/auth/jwt-status",
     # "get_rooms_info": "http://127.0.0.1:5002/admin/rooms/{id}",
+    # "send_email": "http://127.0.0.1:5003/alert",
 }
 
 reservation_limit = {

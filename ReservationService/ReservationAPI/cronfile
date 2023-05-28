@@ -1,5 +1,5 @@
 TZ=Asia/Seoul
-0 * * * * /usr/local/bin/python3 /ReservationAPI/noshow.py >> /ReservationAPI/noshow.log 2>&1
+* * * * * /usr/local/bin/python3 /ReservationAPI/noshow.py >> /ReservationAPI/noshow.log 2>&1
 
 
 

@@ -14,7 +14,7 @@ try:
 except OSError:
     pass
 
-api.add_namespace(managementservice.management, '/admin/rooms')
+api.add_namespace(managementservice.management, '/admin')
 
 
 if __name__=="__main__":

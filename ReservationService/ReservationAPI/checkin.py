@@ -4,6 +4,7 @@ from flask_restx import Resource, Namespace
 from sqlalchemy import select, insert, update, delete, and_
 
 import json
+import hashlib
 
 from datetime import date, time, datetime
 
@@ -15,6 +16,7 @@ from utils import (
     is_valid_token, is_admin, is_authorized,
     check_date_constraints,
     check_time_conflict,
+    protected
 )
 
 CHECK_IN = Namespace(
@@ -23,7 +25,54 @@ CHECK_IN = Namespace(
     prefix="/check-in"
 )
 
-@CHECK_IN.route("/<int:id>")
+REGISTERED_ROOMS = {}
+
+
+@CHECK_IN.route("/<int:room_id>/register")
+class RegisterCheckIn(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, passing arguments to their respective initialization functions.
+        """
+        Service.__init__(self, model_config=model_config,
+                         api_config=api_config)
+        Resource.__init__(self, *args, **kwargs)
+        self.auth_info = None
+
+    @protected()
+    def get(self, room_id):
+        if not is_admin(self.auth_info):
+            return {
+                "status": False,
+                "msg": "user not authorized"
+            }, 400
+        
+        room = self.query_api(
+            "get_rooms_info", "get",
+            headers=request.headers,
+            request_params={"id": room_id}
+        )
+        if room is None:
+            return {
+                "status": False,
+                "msg": "no room found"
+            }, 400
+        
+        room_hash = hashlib.sha256(str(room).encode('utf-8')).hexdigest()
+        room_location_hash = hashlib.sha256(
+            str(request.remote_addr + room_hash).encode("utf-8")
+        ).hexdigest()
+        REGISTERED_ROOMS[room_id] = room_location_hash
+        
+        return {
+            "status": True,
+            "msg": "room registered",
+            "room_hash": room_hash
+        }, 200
+    
+
+@CHECK_IN.route("/<int:room_id>")
 class CheckIn(Resource, Service):
     """
     The ReservationList class defines methods for getting a list of reservations and making a new
@@ -38,7 +87,7 @@ class CheckIn(Resource, Service):
         Service.__init__(self, model_config=model_config,
                          api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
-
+        
 
     @staticmethod
     def get_current_reservation(conn, model, room_id):
@@ -58,21 +107,35 @@ class CheckIn(Resource, Service):
 
         return res
 
+
     @staticmethod
     def validate(data):
         code = data.get("reservation_code")
-        if len(code) == 8:
-            return {"reservation_code": code}
-        return None
+        room_hash = data.get("room_hash")
+
+        valid, invalid = {}, {}
+        if type(code) == str and len(code) == 8:
+            valid["reservation_code"] = code
+        else:
+            invalid["reservation_code"] = code
+
+        if type(room_hash) == str:
+            valid["room_hash"] = room_hash
+        else:
+            invalid["room_hash"] = room_hash
+        
+        
+        return valid, invalid
             
+
     # get reservation at current time
-    def get(self, id):
+    def get(self, room_id):
         with self.query_model("Reservation") as (conn, Reservation):
             try:
                 room = self.query_api(
                     "get_rooms_info", "get",
                     headers=request.headers,
-                    request_params={"id": id}
+                    request_params={"id": room_id}
                 )
                 if "status" not in room.keys() or not room["status"]:
                     return {
@@ -80,13 +143,13 @@ class CheckIn(Resource, Service):
                         "msg": "Invalid room ID"
                     }, 400
                 
-                res = self.get_current_reservation(conn, Reservation, id)
+                res = self.get_current_reservation(conn, Reservation, room_id)
                 
                 if res is None:
                     return {
                         "status": False,
                         "msg": "no reseration for current time"
-                    }, 200
+                    }, 400
                 
                 return {
                     "status": True,
@@ -98,17 +161,25 @@ class CheckIn(Resource, Service):
                 return {
                     "status": False,
                     "msg": "error retrieving reservation for current time"
-                }, 200
-                
-
+                }, 500
+            
+            
     # verify reservation_code(no_show code)
-    def post(self, id):
+    def post(self, room_id):
         with self.query_model("Reservation") as (conn, Reservation):
             try:
+                valid, invalid = self.validate(request.json)
+                if len(invalid) != 0:
+                    return {
+                        "status": False,
+                        "msg": "invalid key:val pairs",
+                        "invalid": invalid
+                    }, 400
+
                 room = self.query_api(
                     "get_rooms_info", "get",
                     headers=request.headers,
-                    request_params={"id": id}
+                    request_params={"id": room_id}
                 )
                 
                 if "status" not in room.keys() or not room["status"]:
@@ -117,16 +188,21 @@ class CheckIn(Resource, Service):
                         "msg": "Invalid room ID"
                     }, 400
 
-                code = self.validate(request.json)
-                res = self.get_current_reservation(conn, Reservation, id)
-                
+                res = self.get_current_reservation(conn, Reservation, room_id)
                 if res is None:
                     return {
                         "status": False,
                         "msg": "no reservation for current time"
-                    }, 200
+                    }, 400
                 
-                if res["reservation_code"] == code["reservation_code"]:
+                reservation_code = valid["reservation_code"]
+                room_hash = valid["room_hash"]
+                room_location_hash = hashlib.sha256(
+                    str(request.remote_addr + room_hash).encode("utf-8")
+                ).hexdigest()
+
+                if (res["reservation_code"] == reservation_code
+                    and REGISTERED_ROOMS.get(room_id) == room_location_hash):
                     conn.execute(
                         update(Reservation)
                         .where(Reservation.id == res["id"])
@@ -141,11 +217,11 @@ class CheckIn(Resource, Service):
                 return {
                     "status": False,
                     "msg": "reservation code wrong",
-                }, 200
+                }, 400
 
-            except Exception:
+            except OSError:
                 return {
                     "status": False,
                     "msg": "error retrieving reservation for current time"
-                }, 200
+                }, 500
         
