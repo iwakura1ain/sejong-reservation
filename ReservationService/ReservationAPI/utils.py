@@ -167,7 +167,7 @@ def check_date_constraints(user_type, reservation_date):
     from config import reservation_limit
 
     diff = date.fromisoformat(reservation_date) - date.today()
-    return True if diff < reservation_limit[user_type] else False
+    return True if diff <= reservation_limit[user_type] else False
 
 
 def create_confirmation_email(
