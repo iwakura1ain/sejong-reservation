@@ -1,7 +1,8 @@
 from flask import request
 from flask_restx import Resource, Namespace
 
-from sqlalchemy import select, insert, update, delete
+from sqlalchemy import select, insert, delete
+from sqlalchemy import update as sql_update
 
 from nanoid import generate
 
@@ -127,7 +128,7 @@ class ReservationList(Resource, Service):
             return {
                 "status": False,
                 "msg": "Get reservation list failed"
-            }, 400
+            }, 500
 
 
     @staticmethod
@@ -232,7 +233,7 @@ class ReservationList(Resource, Service):
                         return {
                             "status": False,
                             "msg": "reservation not in room open hours"
-                        }
+                        }, 400
 
                     # check time conflict
                     if check_time_conflict(valid, connection=conn, model=Reservation):
@@ -251,7 +252,7 @@ class ReservationList(Resource, Service):
                         "status": False,
                         "msg": "Conflict in reservations",
                         "reservations": [serialize(r) for r in invalid_reservaitons]
-                    }
+                    }, 400
 
                 # insert
                 conn.execute(insert(Reservation), valid_reservaitons)
@@ -277,7 +278,7 @@ class ReservationList(Resource, Service):
             return {
                 "status": False,
                 "msg": "Reservation failed"
-            }, 400
+            }, 500
 
 
 @ns.route("/<int:id>")
@@ -355,7 +356,7 @@ class ReservationByID(Resource, Service):
             return {
                 "status": False,
                 "msg": "Get reservation by ID failed"
-            }, 400
+            }, 500
 
 
     @protected()
@@ -394,7 +395,8 @@ class ReservationByID(Resource, Service):
 
                 # create updated and serialized reservation
                 # from RowMapping to dict with validated values
-                updated = serialize(row).update(**valid)
+                updated = serialize(row)
+                updated.update(**valid) # dict.update() is in-place
 
                 # check rooms
                 room = self.query_api(
@@ -419,28 +421,29 @@ class ReservationByID(Resource, Service):
 
                 # check start, end times
                 if "start_time" in valid.keys() and "end_time" in valid.keys():
-                    if not check_start_end_time(updated, room):
+                    if not check_start_end_time(updated, room["room"]):
                         return {
                             "status": False,
                             "msg": "reservation not in room open hours"
-                        }
+                        }, 400
                     
-                    if check_time_conflict(updated, connection=conn, model=Reservation):
+                    if check_time_conflict(updated, connection=conn, 
+                        model=Reservation, reservation_id=updated["id"]):
                         return {
                             "status": False,
                             "msg": "Conflict in reservations"
-                        }
+                        }, 400
                     
                 # update reservation
                 # if members data exist in data, serialize to string for db
-                if "members" in row.keys():
-                    row["members"] = json.dumps(row["members"])
+                if "members" in updated.keys():
+                    updated["members"] = json.dumps(updated["members"])
 
                 # all checks successfully passed, update database
                 conn.execute(
-                    update(Reservation)
+                    sql_update(Reservation)
                     .where(Reservation.id == id)
-                    .values(row)
+                    .values(**updated)
                 )
 
                 # select updated reservation
@@ -456,7 +459,7 @@ class ReservationByID(Resource, Service):
             return {
                 "status": False,
                 "msg": "Reservation edit failed"
-            }, 400
+            }, 500
 
 
     @protected()
@@ -475,13 +478,14 @@ class ReservationByID(Resource, Service):
         # - DELETE /reservation/1: id==1인 예약을 삭제
 
         # get token info
+
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 # check if reservation with id exist.
                 rows = conn.execute(
                     select(Reservation).where(Reservation.id == id)
-                ).mappings().fetchone()
-                if rows:
+                ).mappings().fetchall()
+                if len(rows) == 0:
                     return {
                         "status": False,
                         "msg": "Reservation not found"
@@ -510,4 +514,4 @@ class ReservationByID(Resource, Service):
             return {
                 "status": False,
                 "msg": "Server error"
-            }, 400
+            }, 500

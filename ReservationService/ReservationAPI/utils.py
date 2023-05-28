@@ -25,8 +25,12 @@ def serialize(row):
     for k, v in row.items():
         if k == "members":
             ret[k] = json.loads(v)
+            
         elif type(v) in [datetime, date, time]:
-            ret[k] = str(v)
+            datetime_format = str(v).split(":")
+            concat = lambda l: ":".join(l)
+            ret[k] = concat(datetime_format[:-1]) if len(datetime_format) == 3 else concat(datetime_format)
+            
         else:
             ret[k] = v
     return ret
@@ -98,23 +102,22 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
     new_start_time = reservation_dict["start_time"]
     new_end_time = reservation_dict["end_time"]
 
-    stmt = (select(model)
+    rows = connection.execute(
+        select(model)
         .where(model.reservation_date == reservation_date)
         .where(model.room_id == room_id)
         .filter(and_(
             model.start_time < new_end_time,
             model.end_time > new_start_time,
         ))
-    )
+    ).mappings().fetchall()
 
-    rows = connection.execute(stmt).mappings().fetchall()
-    print(rows, flush=True)
-
-    # check if this function is called in PATCH
-    # TODO: check for PATCH
+    # if this function is called from PATCH
     if reservation_id:
         # if the only conflict is the reservation from PATCH, return false
         if len(rows) == 1 and rows[0].id == reservation_id:
+            return False
+        elif len(rows) == 0:
             return False
         return True
 
@@ -148,7 +151,7 @@ def check_start_end_time(new_reservation, room):
     room_open = convert(room["open_time"])
     room_close = convert(room["close_time"])
     
-    if room_open < reservation_start and reservation_end < room_close:
+    if room_open <= reservation_start and reservation_end <= room_close:
         return True
     return False
 
@@ -166,7 +169,7 @@ def check_date_constraints(user_type, reservation_date):
     from config import reservation_limit
 
     diff = date.fromisoformat(reservation_date) - date.today()
-    return True if diff < reservation_limit[user_type] else False
+    return True if diff <= reservation_limit[user_type] else False
 
 
 def create_confirmation_email(
@@ -267,5 +270,3 @@ def protected():
 
         return decorator
     return wrapper
-
-

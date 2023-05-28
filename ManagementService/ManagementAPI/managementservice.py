@@ -89,7 +89,6 @@ class ConferenceRoom(Resource, Service):
         try:
             with self.query_model("Room") as (conn, Room):
                 valid_data, invalid_data = Room.validate(request.json, optional=True)
-
                 if len(invalid_data) > 0:
                     return {
                         "status": False,
@@ -111,12 +110,20 @@ class ConferenceRoom(Resource, Service):
                         **valid_data
                     }
                 )
+                room = conn.execute(select(Room).where(Room.room_name == request.json['room_name'] 
+                                                                and Room.room_address1 == request.json['room_address1']
+                                                                and Room.room_address2 == request.json['room_address2'])
+                                                                ).mappings().fetchone()
+                
+                room = serialize(room, exclude=exclude)
+                del room['location_hash']
+                del room['preview_image_name']
 
                 # CREATE room
                 return{
                     "status": True,
                     "msg": "Room created",
-                    "created_room": request.json
+                    "created_room": room
                 }, 200
         
         # error
@@ -377,7 +384,8 @@ class ConferenceRoomById(Resource, Service):
                                 rsrv, 
                                 roomById, 
                                 auth_info["User"], 
-                                sender=SENDER)
+                                sender=SENDER
+                            )
                             email_resp = self.query_api(
                                 "send_email", "post",
                                 headers=request.headers, body=json.dumps(email_object)
@@ -474,7 +482,7 @@ class ConferenceRoomImage(Resource, Service):
                 "status": False,
                 "msg": "Invalid file extension",
                 "filename": filename
-            }
+            }, 200
 
         # error checking: is file unique
         if not self.check_if_file_unique(joined_path):
@@ -509,7 +517,8 @@ class ConferenceRoomImage(Resource, Service):
                     "msg": "Image uploaded",
                     # "uploaded": filename,
                     # "uploadedPath": joined_path
-                }
+                }, 200
+            
         except Exception as e:
             return {
                 "status": False,
