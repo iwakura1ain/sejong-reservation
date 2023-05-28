@@ -7,5 +7,5 @@ crontab /etc/cron.d/cronfile
 cron &
 
 # start reservationservice
-/usr/local/bin/python3 /ReservationAPI/app.py
-
+# /usr/local/bin/python3 /ReservationAPI/app.py
+gunicorn --bind 0.0.0.0:5000 app:app

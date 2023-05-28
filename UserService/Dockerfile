@@ -22,4 +22,5 @@ COPY ./UserService/UserAPI /UserAPI/
 
 COPY ./Common/service.py/ /UserAPI/service.py
 
-CMD ["python3", "app.py"]
+# CMD ["python3", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:APP"]
