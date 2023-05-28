@@ -117,6 +117,8 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
         # if the only conflict is the reservation from PATCH, return false
         if len(rows) == 1 and rows[0].id == reservation_id:
             return False
+        elif len(rows) == 0:
+            return False
         return True
 
     # if this function is called from POST
@@ -268,5 +270,3 @@ def protected():
 
         return decorator
     return wrapper
-
-
