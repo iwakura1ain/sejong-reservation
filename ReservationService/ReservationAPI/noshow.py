@@ -68,7 +68,7 @@ class NoShowCheck(Service):
                     # for today
                     .where(Reservation.reservation_date == now_date)
                     # only reservations from the past
-                    .where(Reservation.end_time > now_time)
+                    .where(Reservation.end_time < now_time)
                     # room not used
                     .where(Reservation.room_used == 0)
                 )
