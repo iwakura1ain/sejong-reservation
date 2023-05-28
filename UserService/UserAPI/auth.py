@@ -16,7 +16,8 @@ from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
     jwt_required,
-    get_jwt
+    get_jwt,
+    get_jwt_identity
 )
 
 from service import Service
@@ -179,7 +180,6 @@ class Login(Service, Resource):
         try:
             with self.query_model("User") as (conn, User):
                 # validate request body
-
                 req, invalidated = User.validate(request.json, optional=True)
                 print(req, invalidated)
                 if len(invalidated) != 0:
@@ -386,7 +386,8 @@ class JWTRefresh(Service, Resource):
         req header
         - Authentication: Bearer [JWT Token]
         """
-        identity = retrieve_jwt()
+
+        identity = serialize(get_jwt_identity(), include=include)
         access_token = create_access_token(identity=identity)
         return {
             "status": True,

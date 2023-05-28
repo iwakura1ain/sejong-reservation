@@ -13,6 +13,9 @@ CREATE TABLE Room (
 	   room_address2 VARCHAR(80) NOT NULL DEFAULT '',
 	   is_usable BOOLEAN NOT NULL DEFAULT 0,
 	   max_users INT DEFAULT 0,
+	   open_time TIME NOT NULL DEFAULT '08:00:00',
+	   close_time TIME NOT NULL DEFAULT '20:00:00',
+	   location_hash VARCHAR(64),
 	   preview_image_name VARCHAR(50) NOT NULL DEFAULT 'no-image.png'
 ) DEFAULT CHARSET=utf8;
 

@@ -1,7 +1,6 @@
 # TODO: change restart to "always" in production
 version: "3.9"
 services:
-
   reservationservice:
     build:
       context: .

@@ -121,12 +121,12 @@ class EmailSender(Resource):
             return {
                 "status": True,
                 "msg": "sucess"
-            }
+            }, 200
 
         except Exception:
             return {
                 "status": False,
                 "msg": "error sending mail"
-            }
+            }, 500
             
     
