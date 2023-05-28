@@ -1,7 +1,8 @@
 from flask import request
 from flask_restx import Resource, Namespace
 
-from sqlalchemy import select, insert, update, delete
+from sqlalchemy import select, insert, delete
+from sqlalchemy import update as sql_update
 
 from nanoid import generate
 
@@ -394,7 +395,8 @@ class ReservationByID(Resource, Service):
 
                 # create updated and serialized reservation
                 # from RowMapping to dict with validated values
-                updated = serialize(row).update(**valid)
+                updated = serialize(row)
+                updated.update(**valid) # dict.update() is in-place
 
                 # check rooms
                 room = self.query_api(
@@ -419,13 +421,14 @@ class ReservationByID(Resource, Service):
 
                 # check start, end times
                 if "start_time" in valid.keys() and "end_time" in valid.keys():
-                    if not check_start_end_time(updated, room):
+                    if not check_start_end_time(updated, room["room"]):
                         return {
                             "status": False,
                             "msg": "reservation not in room open hours"
                         }, 400
                     
-                    if check_time_conflict(updated, connection=conn, model=Reservation):
+                    if check_time_conflict(updated, connection=conn, 
+                        model=Reservation, reservation_id=updated["id"]):
                         return {
                             "status": False,
                             "msg": "Conflict in reservations"
@@ -433,14 +436,14 @@ class ReservationByID(Resource, Service):
                     
                 # update reservation
                 # if members data exist in data, serialize to string for db
-                if "members" in row.keys():
-                    row["members"] = json.dumps(row["members"])
+                if "members" in updated.keys():
+                    updated["members"] = json.dumps(updated["members"])
 
                 # all checks successfully passed, update database
                 conn.execute(
-                    update(Reservation)
+                    sql_update(Reservation)
                     .where(Reservation.id == id)
-                    .values(row)
+                    .values(**updated)
                 )
 
                 # select updated reservation
