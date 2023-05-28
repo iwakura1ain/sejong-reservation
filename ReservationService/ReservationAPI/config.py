@@ -20,6 +20,7 @@ model_config = {
 api_config = {
     # docker config
     "get_auth_info": "http://userservice:5000/auth/jwt-status",
+    "increment_noshow": "http://userservice:5000/users/{user_id}/no-show",
     "get_rooms_info": "http://managementservice:5000/admin/rooms/{id}",
     "send_email": "http://alertservice:5000/alert",
     # local config

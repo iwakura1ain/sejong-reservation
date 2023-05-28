@@ -223,7 +223,7 @@ class ReservationList(Resource, Service):
                         headers=request.headers,
                         request_params={"id": valid["room_id"]}
                     )
-                    if not room["status"]:
+                    if not room.get("status"):
                         return {
                             "status": False,
                             "msg": "Invalid room ID"

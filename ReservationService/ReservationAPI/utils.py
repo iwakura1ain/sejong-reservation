@@ -233,9 +233,6 @@ def validate_members(members):
             return False
     return True
 
-
-
-
 def protected():
     """
     decorator which protects endpoints that require authorization

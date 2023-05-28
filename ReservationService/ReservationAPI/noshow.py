@@ -5,59 +5,100 @@ from datetime import date, time, datetime
 
 from config import model_config, api_config
 
-def check_room_used(room_id, service=None):
-    try:
-        with service.query_model("Reservation") as (conn, Reservation):
-            now_date = datetime.now().date()
-            now_time = datetime.now().time()
 
-            stmt = (select(Reservation)
-                # select for a room
-                .where(Reservation.room_id == room_id)
-                # for today
-                .where(Reservation.reservation_date == now_date)
-                # only reservations from the past
-                .where(Reservation.end_time < now_time)
-                # room not used
-                .where(Reservation.room_used == 0)
-            )
-            rows = conn.execute(stmt).mappings().fetchall()
 
-            no_show_users = []
-            for row in rows:
-                if row["room_used"] == 0:
-                    no_show_users.append(row["creator_id"])
+model_config_cron = {
+    "username": "development",
+    "password": "1234",
+    "host": "dbservice",
+    "port": 3306,
+    "database": "sejong"
+}
+
+api_config_cron = {
+    # docker config
+    "get_auth_info": "http://userservice:5000/auth/jwt-status",
+    "increment_noshow": "http://userservice:5000/users/{user_id}/no-show",
+    "get_rooms_info": "http://managementservice:5000/admin/rooms/{id}",
+    "send_email": "http://alertservice:5000/alert",
+}
+
+
+class NoShowCheck(Service):
+    def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from Service
+        class, passing arguments to their respective initialization functions.
+        """
+        Service.__init__(
+            self, model_config=model_config_cron, api_config=api_config_cron
+        )
+
+    def check_noshow(self):
+        noshow_counts = self.get_noshow()
+        for creator, count in noshow_counts.items():
+            res = self.increment_noshow(creator, count)
+    
+    def increment_noshow(self, creator, count):
+        import json
+
+        try:
+            headers = {'Content-type': 'application/json', 'Accept': '*/*'}
+            body = json.dumps({"noshow_count": int(count)})
             
-        # TODO: maybe use query_api?
-        with service.query_model("User") as (conn, User):
-            for user_id in no_show_users:
+            res = self.query_api(
+                "increment_noshow", "post",
+                request_params={"user_id": creator},
+                headers=headers,
+                body=body
+            )
+            return res.get("status")
+
+        except Exception:
+            return False
+
+    def get_noshow(self):
+        try:
+            with self.query_model("Reservation") as (conn, Reservation):
+                now_date = datetime.now().date()
+                now_time = datetime.now().time()
+
                 stmt = (
-                    update(User)
-                    .where(User.id == user_id)
-                    .values(no_show=User.no_show+1)
+                    select(Reservation)
+                    # for today
+                    .where(Reservation.reservation_date == now_date)
+                    # only reservations from the past
+                    .where(Reservation.end_time > now_time)
+                    # room not used
+                    .where(Reservation.room_used == 0)
                 )
-                conn.execute(stmt)
+                rows = conn.execute(stmt).mappings().fetchall()
 
-                # # sanity check
-                # row = conn.execute(select(User).where(User.id == user_id))
-                # print(row.mappings().fetchone())
-        return True
+                noshow_counts = {}
+                unused_reservations = []
+                for r in rows:
+                    creator = r["creator_id"]
+                    if creator in noshow_counts.keys():
+                        noshow_counts[creator] += 1
+                    else:
+                        noshow_counts[creator] = 1
 
-    except Exception:
-        return False
+                    conn.execute(
+                        update(Reservation)
+                        .where(Reservation.id == r["id"])
+                        .values(room_used=-1)
+                    )
 
+                print(f"updating noshow counts for {noshow_counts}")
+                
+            return noshow_counts
+
+        except Exception:
+            return {}
+
+
+no_show_check = NoShowCheck()
 if __name__ == "__main__":
-    model_config = {
-        "username": "development",
-        "password": "1234",
-        "host": "127.0.0.1",
-        "port": 3306,
-        "database": "sejong"
-    }
+    print("=================running cronjob=====================", flush=True)
+    no_show_check.check_noshow()
 
-    service = Service(model_config=model_config,
-                      api_config=api_config)
-
-    room_ids = [1,2,3]
-    for id in room_ids:
-        check_room_used(id,service=service)
