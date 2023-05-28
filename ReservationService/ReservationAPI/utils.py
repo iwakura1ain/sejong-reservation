@@ -102,20 +102,17 @@ def check_time_conflict(reservation_dict, connection=None, model=None, reservati
     new_start_time = reservation_dict["start_time"]
     new_end_time = reservation_dict["end_time"]
 
-    stmt = (select(model)
+    rows = connection.execute(
+        select(model)
         .where(model.reservation_date == reservation_date)
         .where(model.room_id == room_id)
         .filter(and_(
             model.start_time < new_end_time,
             model.end_time > new_start_time,
         ))
-    )
+    ).mappings().fetchall()
 
-    rows = connection.execute(stmt).mappings().fetchall()
-    print(rows, flush=True)
-
-    # check if this function is called in PATCH
-    # TODO: check for PATCH
+    # if this function is called from PATCH
     if reservation_id:
         # if the only conflict is the reservation from PATCH, return false
         if len(rows) == 1 and rows[0].id == reservation_id:
