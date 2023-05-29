@@ -1,5 +1,5 @@
 <template>
-	<filled-button class="minus-round-button" :color="'white'">
+	<filled-button class="x-circle-button" :color="'white'">
 		<template #icon>
 			<img :src="minusimg" />
 		</template>
@@ -12,9 +12,9 @@ import minusimg from '@/assets/images/icons/close.png';
 </script>
 
 <style lang="scss" scoped>
-.minus-round-button {
-	width: 28px;
-	height: 28px;
+.x-circle-button {
+	width: 32px;
+	height: 32px;
 	border-radius: 50%;
 
 	display: flex;

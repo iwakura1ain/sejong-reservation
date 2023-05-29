@@ -7,63 +7,92 @@
 			</div>
 		</router-link>
 
-		<div class="l-container">
-			<router-link :to="{ name: 'MakeQuickReservation' }">
+		<div v-if="userIsLogin" class="l-container">
+			<!-- <router-link :to="{ name: 'MakeQuickReservation' }">
 				<text-button color="white">빠른예약</text-button>
-			</router-link>
+			</router-link> -->
 
 			<router-link :to="{ name: 'MakeReservation' }">
 				<text-button color="white">예약하기</text-button>
 			</router-link>
 			<router-link :to="{ name: 'ReservationHistory' }">
-				<text-button color="white">예약내역</text-button>
+				<text-button color="white">내 예약</text-button>
+			</router-link>
+			<router-link :to="{ name: 'AllReservationCalendar' }">
+				<text-button color="white">모든예약</text-button>
 			</router-link>
 		</div>
 
-		<div v-if="isLogin" class="r-container">
-			<router-link :to="{ name: 'UserMyPage' }">
+		<div v-if="userIsLogin" class="r-container">
+			<router-link :to="{ name: 'UserMyPage' }" class="username-text">
 				<text-button color="white">{{ userinfoString }}</text-button>
 			</router-link>
-			<div>
-				<router-link :to="{ name: 'ManageMain' }">
+			<div class="r-container-btns">
+				<router-link
+					v-if="userInfoStore.get().type === 1"
+					:to="{ name: 'ManageMain' }"
+				>
 					<filled-button color="white">관리</filled-button>
 				</router-link>
-				<filled-button color="red">로그아웃</filled-button>
+				<filled-button color="red" @click="handleLogout"
+					>로그아웃</filled-button
+				>
 			</div>
 		</div>
-		<div v-else class="r-container">로그인안함</div>
 	</div>
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+
 import sejongLogo from '@/assets/images/logo_white.png';
 import TextButton from '@/components/atoms/TextButton.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
-import { computed } from 'vue';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
 
-const props = defineProps({
-	isLogin: {
-		required: true,
-		type: Boolean,
-	},
-	userInfo: {
-		required: false,
-		type: Object,
-		default(rawProps) {
-			return {};
-		},
-		validator(value) {
-			return true;
-		},
-	},
-});
+import { userService } from '@/assets/scripts/requests/request.js';
+import { userInfoStore, userIsLogin, userTypeStr } from '@/stores/userInfo.js';
+import { userTokenStore } from '@/stores/userToken.js';
+import { loadingStore } from '@/stores/loading.js';
 
-console.log(props.userInfo);
+// ----------------------------------
 
+// 상태 ----------------------------------
 const userinfoString = computed(() => {
-	const { username, level, isAdmin, noShowCount, isBanned } = props.userInfo;
-	return `(${username} | ${level})`;
+	const { name } = userInfoStore.get();
+	return `(${name} | ${userTypeStr.value})`;
 });
+
+// 초기화 ----------------------------
+const router = useRouter();
+
+// 이벤트 핸들러 ----------------------
+async function handleLogout() {
+	try {
+		loadingStore.start();
+
+		const res = await userService.logout(userTokenStore.getAccessToken());
+		if (!res.status) {
+			if (res.msg) throw new Error(res.msg);
+			else throw new Error(res);
+		}
+	} catch (err) {
+		const msg = err.message;
+		console.error(err, msg);
+
+		if (msg === 'Token has been revoked') {
+			makeToast('이미 로그아웃 되었습니다.', 'error');
+		} else {
+			makeToast('예기치 못한 오류가 발생했습니다.', 'error');
+		}
+	} finally {
+		userInfoStore.clear();
+		userTokenStore.clear();
+		router.push({ name: 'Login' });
+		loadingStore.stop();
+	}
+}
 </script>
 
 <style lang="scss" scoped>
@@ -82,6 +111,13 @@ const userinfoString = computed(() => {
 		display: flex;
 
 		align-items: center;
+
+		.username-text {
+			word-break: break-all;
+		}
+		.r-container-btns {
+			display: flex;
+		}
 	}
 
 	.logo-container {

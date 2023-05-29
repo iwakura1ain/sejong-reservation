@@ -9,7 +9,7 @@
 				'right-round': len >= 2 && index === len - 1,
 				'both-round': len === 1,
 			}"
-			:color="selectedValue === btn.value ? 'red' : 'white'"
+			:color="modelValue === btn.value ? 'red' : 'white'"
 			@click="updateSelect(index)"
 		>
 			{{ btn.text }}
@@ -25,7 +25,7 @@ import FilledButton from '@/components/atoms/FilledButton.vue';
 const props = defineProps({
 	modelValue: {
 		required: false,
-		type: [Number, String, null],
+		type: [Number, String, Boolean, null],
 		default: null,
 	},
 	buttons: {
@@ -43,15 +43,14 @@ const props = defineProps({
 const emits = defineEmits(['update:modelValue']);
 
 // states
-const selectedValue = ref(props.buttons[0].value);
+//const selectedValue = ref(props.modelValue);
 const len = computed(() => {
 	return props.buttons.length;
 });
 
 // event handlers
 function updateSelect(index) {
-	console.log('[RadioGroup]', index, '->', props.buttons[index]);
-	selectedValue.value = props.buttons[index].value;
+	//selectedValue.value = props.buttons[index].value;
 	emits('update:modelValue', props.buttons[index].value);
 }
 </script>

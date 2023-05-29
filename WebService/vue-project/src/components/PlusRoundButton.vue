@@ -13,8 +13,8 @@ import plusimg from '@/assets/images/icons/plus.png';
 
 <style lang="scss" scoped>
 .plus-round-button {
-	width: 36px;
-	height: 36px;
+	width: 32px;
+	height: 32px;
 	border-radius: 50%;
 
 	display: flex;

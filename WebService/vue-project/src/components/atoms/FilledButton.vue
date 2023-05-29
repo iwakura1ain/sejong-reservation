@@ -14,7 +14,7 @@
 		type: String,
 		default: 'red',
 		validator(value) {
-			return ['red', 'white'].includes(value);
+			return ['red', 'white', 'disabled'].includes(value);
 		},
 	},
 });
@@ -31,7 +31,7 @@
 	cursor: pointer;
 
 	transition: all 0.1s;
-
+	word-break: keep-all;
 	&:active {
 		transform: scale(1.1);
 	}
@@ -52,6 +52,15 @@
 	border: 1px solid $sejong-red;
 	&:hover {
 		background-color: $light-sejong-red;
+	}
+}
+
+.disabled {
+	border: 1px solid lightgrey;
+	color: lightgrey;
+	cursor: not-allowed;
+	&:active {
+		transform: none;
 	}
 }
 </style>

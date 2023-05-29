@@ -2,49 +2,99 @@
 	<div id="user-main-view">
 		<section-header>예정된 회의</section-header>
 		<div class="reservation-card-container">
-			<reservation-card :reservation="data[0]"></reservation-card>
-			<reservation-card :reservation="data[1]"></reservation-card>
-			<reservation-card :reservation="data[2]"></reservation-card>
+			<reservation-card
+				v-for="item in reservationList"
+				:key="item.id"
+				:rsv-data="item"
+				:room-data="fetchedRoomStore.getById(item.roomId)"
+				:user-name="userInfoStore.get().name"
+				@click="goDetailPage(item.id, item.reservationType)"
+			/>
 		</div>
 	</div>
 </template>
 
 <script setup>
-import FilledButton from '@/components/atoms/FilledButton.vue';
+import { ref /*, watch*/ } from 'vue';
+import { useRouter } from 'vue-router';
+
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import ReservationCard from '@/components/atoms/ReservationCard.vue';
-import { ref } from 'vue';
+// import MonthCalendar from '@/components/MonthCalendar.vue';
 
-const subdata = {
-	creatorID: -1,
-	creatorName: '이원진',
-	members: ['장호진', '안창언', '한수현', '이원진', '장호진'],
-	reservationRoomID: -1,
-	reservationRoomBuilding: '대양AI센터',
-	reservationRoomName: '835호',
-	isRegular: false,
+import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
+import { userInfoStore } from '@/stores/userInfo.js';
+import { userTokenStore } from '@/stores/userToken.js';
+import { reservationService } from '@/assets/scripts/requests/request.js';
+import getDateStringInThreeDays from '@/assets/scripts/utils/getDateStringInThreeDays';
+import { loadingStore } from '@/stores/loading.js';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
+
+// 상태 ---------------------------------------
+const reservationList = ref([]);
+
+// 초기화 --------------------------------------
+const router = useRouter();
+
+const historyState = {
+	reservationFullyDeleted: history.state.reservationFullyDeleted,
 };
+if (historyState.reservationFullyDeleted) {
+	makeToast('예약이 삭제되었습니다', 'info');
+}
 
-const data = ref([
-	{
-		reservationDate: '2023-05-10',
-		reservationTimeslot: [50, 51, 52],
-		reservationTopic: '테스트 _ 1',
-		...subdata,
-	},
-	{
-		reservationDate: '2023-05-11',
-		reservationTimeslot: [120, 121, 122, 123, 124, 125, 126, 127, 128],
-		reservationTopic: '테스트 _ 2',
-		...subdata,
-	},
-	{
-		reservationDate: '2023-05-12',
-		reservationTimeslot: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-		reservationTopic: '테스트 _ 3',
-		...subdata,
-	},
-]);
+init();
+
+// 일반 함수 -----------------------------------
+async function fetchReservationsInThreeDays() {
+	// 예정된 회의 (오늘, 내일, 모레의 내가 생성한 예약)를 불러오는 함수
+	try {
+		const { today, afterTomorrow } = getDateStringInThreeDays();
+		const accessToken = userTokenStore.getAccessToken();
+		await userInfoStore.setFromBackend(accessToken);
+		const res = await reservationService.getMyFullData(
+			{
+				after: today,
+				before: afterTomorrow,
+				creator: userInfoStore.get().id,
+			},
+			accessToken,
+		);
+
+		if (!res.status) {
+			throw new Error('INVALID_STATUS', res.status);
+		}
+
+		reservationList.value = res.data;
+		console.log(reservationList.value);
+	} catch (err) {
+		alert('예약내역을 불러오는 중 문제가 생겼습니다.');
+		console.error(err);
+	}
+}
+
+async function init() {
+	try {
+		loadingStore.start();
+		await fetchReservationsInThreeDays();
+	} catch (err) {
+		console.error(err);
+	} finally {
+		loadingStore.stop();
+	}
+}
+
+// 이벤트 핸들러 ---------------------------------
+function goDetailPage(id, reservationType) {
+	console.log(id, reservationType);
+	router.push({
+		name: 'ReservationDetail',
+		state: {
+			id,
+			reservationType,
+		},
+	});
+}
 </script>
 
 <style lang="scss" scoped>

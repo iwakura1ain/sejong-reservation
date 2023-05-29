@@ -24,6 +24,7 @@ defineProps({
 	margin-top: 18px;
 
 	h2 {
+		min-width: 128px;
 		display: inline-block;
 		font-size: 1.6rem;
 		font-weight: 800;

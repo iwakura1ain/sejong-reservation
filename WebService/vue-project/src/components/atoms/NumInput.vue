@@ -6,13 +6,18 @@
 const props = defineProps({
 	modelValue: {
 		require: false,
-		type: Number,
+		type: [Number, null],
 		default: -1,
 	},
 	noZero: {
 		require: false,
 		type: Boolean,
 		default: false,
+	},
+	max: {
+		require: false,
+		type: [Number, null],
+		default: null,
 	},
 });
 const emits = defineEmits(['update:modelValue']);
@@ -26,6 +31,13 @@ function update(event) {
 	if (props.noZero && (!replaced || replaced === '0')) {
 		event.target.value = '1';
 	}
+
+	if (props.max) {
+		if (parseInt(event.target.value) > props.max) {
+			event.target.value = props.max;
+		}
+	}
+
 	emits('update:modelValue', parseInt(event.target.value));
 }
 </script>
