@@ -196,7 +196,7 @@ def create_confirmation_email(
     members_detail = DEFAULT
     if reservation["members"] != []:
         members = [f'{member["name"]} {member["email"]}' for member in reservation["members"]]
-        members_detail = f"{len(members)}인 ({', '.join(members)})"
+        members_detail = f"{1+len(members)}인 ({', '.join(members)})"
     reservation_topic = DEFAULT
     if reservation["reservation_topic"] != "":
         reservation_topic = reservation["reservation_topic"]
