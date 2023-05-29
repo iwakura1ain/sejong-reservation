@@ -8,6 +8,7 @@
 			padding: 8px;
 			border-radius: 0.5rem;
 			border: 1px solid #51626f;
+			cursor: pointer;
 		"
 		:style="{
 			'--vdp-selected-bg-color': '#C3002F',
@@ -16,8 +17,8 @@
 		:locale="ko"
 		v-model="localDateState"
 		:week-starts-on="0"
-		:lower-limit="datepickerLimit.lower"
-		:upper-limit="datepickerLimit.upper"
+		:lower-limit="useLimit ? datepickerLimit.lower : null"
+		:upper-limit="useLimit ? datepickerLimit.upper : null"
 	/>
 </template>
 
@@ -34,6 +35,12 @@ const props = defineProps({
 		required: false,
 		type: Date,
 		default: new Date(),
+	},
+	useLimit: {
+		// 달력 날짜선택 제한(lower, upper-limit을 적용할지 말지 결정)
+		required: false,
+		type: Boolean,
+		default: true,
 	},
 });
 const emits = defineEmits(['update:modelValue']);

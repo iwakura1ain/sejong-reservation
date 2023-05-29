@@ -237,7 +237,11 @@ const calendarArr = computed(() => {
 	props.reservationList.forEach(rsv => {
 		const dateObj = new Date(rsv.meetingDatetime.date);
 		const weekNum = getWeekNumber(rsv.meetingDatetime.date);
-		arr[weekNum - 1][dateObj.getDay()].reservations.push(rsv);
+		if (
+			arr[weekNum - 1][dateObj.getDay()].dateStr === rsv.meetingDatetime.date
+		) {
+			arr[weekNum - 1][dateObj.getDay()].reservations.push(rsv);
+		}
 	});
 	return arr;
 });
@@ -376,7 +380,7 @@ function selectDayNumber(dateStr) {
 
 		border: 2px solid lightgrey;
 		background-color: $sejong-red;
-		overflow-x: scroll;
+		overflow-x: auto;
 		.header-container {
 			display: flex;
 

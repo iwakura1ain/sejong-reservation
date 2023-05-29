@@ -165,7 +165,11 @@ const calendarArr = computed(() => {
 	props.reservationList.forEach(rsv => {
 		const dateObj = new Date(rsv.meetingDatetime.date);
 		const weekNum = getWeekNumber(rsv.meetingDatetime.date);
-		arr[weekNum - 1][dateObj.getDay()].reservations.push(rsv);
+		if (
+			arr[weekNum - 1][dateObj.getDay()].dateStr === rsv.meetingDatetime.date
+		) {
+			arr[weekNum - 1][dateObj.getDay()].reservations.push(rsv);
+		}
 	});
 	return arr;
 });
@@ -229,6 +233,7 @@ function selectReservation(reservationId) {
 	$cell-min-width: 100px;
 	// width: 95vw;
 	width: 100%;
+	max-width: 95vw;
 
 	color: $sejong-grey;
 	.control-container {

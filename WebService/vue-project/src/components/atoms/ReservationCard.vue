@@ -11,23 +11,61 @@
 		</div>
 
 		<div class="contents-container">
-			<p class="topic">{{ rsvData.topic }}</p>
+			<p class="topic">
+				<span
+					v-if="rsvData.reservationType"
+					style="border: 1px solid grey; border-radius: 8px; padding: 2px"
+					>정기예약</span
+				>
+				{{ rsvData.topic }}
+			</p>
 
 			<div class="location">
-				<img :src="pinIcon" alt="위치를 나타내는 핀 아이콘" />
+				<img class="icon" :src="pinIcon" alt="위치를 나타내는 핀 아이콘" />
 				<span class="title">{{ roomData.address1 }}</span>
 				<span class="value">{{ roomData.address2 }}</span>
 				<span class="value">{{ roomData.name }}</span>
 			</div>
 
 			<div class="members">
-				<img :src="groupIcon" alt="구성원을 의미하는 한 무리의 사람 아이콘" />
+				<img
+					class="icon"
+					:src="groupIcon"
+					alt="구성원을 의미하는 한 무리의 사람 아이콘"
+				/>
 				<span class="title" style="margin-left: 2px">
 					{{ rsvData.members.length + 1 + '명' }}
 				</span>
 				<span class="value">
 					{{ membersNameString }}
 				</span>
+			</div>
+
+			<div class="use-status" style="margin-top: 8px">
+				<div
+					v-if="rsvData.roomUsed === 1"
+					class="content is-used"
+					style="color: green"
+				>
+					<span class="icon">🟢</span>
+					<span class="title">이용완료</span>
+				</div>
+				<div
+					v-else-if="rsvData.roomUsed === -1"
+					class="content is-used"
+					style="color: red"
+				>
+					<span class="icon">🔴</span>
+					<span class="title">이용안함</span>
+				</div>
+				<div
+					v-else-if="rsvData.roomUsed === 0"
+					class="content is-used"
+					style="color: grey"
+				>
+					<span class="icon">⚪</span>
+					<span class="title">이용예정</span>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -67,6 +105,7 @@ const props = defineProps({
 				roomId: -1,
 				topic: '',
 				members: [{ name: '', email: '' }],
+				roomUsed: 1,
 			};
 		},
 	},
@@ -138,6 +177,8 @@ function getDayExpressionFromDateStr(str) {
 
 <style lang="scss" scoped>
 .reservation-card {
+	word-wrap: break-word;
+	word-break: break-all;
 	display: flex;
 	width: 512px;
 
@@ -205,12 +246,14 @@ function getDayExpressionFromDateStr(str) {
 		.value {
 			margin-left: 4px;
 		}
-		img {
+		.icon {
 			vertical-align: middle;
 			display: inline-block;
-			height: 24px;
-			width: auto;
+			// height: 24px;
+			height: auto;
+			width: 24px;
 			margin-right: 8px;
+			text-align: center;
 		}
 	}
 }
@@ -220,6 +263,18 @@ function getDayExpressionFromDateStr(str) {
 }
 .reservation-card:active {
 	transform: scale(105%);
+}
+
+// 이 예약의 room_used값에 따라 적용되는 스타일.
+.use-status-noshow {
+	// 노쇼 (이용안함)
+}
+.use-status-used {
+	// 사용완료
+}
+.use-status-notyet {
+	// 사용예정
+	filter: brightness(120);
 }
 
 @media (max-width: 768px) {

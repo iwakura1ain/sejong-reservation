@@ -100,6 +100,7 @@ function goDetailPage(id, reservationType) {
 <style lang="scss" scoped>
 #user-main-view {
 	.reservation-card-container {
+		width: 100%;
 		display: flex;
 		justify-content: center;
 		flex-wrap: wrap;
