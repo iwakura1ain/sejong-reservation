@@ -28,4 +28,4 @@ pymysql==1.0.3
 mysql==0.0.3
 mysqlclient==2.1.1
 flask-cors==3.0.10
-gunicorn
+gunicorn==20.1.0

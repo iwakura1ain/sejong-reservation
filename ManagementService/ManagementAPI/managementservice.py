@@ -79,8 +79,8 @@ class ConferenceRoom(Resource, Service):
             "jwt_status", "get", headers=request.headers
         )
 
-        if(check_jwt_exists(auth_info) 
-           and (auth_info['User']['type'] != 1)):
+        if(check_jwt_exists(auth_info) is False
+           or (auth_info['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -269,8 +269,8 @@ class ConferenceRoomById(Resource, Service):
         auth_info = self.query_api( 
             "jwt_status", "get", headers=request.headers
         )
-        if(check_jwt_exists(auth_info) 
-           and (auth_info['User']['type'] != 1)):
+        if(check_jwt_exists(auth_info) is False
+           or (auth_info['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -326,8 +326,8 @@ class ConferenceRoomById(Resource, Service):
             "jwt_status", "get", headers=request.headers
         )
         
-        if (check_jwt_exists(auth_info)
-           and (auth_info['User']['type'] != 1)):
+        if (check_jwt_exists(auth_info) is False
+            or (auth_info['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"
@@ -459,11 +459,11 @@ class ConferenceRoomImage(Resource, Service):
         joined_path = os.path.join(filepath, filename)
         
         # check user if has authorization.
-        auth_info = self.query_api( 
+        auth_info = self.query_api(
             "jwt_status", "get", headers=request.headers
         )
-        if(check_jwt_exists(auth_info) 
-           and (auth_info['User']['type'] != 1)):
+        if(check_jwt_exists(auth_info) is False
+           or (auth_info['User']['type'] != 1)):
             return {
                 "status": False,
                 "msg": "No authorization"

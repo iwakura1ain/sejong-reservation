@@ -32,7 +32,7 @@ def serialize(data, include=[], exclude=[]):
 def check_jwt_exists(auth_info):
     if "status" not in auth_info.keys():
         return False
-    return auth_info["status"]
+    return True
 
 from sqlalchemy import select
 
