@@ -173,10 +173,8 @@ def check_date_constraints(user_type, reservation_date):
 
 
 def create_confirmation_email(
-    reservation, room, creator,
-    # sender="reservationsys_admin@sejong.ac.kr",
-    sender="",
-    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다",
+    reservation, room, creator, sender,
+    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다.",
     template_name="template.txt"
 ):
     """
