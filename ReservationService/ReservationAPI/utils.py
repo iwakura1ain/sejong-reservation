@@ -173,10 +173,8 @@ def check_date_constraints(user_type, reservation_date):
 
 
 def create_confirmation_email(
-    reservation, room, creator,
-    # sender="reservationsys_admin@sejong.ac.kr",
-    sender="",
-    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다",
+    reservation, room, creator, sender,
+    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다.",
     template_name="template.txt"
 ):
     """
@@ -187,20 +185,30 @@ def create_confirmation_email(
 
     Returns a dict for POST alertservice/alert body
     """
-    # TODO: refactor to account for cases when some info are missing
 
-    members_emails = [member["email"] for member in reservation["members"]]
+    # set default text for missing info
+    DEFAULT = "(내용없음)"
+
+    # email receiver
     receivers = [creator["email"]]
+
+    # reservation infos
+    members_detail = DEFAULT
+    if reservation["members"] != []:
+        members = [f'{member["name"]} {member["email"]}' for member in reservation["members"]]
+        members_detail = f"{len(members)}인 ({', '.join(members)})"
+    reservation_topic = DEFAULT
+    if reservation["reservation_topic"] != "":
+        reservation_topic = reservation["reservation_topic"]
 
     template_data = {
         # reservation info
         "reservation_date": reservation["reservation_date"],
         "start_time": reservation["start_time"],
         "end_time": reservation["end_time"],
-        "members_len": len(members_emails),
-        "members_emails": ", ".join(members_emails),
+        "members_detail": members_detail,
+        "reservation_topic": reservation_topic,
         "code": reservation["reservation_code"],
-        "reservation_topic": reservation["reservation_topic"],
         # room info
         "room_name": room["room_name"],
         "room_address1": room["room_address1"],

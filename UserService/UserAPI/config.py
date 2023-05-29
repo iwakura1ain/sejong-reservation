@@ -28,3 +28,24 @@ ORM = {
 #     "port": 3306,
 #     "database": "sejong"
 # }
+
+api_config = {
+    "send_email": "http://alertservice:5000/alert",
+}
+
+# email address from which alert emails will be sent
+SENDER = "ernie937@gmail.com"
+
+# 학과 정보
+dept_str = {
+    1: "컴퓨터공학과",
+    2: "기타 학과",
+}
+
+# 사용자 구분 정보
+user_type_str = {
+    1: "관리자",
+    2: "교수",
+    3: "대학원생",
+    4: "학부생",
+}
