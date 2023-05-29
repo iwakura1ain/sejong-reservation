@@ -74,7 +74,6 @@ class EmailSender(Resource):
         어떤 키벨류값 들어있는지 써야함
         """
         for receiver in data["receivers"]:
-            html = mail_format.format(text=data["text"])
             text = data["text"]
 
             message = MIMEMultipart("alternative")
@@ -83,7 +82,6 @@ class EmailSender(Resource):
             message["To"] = receiver
 
             message.attach(MIMEText(text, "plain"))
-            message.attach(MIMEText(html, "html"))
 
             yield data["sender"], receiver, message
 
