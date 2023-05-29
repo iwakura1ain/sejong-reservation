@@ -2,6 +2,14 @@
 
 version: "3.9"
 services:
+  webservice:
+    build:
+      context: .
+      dockerfile: ./WebService/Dockerfile
+    restart: always
+    ports:
+      - "80:80"
+
   reservationservice:
     build:
       context: .
@@ -95,7 +103,6 @@ services:
     environment:
       TZ: Asia/Seoul
     ports:
-      - "80:80"
       - "8080:8080"
     depends_on:
       - reservationservice
