@@ -205,23 +205,11 @@ async function validateRsvConflict(targetIdxArr) {
 
 		const req = { reservations };
 		const accessToken = userTokenStore.getAccessToken();
-		// console.log(req);
-		// console.log(targetIdxArr);
-		// 모든 예약이 생성 가능한지 확인 (create시도)
-		const res = await reservationService.create(req, accessToken);
+
+		// 모든 예약이 생성 가능한지 확인
+		const res = await reservationService.checkIfReservationOk(req, accessToken);
 		console.log(res);
 		if (res.status) {
-			// 만들어졌으면 확인했으니 만든 예약 삭제함.
-			const ids = res.data.map(item => item.id);
-			console.log(ids, res.data);
-			const promises = ids.map(id =>
-				reservationService.delete(id, accessToken),
-			);
-			await Promise.all(promises).catch(err => {
-				console.error(err);
-				makeToast('알 수 없는 오류입니다', 'error');
-			});
-
 			// 예약가능하다고 표시
 			targetIdxArr.forEach(idx => {
 				makeRsvFormStore.each[idx].conflict = false;

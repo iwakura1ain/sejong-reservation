@@ -50,7 +50,7 @@
 		<!--  -->
 		<!--  -->
 		<!-- 선택한 회의실의 예약현황을 보여주는 달력 : STEP 2~3에 표시됨 -->
-		<div
+		<!-- <div
 			class="reserved-time-display-calendar-container"
 			v-if="
 				1 < makeRsvFormStore.formState.step &&
@@ -62,7 +62,7 @@
 				:fetch-trigger="makeRsvFormStore.common"
 				:room-id="makeRsvFormStore.common.roomId"
 			/>
-		</div>
+		</div> -->
 
 		<!-- STEP 2 : 회의 일정의 큰 틀 선택 -->
 		<template v-if="makeRsvFormStore.formState.step === 2">
@@ -70,6 +70,13 @@
 				<article class="step step2-select-general-datetime">
 					<div class="center-box">
 						<section-header size="small">공통 내용 결정하기</section-header>
+						<div class="reserved-time-display-calendar-container">
+							<RoomCalendar
+								v-model:is-opened="isCalendarOpened"
+								:fetch-trigger="makeRsvFormStore.common"
+								:room-id="makeRsvFormStore.common.roomId"
+							/>
+						</div>
 						<general-datetime-selector />
 					</div>
 					<div class="step-btn-container">
@@ -102,6 +109,13 @@
 				<article class="step step3-select-detailed-datetime">
 					<div class="center-box">
 						<section-header size="small">세부 일정 선택</section-header>
+						<div class="reserved-time-display-calendar-container">
+							<RoomCalendar
+								v-model:is-opened="isCalendarOpened"
+								:fetch-trigger="makeRsvFormStore.common"
+								:room-id="makeRsvFormStore.common.roomId"
+							/>
+						</div>
 						<detailed-datetime-selector />
 					</div>
 					<div class="step-btn-container">
@@ -196,7 +210,7 @@ import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
 import validateDateTime from '@/assets/scripts/utils/validateDateTime.js';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
 // 초기화 -------------------------------------
-// const router = useRouter();
+makeRsvFormStore.clear();
 
 // 상태, computed -----------------------------
 const isCalendarOpened = ref(false);
@@ -283,6 +297,7 @@ function handleGoNextStep() {
 		flex-direction: column;
 		align-items: center;
 		width: 100%;
+		margin-bottom: 48px;
 	}
 }
 </style>

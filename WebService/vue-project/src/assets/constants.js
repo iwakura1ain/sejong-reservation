@@ -1,3 +1,11 @@
+// 최대 예약 건수 제한
+// -- 사용자 유형에 관계없이 " 모 든 사 람 " 에게 적용되는 예약생성 최대 범위
+const now = new Date();
+export const REPEAT_END_CONDITION_MAX = {
+	REPS: 1000, // 종료조건 "반복수"로 1000번까지
+	DATE: new Date(now.setYear(now.getFullYear() + 3)), // 종료조건 "날짜"로 3년뒤까지
+};
+
 // 예약 유형
 // --- 정기예약 시 종료시점을 결정하는 유형
 export const REPEAT_END_TYPE = {

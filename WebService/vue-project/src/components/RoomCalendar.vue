@@ -4,17 +4,10 @@
 			{{ meetingRoomStr }}
 		</p>
 		<div v-if="!isOpened">
-			<filled-button @click="showCalendar"> 달력 열기 </filled-button>
+			<filled-button @click="showCalendar"> 예약현황 열기 </filled-button>
 		</div>
 		<template v-else>
 			<div style="display: flex; align-items: center; flex-wrap: wrap">
-				<text-button
-					@click="unshowCalendar"
-					style="margin: 0; height: 36px; vertical-align: text-bottom"
-				>
-					달력 닫기
-				</text-button>
-
 				<div
 					class="calendar-type-selector"
 					style="margin: 0 0 2px 8px; height: 36px"
@@ -27,6 +20,12 @@
 						]"
 					/>
 				</div>
+				<text-button
+					@click="unshowCalendar"
+					style="margin: 0 0 0 auto; height: 36px; vertical-align: text-bottom"
+				>
+					예약현황 닫기
+				</text-button>
 			</div>
 
 			<month-calendar
@@ -43,7 +42,7 @@
 			/>
 			<div style="text-align: right">
 				<text-button @click="unshowCalendar" style="margin-top: 0">
-					달력 닫기
+					예약현황 닫기
 				</text-button>
 			</div>
 		</template>

@@ -351,7 +351,9 @@ async function init() {
 
 	// 필터값 초기화
 	const now = new Date();
-	filter.value.date.after = new Date(now.setMonth(now.getMonth() - 1));
+	filter.value.date.after = new Date(now.setDate(now.getDate() - 7));
+	filter.value.date.before = new Date(now.setMonth(now.getMonth() + 1));
+
 	await fetchReservationList();
 }
 init();

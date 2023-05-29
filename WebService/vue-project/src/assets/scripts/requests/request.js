@@ -621,7 +621,66 @@ const reservationService = {
 	// --------------------------------------------------------------------------
 	create: async function (reqBody, accessToken) {
 		try {
-			console.log(reqBody);
+			// 통신
+			const res = await axios
+				.post(`${BASE_URL.RESERVATION_SERVICE}/reservation`, reqBody, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				})
+				.catch(function (err) {
+					console.error(err);
+					if (err.response.status !== 400) {
+						throw new Error(err);
+					} else {
+						return err.response;
+					}
+					// < err.response.data.msg 내용 >
+					//
+					// 'Conflict in reservations' : 예약 충돌
+					// {
+					// 	status: false,
+					// 	reservations : [],
+					// 	msg: 'Conflict in reservations',
+					// }
+
+					// 'Invalid reservation' : 폼데이터 검증 통과못함
+					// {
+					// 	status: false,
+					// 	invalid: { },
+					// 	msg: 'Invalid reservation',
+					// }
+
+					// "reservation not in room open hours" : 방 사용가능시간 밖 예약.
+					// "Reservation failed" : 유효하지 않은 사용자id일 때
+					// "Invalid room ID" : 회의실 정보가 잘못된 경우
+					// "User cannot reserve that far into future" : 사용자 권한에 맞지 않은 예약
+					// "Unauthenticated" : invalid한 토큰
+				});
+
+			const data = res.data;
+			if (!data.status) {
+				return data;
+			}
+
+			// 응답데이터-->프론트엔드 데이터 컨버팅, 반환.
+			const converted = data.reservations.map(item =>
+				convertReservationRes(item, 'max'),
+			);
+
+			return {
+				status: true,
+				data: converted,
+				msg: '',
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
+	// --------------------------------------------------------------------------
+	checkIfReservationOk: async function (reqBody, accessToken) {
+		try {
 			// 통신
 			const res = await axios
 				.post(`${BASE_URL.RESERVATION_SERVICE}/reservation`, reqBody, {
