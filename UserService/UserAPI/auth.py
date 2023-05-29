@@ -5,6 +5,7 @@ from sqlalchemy import delete as remove
 from openpyxl import load_workbook
 from magic import Magic
 from io import BytesIO
+import json
 
 from flask import request
 from flask_restx import (
@@ -21,8 +22,14 @@ from flask_jwt_extended import (
 )
 
 from service import Service
-from utils import retrieve_jwt, serialize, protected, admin_only
-from config import ORM
+from utils import (
+    retrieve_jwt,
+    serialize,
+    protected,
+    admin_only,
+    create_register_confirmation_email,
+)
+from config import ORM, api_config, SENDER
 
 """
 This code creates a Flask-RESTX namespace object named "AUTH" for handling authentication-related
@@ -64,13 +71,30 @@ class Register(Service, Resource):
         This is the initialization function for a class that inherits from both Service and Resource
         classes, passing in arguments and keyword arguments.
         """
-        Service.__init__(self, model_config=ORM)
+        Service.__init__(
+            self, model_config=ORM, api_config=api_config
+        )
         Resource.__init__(self, *args, **kwargs)
 
     @jwt_required()
     @admin_only()
     def admin_credentials_required(*args, **kwargs):
         pass
+
+    def send_email(self, user):
+        # create and send email object
+        email_object = create_register_confirmation_email(user, sender=SENDER)
+        
+        try:
+            email_resp = self.query_api(
+                "send_email", "post",
+                headers=request.headers, body=json.dumps(email_object)
+            )
+            
+        except:
+            return None
+
+        return email_resp
 
     def post(self):
         """
@@ -124,6 +148,9 @@ class Register(Service, Resource):
                 res = conn.execute(
                     select(User).where(User.id == req["id"])
                 ).mappings().fetchone()
+
+                # send email to new user
+                _ = self.send_email(serialize(res, exclude=exclude))
 
                 return {
                     "status": True,
