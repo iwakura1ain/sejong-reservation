@@ -580,7 +580,7 @@ const reservationService = {
 		try {
 			// 통신
 			const res = await axios
-				.post(`${BASE_URL.RESERVATION_SERVICE}/reservation/check`, reqBody, {
+				.post(`${BASE_URL.RESERVATION_SERVICE}/reservation`, reqBody, {
 					headers: {
 						Authorization: `Bearer ${accessToken}`,
 					},
