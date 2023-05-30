@@ -29,6 +29,10 @@
 				</div> -->
 					<div class="contents-section common-data">
 						<div class="field-set topic">
+							<p class="label">인증코드</p>
+							<p class="content code">{{ reservationCommonField.code }}</p>
+						</div>
+						<div class="field-set topic">
 							<p class="label">주제</p>
 							<p class="content">{{ reservationCommonField.topic }}</p>
 						</div>
@@ -261,6 +265,7 @@ const reservationCommonField = ref({
 	},
 	creatorId: '',
 	creatorName: '',
+	code: '',
 });
 
 const selectedReservationIds = ref([]);
@@ -406,6 +411,7 @@ async function init() {
 		reservationCommonField.value.createdAt = sampledReservation.createdAt;
 		reservationCommonField.value.members = sampledReservation.members;
 		reservationCommonField.value.creatorId = sampledReservation.creatorId;
+		reservationCommonField.value.code = sampledReservation.code;
 
 		const room = fetchedRoomStore.getById(sampledReservation.roomId);
 		reservationCommonField.value.roomInfo.address1 = room.address1;

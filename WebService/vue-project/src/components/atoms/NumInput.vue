@@ -38,7 +38,8 @@ function update(event) {
 		}
 	}
 
-	emits('update:modelValue', parseInt(event.target.value));
+	const result = parseInt(event.target.value);
+	emits('update:modelValue', Number.isNaN(result) ? 0 : result);
 }
 </script>
 

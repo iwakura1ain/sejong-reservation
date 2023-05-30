@@ -80,8 +80,9 @@
 				>
 					<num-input
 						v-model="makeRsvFormStore.common.repeatOption.endReps"
-						:no-zero="true"
+						:no-zero="false"
 						:style="{ width: '64px', textAlign: 'center' }"
+						:max="REPEAT_END_CONDITION_MAX.REPS"
 					/>
 					<span>번 반복</span>
 				</div>
@@ -94,6 +95,7 @@
 				>
 					<vue3-datepicker-wrapper
 						v-model="makeRsvFormStore.common.repeatOption.endDate"
+						:max="REPEAT_END_CONDITION_MAX.DATE"
 					/>
 					<span style="margin-left: 4px">까지</span>
 				</div>
@@ -141,7 +143,11 @@ import RadioGroup from '@/components/RadioGroup.vue';
 import NumInput from '@/components/atoms/NumInput.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
 
-import { REPEAT_END_TYPE, REPEAT_INTERVAL_TYPE } from '@/assets/constants.js';
+import {
+	REPEAT_END_TYPE,
+	REPEAT_INTERVAL_TYPE,
+	REPEAT_END_CONDITION_MAX,
+} from '@/assets/constants.js';
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
 import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
 import { userInfoStore } from '@/stores/userInfo.js';
@@ -331,21 +337,10 @@ async function validateRsvConflict(targetIdxArr) {
 		const req = { reservations };
 		const accessToken = userTokenStore.getAccessToken();
 
-		// 모든 예약이 생성 가능한지 확인 (create시도)
-		const res = await reservationService.create(req, accessToken);
+		// 모든 예약이 생성 가능한지 확인
+		const res = await reservationService.checkIfReservationOk(req, accessToken);
 		console.log(res);
 		if (res.status) {
-			// 만들어졌으면 확인했으니 만든 예약 삭제함.
-			const ids = res.data.map(item => item.id);
-			console.log(ids, res.data);
-			const promises = ids.map(id =>
-				reservationService.delete(id, accessToken),
-			);
-			await Promise.all(promises).catch(err => {
-				console.error(err);
-				makeToast('알 수 없는 오류입니다', 'error');
-			});
-
 			// 예약가능하다고 표시
 			targetIdxArr.forEach(idx => {
 				makeRsvFormStore.each[idx].conflict = false;

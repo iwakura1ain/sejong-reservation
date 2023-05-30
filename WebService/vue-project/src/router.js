@@ -160,7 +160,7 @@ const router = createRouter({
 });
 
 // 네이게이션 가드 설정
-const notRequireLogin = ['Login', 'Register', 'Landing'];
+const notRequireLogin = ['Login', 'Register'];
 const RequireAdmin = [
 	'ManageMain',
 	'ManageReservation',
@@ -183,6 +183,12 @@ router.beforeEach(async (to, from, next) => {
 		// 액세스토큰, 리프레시토큰 둘 중 하나라도 저장된 것 없으면 로그인으로 갑시다
 		if (!userTokenStore.exist()) {
 			next({ name: 'Login' });
+			return;
+		}
+
+		// 혹시 "/"로 들어왔다면, 로그인했으면 UserMain으로, 안했으면 Login으로 보냅시다
+		if (to.name === 'Landing') {
+			next({ name: 'UserMain' });
 			return;
 		}
 

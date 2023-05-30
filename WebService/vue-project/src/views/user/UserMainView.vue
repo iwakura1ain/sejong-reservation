@@ -1,15 +1,21 @@
+div
 <template>
 	<div id="user-main-view">
 		<section-header>예정된 회의</section-header>
 		<div class="reservation-card-container">
-			<reservation-card
-				v-for="item in reservationList"
-				:key="item.id"
-				:rsv-data="item"
-				:room-data="fetchedRoomStore.getById(item.roomId)"
-				:user-name="userInfoStore.get().name"
-				@click="goDetailPage(item.id, item.reservationType)"
-			/>
+			<template v-if="reservationList.length > 0">
+				<reservation-card
+					v-for="item in reservationList"
+					:key="item.id"
+					:rsv-data="item"
+					:room-data="fetchedRoomStore.getById(item.roomId)"
+					:user-name="userInfoStore.get().name"
+					@click="goDetailPage(item.id, item.reservationType)"
+				/>
+			</template>
+			<template v-else>
+				<empty-sign />
+			</template>
 		</div>
 	</div>
 </template>
@@ -17,7 +23,7 @@
 <script setup>
 import { ref /*, watch*/ } from 'vue';
 import { useRouter } from 'vue-router';
-
+import EmptySign from '@/components/atoms/EmptySign.vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import ReservationCard from '@/components/atoms/ReservationCard.vue';
 // import MonthCalendar from '@/components/MonthCalendar.vue';
@@ -100,6 +106,7 @@ function goDetailPage(id, reservationType) {
 <style lang="scss" scoped>
 #user-main-view {
 	.reservation-card-container {
+		width: 100%;
 		display: flex;
 		justify-content: center;
 		flex-wrap: wrap;

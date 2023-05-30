@@ -1,7 +1,12 @@
 <template>
-	<div id="manage-reservation-view">관리기능 예약정보 관리 뷰</div>
+	<div id="manage-reservation-view">
+		<manage-tool-header name="예약 관리" />
+	</div>
 </template>
 
-<script setup></script>
+<script setup>
+import ManageToolHeader from '@/layouts/Manage/ManageToolHeader.vue';
+import SectionHeader from '@/components/atoms/SectionHeader.vue';
+</script>
 
 <style lang="scss" scoped></style>

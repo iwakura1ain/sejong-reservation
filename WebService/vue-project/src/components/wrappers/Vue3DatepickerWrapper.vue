@@ -8,6 +8,7 @@
 			padding: 8px;
 			border-radius: 0.5rem;
 			border: 1px solid #51626f;
+			cursor: pointer;
 		"
 		:style="{
 			'--vdp-selected-bg-color': '#C3002F',
@@ -16,8 +17,8 @@
 		:locale="ko"
 		v-model="localDateState"
 		:week-starts-on="0"
-		:lower-limit="datepickerLimit.lower"
-		:upper-limit="datepickerLimit.upper"
+		:lower-limit="useLimit ? datepickerLimit.lower : null"
+		:upper-limit="useLimit ? datepickerLimit.upper : null"
 	/>
 </template>
 
@@ -25,7 +26,7 @@
 import Datepicker from 'vue3-datepicker';
 import { ko } from 'date-fns/locale';
 import { computed, ref, watch } from 'vue';
-
+import { REPEAT_END_CONDITION_MAX } from '@/assets/constants.js';
 import { userInfoStore } from '@/stores/userInfo.js';
 
 // define props, emits
@@ -34,6 +35,18 @@ const props = defineProps({
 		required: false,
 		type: Date,
 		default: new Date(),
+	},
+	useLimit: {
+		// 달력 날짜선택 제한(lower, upper-limit을 적용할지 말지 결정)
+		required: false,
+		type: Boolean,
+		default: true,
+	},
+	max: {
+		// 사용자 유형에 관계없이 최대로 선택가능한 날짜의 한계
+		required: false,
+		type: Date,
+		deafult: null,
 	},
 });
 const emits = defineEmits(['update:modelValue']);
@@ -58,24 +71,24 @@ const datepickerLimit = computed(() => {
 	if (userType === 1) {
 		return {
 			lower: lower,
-			upper: null,
+			upper: props.max,
 		};
 	} else if (userType === 2) {
 		return {
 			lower: lower,
-			upper: null,
+			upper: props.max,
 		};
 	} else if (userType === 3) {
 		upper.setDate(upper.getDate() + 6);
 		return {
 			lower: lower,
-			upper: upper,
+			upper: props.max && props.max < upper ? props.max : upper,
 		};
 	} else if (userType === 4) {
 		upper.setDate(upper.getDate() + 2);
 		return {
 			lower: lower,
-			upper: upper,
+			upper: props.max && props.max < upper ? props.max : upper,
 		};
 	} else {
 		return null;

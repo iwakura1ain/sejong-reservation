@@ -6,13 +6,18 @@ RoomCard의 '선택'버튼이 클릭되면 선택된 room의 id를 받습니다.
 
 <template>
 	<div class="room-selector">
-		<room-card
-			v-for="room in fetchedRoomStore.getAll()"
-			:key="room.id"
-			:contents="room"
-			:selected="room.id === modelValue"
-			@update-selected-room="updateSelectedRoom"
-		></room-card>
+		<template v-if="fetchedRoomStore.getAll().length">
+			<room-card
+				v-for="room in fetchedRoomStore.getAll()"
+				:key="room.id"
+				:contents="room"
+				:selected="room.id === modelValue"
+				@update-selected-room="updateSelectedRoom"
+			></room-card>
+		</template>
+		<template v-else>
+			<empty-sign></empty-sign>
+		</template>
 	</div>
 </template>
 
@@ -25,7 +30,7 @@ defineProps({
 	},
 });
 const emits = defineEmits(['update:modelValue']);
-
+import EmptySign from '@/components/atoms/EmptySign.vue';
 import RoomCard from '@/components/atoms/RoomCard.vue';
 import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
 
@@ -38,6 +43,7 @@ function updateSelectedRoom(id) {
 .room-selector {
 	width: 100%;
 	display: flex;
+	justify-content: center;
 	flex-wrap: wrap;
 
 	.selected {

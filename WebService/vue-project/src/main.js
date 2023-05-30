@@ -2,7 +2,7 @@ import axios from 'axios';
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from '@/router.js';
-
+// import { VueSelect } from 'vue-select';
 // import './assets/global.scss';
 
 async function init() {
@@ -13,6 +13,7 @@ async function init() {
 
 		const app = createApp(App);
 		app.use(router);
+		// app.component('v-select', VueSelect);
 		app.mount('#app');
 	} catch (err) {}
 }
