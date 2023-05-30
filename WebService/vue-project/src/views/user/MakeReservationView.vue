@@ -1,113 +1,191 @@
 <template>
 	<div id="make-reservation-view">
 		<section-header>예약하기</section-header>
-
-		<template v-if="step < 4">
-			<Transition appear>
+		<div id="top-header"></div>
+		<!-- STEP 1 : 회의실 선택 -->
+		<template v-if="makeRsvFormStore.formState.step === 1">
+			<Transition>
 				<article class="step step1-select-room">
 					<section-header size="small">회의실 선택</section-header>
-					<!-- <room-selector :rooms="step1Testdata" v-model="selectedRoomId" /> -->
-					<room-selector />
+					<room-selector v-model="makeRsvFormStore.common.roomId" />
 				</article>
 			</Transition>
+		</template>
 
-			<Transition appear>
-				<article
-					v-if="Object.keys(selectedRoom).length > 0"
-					class="step step2-select-time"
-				>
-					<section-header size="small">시간 선택</section-header>
-					<meeting-datetime-selector :selected-room="selectedRoom" />
-				</article>
+		<!-- 선택한 회의실의 예약현황을 보여주는 달력 : STEP 1에 표시됨 -->
+		<template v-if="makeRsvFormStore.formState.step === 1 && isRoomSelected">
+			<Transition>
+				<div style="width: 100%">
+					<div
+						v-if="isRoomSelected"
+						class="reserved-time-display-calendar-container"
+					>
+						<section-header size="small">회의실 예약현황</section-header>
+						<RoomCalendar
+							v-model:is-opened="isCalendarOpened"
+							:fetch-trigger="makeRsvFormStore.common"
+							:room-id="makeRsvFormStore.common.roomId"
+						/>
+					</div>
+				</div>
 			</Transition>
+		</template>
 
-			<Transition appear>
-				<article
-					v-if="datetimeAvailability.length"
-					class="step step3-write-members"
+		<div class="step" v-if="makeRsvFormStore.formState.step === 1">
+			<div class="step-btn-container">
+				<section-header></section-header>
+				<filled-button
+					v-if="isRoomSelected"
+					class="next-step-btn"
+					@click="handleGoNextStep"
 				>
-					<section-header size="small">회의 정보 입력</section-header>
-					<meeting-member-writer />
+					{{ `공통 내용 결정하기 >` }}
+				</filled-button>
+				<filled-button v-else color="disabled">
+					{{ `공통 내용 결정하기 >` }}
+				</filled-button>
+			</div>
+		</div>
 
+		<!--  -->
+		<!--  -->
+		<!-- 선택한 회의실의 예약현황을 보여주는 달력 : STEP 2~3에 표시됨 -->
+		<!-- <div
+			class="reserved-time-display-calendar-container"
+			v-if="
+				1 < makeRsvFormStore.formState.step &&
+				makeRsvFormStore.formState.step < 4
+			"
+		>
+			<RoomCalendar
+				v-model:is-opened="isCalendarOpened"
+				:fetch-trigger="makeRsvFormStore.common"
+				:room-id="makeRsvFormStore.common.roomId"
+			/>
+		</div> -->
+
+		<!-- STEP 2 : 회의 일정의 큰 틀 선택 -->
+		<template v-if="makeRsvFormStore.formState.step === 2">
+			<Transition>
+				<article class="step step2-select-general-datetime">
+					<div class="center-box">
+						<section-header size="small">공통 내용 결정하기</section-header>
+						<div class="reserved-time-display-calendar-container">
+							<RoomCalendar
+								v-model:is-opened="isCalendarOpened"
+								:fetch-trigger="makeRsvFormStore.common"
+								:room-id="makeRsvFormStore.common.roomId"
+							/>
+						</div>
+						<general-datetime-selector />
+					</div>
 					<div class="step-btn-container">
-						<filled-button class="step-btn" @click="confirm">
-							검토하기
+						<section-header></section-header>
+						<filled-button
+							class="prev-step-btn"
+							color="white"
+							@click="handleGoPrevStep"
+						>
+							{{ `< 회의실 선택하기` }}
+						</filled-button>
+						<filled-button
+							class="next-step-btn"
+							@click="handleGoNextStep"
+							v-if="makeRsvFormStore.isGeneralFormRequirementFulfilled.value"
+						>
+							{{ `세부 일정 선택하기 >` }}
+						</filled-button>
+						<filled-button v-else color="disabled">
+							{{ `세부 일정 선택하기 >` }}
 						</filled-button>
 					</div>
 				</article>
 			</Transition>
 		</template>
 
-		<!-- form  -->
-		<!-- confirm -->
-
-		<template v-else>
+		<!-- STEP 3 : 세부 일정 선택 -- 예외처리(시간변경, 제외) -->
+		<template v-if="makeRsvFormStore.formState.step === 3">
 			<Transition appear>
-				<article class="step-4">
-					<section-header size="small">내용 검토</section-header>
-					<div class="confirm-notice">
-						<p class="notice-1">입력하신 내용이 맞는지 검토해주세요.</p>
-						<p class="notice-2">
-							<span style="font-weight: bold">예약하기</span>
-							버튼을 누르면 아래 내용으로 예약처리하고 참여자들에게 안내메일을
-							발송합니다.
-						</p>
+				<article class="step step3-select-detailed-datetime">
+					<div class="center-box">
+						<section-header size="small">세부 일정 선택</section-header>
+						<div class="reserved-time-display-calendar-container">
+							<RoomCalendar
+								v-model:is-opened="isCalendarOpened"
+								:fetch-trigger="makeRsvFormStore.common"
+								:room-id="makeRsvFormStore.common.roomId"
+							/>
+						</div>
+						<detailed-datetime-selector />
 					</div>
+					<div class="step-btn-container">
+						<section-header></section-header>
+						<filled-button
+							class="prev-step-btn"
+							color="white"
+							@click="handleGoPrevStep"
+						>
+							{{ `< 공통 내용 선택하기` }}
+						</filled-button>
+						<filled-button
+							v-if="isConflictIncluded || isThereNoIncluded"
+							class="next-step-btn"
+							@click="handleGoNextStep"
+						>
+							{{ `주제/참여자 입력하기 >` }}
+						</filled-button>
+						<filled-button v-else color="disabled">
+							{{ `주제/참여자 입력하기 >` }}
+						</filled-button>
+					</div>
+				</article>
+			</Transition>
+		</template>
 
-					<div class="confirm-contents">
-						<div class="content">
-							<p class="label">회의주제</p>
-							<p class="value">
-								{{ topic }}
-							</p>
-						</div>
-						<div class="content">
-							<p class="label">회의장소</p>
-							<p class="value">
-								{{ selectedRoom.buildingName }} {{ selectedRoom.roomName }}
-							</p>
-						</div>
-						<div class="content">
-							<p class="label">회의시간</p>
-							<p class="value">{{ meetingTimeString }}</p>
-						</div>
-						<div class="content">
-							<p class="label">회의일자</p>
-							<div>
-								<p
-									v-for="(date, index) in meetingDates"
-									:key="index"
-									class="value"
-								>
-									{{ date.dateString }}
-								</p>
-							</div>
-						</div>
-						<div class="content">
-							<p class="label">참여인원</p>
-							<div>
-								<p class="value">이원진 lee@wonj.in (예약자)</p>
-								<p
-									v-for="(member, index) in members"
-									:key="index"
-									class="value"
-								>
-									{{ member.name }} {{ member.email }}
-								</p>
-							</div>
-						</div>
+		<!-- STEP 4 : 회의 주제, 참여자 입력 -->
+		<template v-if="makeRsvFormStore.formState.step === 4">
+			<Transition appear>
+				<article class="step step4-write-topic-members">
+					<section-header size="small">주제/참여자 정보 입력</section-header>
+					<topic-member-writer />
+
+					<div class="step-btn-container">
+						<section-header></section-header>
+						<filled-button
+							class="prev-step-btn"
+							color="white"
+							@click="handleGoPrevStep"
+						>
+							{{ `< 세부 일정 선택하기` }}
+						</filled-button>
+						<filled-button class="next-step-btn" @click="handleGoNextStep">
+							{{ `최종 검토하기 >` }}
+						</filled-button>
 					</div>
-					<div style="display: flex; width: 100%">
-						<div class="step-btn-container">
-							<filled-button class="step-btn" color="white" @click="cancel">
-								수정하기
-							</filled-button>
-						</div>
-						<div class="step-btn-container">
-							<filled-button class="step-btn" @click="reserve">
-								예약하기
-							</filled-button>
-						</div>
+				</article>
+			</Transition>
+		</template>
+
+		<!-- form 끝  -->
+		<!-- confirm 시작 -->
+
+		<!-- STEP 5 : 최종 검토 및 예약 생성 -->
+		<template v-if="makeRsvFormStore.formState.step === 5">
+			<Transition appear>
+				<article class="step step-5-comfirm">
+					<div class="center-box">
+						<section-header size="small">내용 검토</section-header>
+						<form-confirmator />
+					</div>
+					<div class="step-btn-container">
+						<section-header></section-header>
+						<filled-button
+							class="prev-step-btn"
+							color="white"
+							@click="handleGoPrevStep"
+						>
+							{{ `< 주제/참여자 입력하기` }}
+						</filled-button>
 					</div>
 				</article>
 			</Transition>
@@ -120,42 +198,80 @@ import { ref, computed } from 'vue';
 
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
-import RoomSelector from '@/layouts/MakeReservation/RoomSelector.vue';
-import MeetingDatetimeSelector from '@/layouts/MakeReservation/MeetingDatetimeSelector.vue';
-import MeetingMemberWriter from '@/layouts/MakeReservation/MeetingMemberWriter.vue';
+import RoomCalendar from '@/components/RoomCalendar.vue';
 
-import {
-	selectedRoom,
-	pickedTime,
-	datetimeAvailability,
-	topic,
-	members,
-} from '@/stores/reservation.js';
+import RoomSelector from '@/components/RoomSelector.vue';
+import GeneralDatetimeSelector from '@/layouts/MakeReservation/GeneralDatetimeSelector.vue';
+import DetailedDatetimeSelector from '@/layouts/MakeReservation/DetailedDatetimeSelector.vue';
+import TopicMemberWriter from '@/layouts/MakeReservation/TopicMemberWriter.vue';
+import FormConfirmator from '@/layouts/MakeReservation/FormConfirmator.vue';
 
-const meetingTimeString = computed(() => {
-	const { start, end } = pickedTime.value;
-	return `${start.HH}:${start.mm} ~ ${end.HH}:${end.mm}`;
+import { makeRsvFormStore } from '@/stores/makeRsvForm.js';
+import validateDateTime from '@/assets/scripts/utils/validateDateTime.js';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
+// 초기화 -------------------------------------
+makeRsvFormStore.clear();
+
+// 상태, computed -----------------------------
+const isCalendarOpened = ref(false);
+
+const isRoomSelected = computed(() => {
+	return makeRsvFormStore.common.roomId > 0; // db의 회의실 id는 1부터 시작함.
 });
 
-const meetingDates = computed(() => {
-	const arr = datetimeAvailability.value.filter(item => item.available);
-	console.log(arr);
-	return arr;
+const isConflictIncluded = computed(() => {
+	let result = false;
+	for (let rsv of makeRsvFormStore.each) {
+		if (rsv.conflict && rsv.include) {
+			return true;
+		}
+	}
+
+	return result;
 });
 
-const step = ref(1);
+const isThereNoIncluded = computed(() => {
+	for (let rsv of makeRsvFormStore.each) {
+		if (rsv.include) {
+			return true;
+		}
+	}
 
-function confirm() {
-	step.value = 4;
+	return false;
+});
+// 일반함수 -----------------------------------
+
+// 이벤트 핸들러 -------------------------------
+function handleGoPrevStep() {
+	makeRsvFormStore.formState.step -= 1;
+	const el = document.querySelector('#top-header');
+	el.scrollIntoView({
+		behavior: 'smooth',
+	});
 }
+function handleGoNextStep() {
+	if (makeRsvFormStore.formState.step === 2) {
+		const startDate = makeRsvFormStore.common.startDate;
+		const defaultTime = makeRsvFormStore.defaultTime;
+		const isValid = validateDateTime(startDate, defaultTime);
+		if (!isValid) return;
+	} else if (makeRsvFormStore.formState.step === 4) {
+		const isValid = makeRsvFormStore.checkMeetingInfoFormValid();
+		if (!isValid) {
+			makeToast(
+				'비어있는 항목이 있거나, 이메일의 형식이 올바르지 않습니다',
+				'warning',
+			);
+			return;
+		}
+	}
 
-function cancel() {
-	step.value = 3;
-}
+	makeRsvFormStore.formState.step += 1;
 
-function reserve() {
-	// stores/reservation 드래곤볼
-	// --
+	const el = document.querySelector('#top-header');
+	el.scrollIntoView({
+		behavior: 'smooth',
+	});
 }
 </script>
 
@@ -166,93 +282,22 @@ function reserve() {
 		width: 100%;
 	}
 	.step-btn-container {
-		width: 100%;
-		margin-top: 64px;
-		margin-bottom: 64px;
 		text-align: center;
 		.step-btn {
-			text-align: center;
-			width: 50%;
-			min-width: 100px;
-			padding-top: 24px;
-			padding-bottom: 24px;
-			font-size: 1.2rem;
+			// width: 80%;
 		}
 	}
-
-	.step-4 {
+	.center-box {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 	}
-	.confirm-notice {
-		margin-top: 24px;
-		text-align: center;
-		.notice-1 {
-			font-size: 1.5rem;
-			font-weight: bold;
-			margin-bottom: 8px;
-		}
-		.notice-2 {
-			font-size: 1.3rem;
-		}
-	}
-	@media (max-width: 768px) {
-		.confirm-notice {
-			text-align: left;
-			.notice-1 {
-				font-size: 1.2rem;
-			}
-			.notice-2 {
-				font-size: 1rem;
-			}
-		}
-	}
-
-	.confirm-contents {
-		display: block;
-		margin-top: 48px;
-		margin-bottom: 24px;
-		padding: 40px 96px 16px 96px;
-		border: 1px solid $sejong-grey;
-		border-radius: $box-radius;
-		.content {
-			display: flex;
-			font-size: 1.1rem;
-			margin-bottom: 24px;
-			.label {
-				font-weight: bold;
-				margin-right: 8px;
-				width: 67px;
-			}
-			.value {
-				flex: 1;
-				// word-wrap: break-all;
-				word-break: break-all;
-			}
-			> div > p {
-				margin-bottom: 8px;
-			}
-		}
-	}
-	@media (max-width: 768px) {
-		.confirm-contents {
-			display: block;
-			width: 100%;
-			max-width: 100%;
-			padding-left: 4px;
-			padding-right: 4px;
-		}
-	}
-
-	.v-enter-active,
-	.v-leave-active {
-		transition: opacity 1s ease;
-	}
-
-	.v-enter-from,
-	.v-leave-to {
-		opacity: 0;
+	.reserved-time-display-calendar-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		margin-bottom: 48px;
 	}
 }
 </style>

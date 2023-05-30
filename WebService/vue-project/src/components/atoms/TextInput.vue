@@ -6,7 +6,7 @@
 defineProps({
 	modelValue: {
 		require: false,
-		type: String,
+		type: [String, null],
 		default: '',
 	},
 });

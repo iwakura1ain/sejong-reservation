@@ -1,26 +1,27 @@
 <template>
-	<div class="room-card">
+	<div class="room-card" :class="{ selected: selected }">
 		<div class="info-container">
-			<img class="room-img" :src="contents.roomImg" alt="회의실 사진" />
+			<img class="room-img" :src="contents.img" alt="회의실 사진" />
 			<div>
-				<span class="building">{{ contents.buildingName }}</span>
-				<span class="room">{{ contents.roomName }}</span>
+				<span class="room-address">{{
+					`${contents.address1} ${contents.address2}`
+				}}</span>
+				<!-- <span class="room-address2">{{ contents.address2 }}</span> -->
+				<span class="room-name">{{ contents.name }}</span>
 				<div class="max-user">
 					<img class="icon" :src="groupIcon" alt="최대 수용인원" />
-					<span class="value">{{ contents.maxUser }}명</span>
+					<span class="value">{{ contents.maxUsers }}명</span>
 				</div>
 				<div class="opening-hour">
 					<img class="icon" :src="clockIcon" alt="개방시간" />
-					<span class="value"
-						>{{ contents.openingHour[0] }} ─ {{ contents.openingHour[1] }}</span
-					>
+					<span class="value">
+						{{ contents.time.open }}
+						─ {{ contents.time.close }}
+					</span>
 				</div>
-				<div class="btns">
-					<filled-button color="white" style="margin-left: 0">
-						자세히보기
-					</filled-button>
-					<filled-button @click="selectRoom">선택</filled-button>
-				</div>
+				<filled-button class="select-room-btn" @click="selectRoom">
+					선택
+				</filled-button>
 			</div>
 		</div>
 		<div class="reservation-viewer">
@@ -39,12 +40,16 @@ const props = defineProps({
 		required: false,
 		type: [Object, null],
 	},
+	selected: {
+		required: false,
+		type: Boolean,
+		default: false,
+	},
 });
 
 const emit = defineEmits(['update-selected-room']);
 
 function selectRoom() {
-	console.log('[RoomCard] 방 선택 : ', props.contents.id);
 	emit('update-selected-room', props.contents.id);
 }
 </script>
@@ -63,10 +68,12 @@ function selectRoom() {
 
 	.info-container {
 		display: flex;
+		align-items: flex-end;
 		.room-img {
 			width: 192px;
 			height: 192px;
 			border-radius: $box-radius;
+			object-fit: cover;
 		}
 
 		> div {
@@ -83,11 +90,11 @@ function selectRoom() {
 				margin-right: 8px;
 			}
 
-			.building {
+			.room-address {
 				display: block;
 				font-weight: bold;
 			}
-			.room {
+			.room-name {
 				display: block;
 				font-size: 1.6rem;
 				padding: 12px 0;
@@ -101,7 +108,20 @@ function selectRoom() {
 				display: flex;
 				align-items: center;
 			}
+
+			.select-room-btn {
+				text-align: center;
+				margin: 0;
+				margin-top: 8px;
+			}
 		}
+	}
+}
+
+.room-card.selected {
+	border: 2px solid $sejong-red;
+	.info-container {
+		filter: opacity(50%);
 	}
 }
 
@@ -112,14 +132,19 @@ function selectRoom() {
 		align-items: center;
 		width: 100%;
 		margin: 12px 0;
+		// margin: 8px;
+		padding: 12px;
 		border: 2px solid white;
 		.info-container {
 			flex-direction: column;
 			align-items: center;
 			.room-img {
-				width: 160px;
-				height: 160px;
+				width: 120px;
+				height: 80px;
 				margin-bottom: 24px;
+			}
+			> div {
+				padding: 0;
 			}
 		}
 	}

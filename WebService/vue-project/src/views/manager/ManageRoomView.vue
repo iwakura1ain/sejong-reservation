@@ -1,7 +1,12 @@
 <template>
-	<div id="manage-room-view">관리기능 회의실 관리 뷰</div>
+	<div id="manage-room-view">
+		<manage-tool-header name="회의실 관리" />
+	</div>
 </template>
 
-<script setup></script>
+<script setup>
+import ManageToolHeader from '@/layouts/Manage/ManageToolHeader.vue';
+import SectionHeader from '@/components/atoms/SectionHeader.vue';
+</script>
 
 <style lang="scss" scoped></style>

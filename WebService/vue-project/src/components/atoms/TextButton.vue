@@ -13,7 +13,7 @@
 		type: String,
 		default: 'red',
 		validator(value) {
-			return ['red', 'white'].includes(value);
+			return ['red', 'white', 'disabled'].includes(value);
 		},
 	},
 });
@@ -54,5 +54,14 @@
 	// &:active {
 	// 	background-color: $white-50;
 	// }
+}
+
+.disabled {
+	color: lightgrey;
+	// color: lightgrey;
+	cursor: not-allowed;
+	&:active {
+		transform: none;
+	}
 }
 </style>
