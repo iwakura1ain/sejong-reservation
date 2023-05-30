@@ -120,14 +120,18 @@
 				/>
 			</div>
 			<div class="reservation-card-container">
-				<reservation-card
-					v-for="item in reservationList.slice().reverse()"
-					:key="item.id"
-					:rsv-data="item"
-					:room-data="fetchedRoomStore.getById(item.roomId)"
-					:user-name="userInfoStore.get().name"
-					@click="goDetailPage(item.id, item.reservationType)"
-				/>
+				<template v-if="reservationList.length > 0">
+					<reservation-card
+						v-for="item in reservationList.slice().reverse()"
+						:key="item.id"
+						:rsv-data="item"
+						:room-data="fetchedRoomStore.getById(item.roomId)"
+						:user-name="userInfoStore.get().name"
+						@click="goDetailPage(item.id, item.reservationType)"
+				/></template>
+				<template v-else>
+					<empty-sign />
+				</template>
 			</div>
 		</div>
 	</div>
@@ -136,6 +140,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import EmptySign from '@/components/atoms/EmptySign.vue';
 import SectionHeader from '@/components/atoms/SectionHeader.vue';
 import ReservationCard from '@/components/atoms/ReservationCard.vue';
 import MultiCalendar from '@/components/MultiCalendar.vue';
