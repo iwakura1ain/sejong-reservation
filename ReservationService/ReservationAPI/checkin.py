@@ -11,6 +11,8 @@ from datetime import date, time, datetime
 from config import model_config, api_config, MINIMIZED_COLS
 from service import Service
 
+import json
+
 from utils import (
     serialize,
     is_valid_token, is_admin, is_authorized,
@@ -25,7 +27,7 @@ CHECK_IN = Namespace(
     prefix="/check-in"
 )
 
-REGISTERED_ROOMS = {}
+#REGISTERED_ROOMS = {}
 
 
 @CHECK_IN.route("/<int:room_id>/register")
@@ -42,35 +44,48 @@ class RegisterCheckIn(Resource, Service):
 
     @protected()
     def get(self, room_id):
-        if not is_admin(self.auth_info):
+        try:
+            if not is_admin(self.auth_info):
+                return {
+                    "status": False,
+                    "msg": "user not authorized"
+                }, 400
+
+            room = self.query_api(
+                "get_rooms_info", "get",
+                headers=request.headers,
+                request_params={"id": room_id}
+            )
+            if room is None:
+                return {
+                    "status": False,
+                    "msg": "no room found"
+                }, 400
+
+            room_hash = hashlib.sha256(str(room).encode('utf-8')).hexdigest()
+            room_location_hash = hashlib.sha256(
+                str(request.remote_addr + room_hash).encode("utf-8")
+            ).hexdigest()
+
+            res = self.query_api(
+                "patch_rooms_info", "patch",
+                headers=request.headers,
+                request_params={"id": room_id},
+                body=json.dumps({"location_hash": room_location_hash})
+            )
+            if res.get["status"]:
+                return {
+                    "status": True,
+                    "msg": "room registered",
+                    "room_hash": room_hash
+                }, 200
+
+        except Exception:
             return {
                 "status": False,
-                "msg": "user not authorized"
-            }, 400
-        
-        room = self.query_api(
-            "get_rooms_info", "get",
-            headers=request.headers,
-            request_params={"id": room_id}
-        )
-        if room is None:
-            return {
-                "status": False,
-                "msg": "no room found"
-            }, 400
-        
-        room_hash = hashlib.sha256(str(room).encode('utf-8')).hexdigest()
-        room_location_hash = hashlib.sha256(
-            str(request.remote_addr + room_hash).encode("utf-8")
-        ).hexdigest()
-        REGISTERED_ROOMS[room_id] = room_location_hash
-        
-        return {
-            "status": True,
-            "msg": "room registered",
-            "room_hash": room_hash
-        }, 200
-    
+                "msg": "room register failed"
+            }, 200
+
 
 @CHECK_IN.route("/<int:room_id>")
 class CheckIn(Resource, Service):
@@ -107,7 +122,6 @@ class CheckIn(Resource, Service):
 
         return res
 
-
     @staticmethod
     def validate(data):
         code = data.get("reservation_code")
@@ -123,9 +137,14 @@ class CheckIn(Resource, Service):
             valid["room_hash"] = room_hash
         else:
             invalid["room_hash"] = room_hash
-        
-        
+                
         return valid, invalid
+
+    @staticmethod
+    def get_location_hash(reservation_code, room_hash):
+        room_location_hash = hashlib.sha256(
+            str(request.remote_addr + room_hash).encode("utf-8")
+        ).hexdigest()
             
 
     # get reservation at current time
@@ -181,31 +200,31 @@ class CheckIn(Resource, Service):
                     headers=request.headers,
                     request_params={"id": room_id}
                 )
-                
                 if "status" not in room.keys() or not room["status"]:
                     return {
                         "status": False,
                         "msg": "Invalid room ID"
                     }, 400
 
-                res = self.get_current_reservation(conn, Reservation, room_id)
-                if res is None:
+                reservation = self.get_current_reservation(
+                    conn, Reservation, room_id
+                )
+                if reservation is None:
                     return {
                         "status": False,
                         "msg": "no reservation for current time"
                     }, 400
-                
-                reservation_code = valid["reservation_code"]
-                room_hash = valid["room_hash"]
-                room_location_hash = hashlib.sha256(
-                    str(request.remote_addr + room_hash).encode("utf-8")
-                ).hexdigest()
 
-                if (res["reservation_code"] == reservation_code
-                    and REGISTERED_ROOMS.get(room_id) == room_location_hash):
+                reservation_code = valid["reservation_code"]
+                room_location_hash = self.get_location_hash(
+                    valid["reservation_code"], valid["room_hash"]
+                )
+
+                if (reservation["reservation_code"] == reservation_code
+                    and room["location_hash"] == room_location_hash):
                     conn.execute(
                         update(Reservation)
-                        .where(Reservation.id == res["id"])
+                        .where(Reservation.id == reservation["id"])
                         .values(room_used=1)
                     )
                     
