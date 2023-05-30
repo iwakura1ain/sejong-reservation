@@ -35,7 +35,7 @@ export const DEPT_TYPE = {
 
 // 백엔드로 요청 넣을 베이스 URL
 // const SERVICE_IP = localStorage.getItem('SEJONG_RESERVATION_SERVICE_IP');
-const SERVICE_IP = "http://182.221.64.162"
+const SERVICE_IP = "182.221.64.162"
 const SERVICE_PORT = "8080"
 export const BASE_URL = {
 	// TODO: 실제로 배포하게 되면 아래 속성들을 사용합니다.

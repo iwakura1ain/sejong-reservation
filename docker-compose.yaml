@@ -77,7 +77,16 @@ services:
     environment:
       TZ: Asia/Seoul
     ports:
-      - "9999:8080"
+     - "9999:8080"
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    ports:
+      - "9443:9443"
+      volumes:
+        - portainer-data:/data
+        - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
 
   dbservice:
     image: mariadb:11.0-rc-jammy
@@ -110,3 +119,6 @@ services:
       - managementservice
       - alertservice
       - dbservice
+
+volumes:
+    portainer-data:
