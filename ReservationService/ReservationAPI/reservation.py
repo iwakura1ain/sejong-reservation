@@ -280,6 +280,126 @@ class ReservationList(Resource, Service):
                 "msg": "Reservation failed"
             }, 500
 
+@ns.route("/check")
+class ReservationCheck(Resource, Service):
+    def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, passing arguments to their respective initialization functions.
+        """
+        Service.__init__(
+            self, model_config=model_config, api_config=api_config
+        )
+        Resource.__init__(self, *args, **kwargs)
+
+        self.auth_info = None
+
+    @staticmethod
+    def validate_with_members(model, data):
+        # validate model
+        valid, invalid = model.validate(data, exclude=["members"])
+
+        # and validate members data
+        if not validate_members(valid["members"]):
+            invalid["members"] = valid["members"]
+        else:
+            valid["members"] = json.dumps(valid["members"])
+
+        return valid, invalid
+
+
+    @protected()
+    def post(self):
+        """
+        This function creates a new reservation and checks for conflicts and constraints before
+        inserting it into the database.
+
+        :return: a JSON object with a "status" key and a corresponding boolean value, as well as a "msg"
+        key with a corresponding string value. The HTTP status code is also included in the return
+        statement. If the reservation is successfully created, the function also includes a
+        "reservation" key with a corresponding dictionary value containing information about the new
+        reservation.
+        """
+
+        try:    
+            reservations = request.json.get("reservations", [])
+            if len(reservations) == 0:
+                return {
+                    "status": False,
+                    "msg": "Empty reservation received"
+                }, 400
+            
+            valid_reservations, invalid_reservaitons = [], []
+            with self.query_model("Reservation") as (conn, Reservation):
+                for reservation in reservations:
+                    # # validate model
+                    valid, invalid = self.validate_with_members(Reservation, reservation)
+                    if invalid != {}:
+                        return {
+                            "status": False,
+                            "msg": "Invalid reservation",
+                            "invalid": invalid
+                        }, 400
+                    
+                    # check if logged in user is same as reservation creator
+                    if self.auth_info["id"] != valid["creator_id"]:
+                        return {
+                            "status": False,
+                            "msg": "cannot create reservation for another user"
+                        }, 400
+
+                    # check reservation date
+                    reservation_date = valid["reservation_date"]
+                    if not check_date_constraints(self.auth_info["type"], reservation_date):
+                        return {
+                            "status": False,
+                            "msg": "User cannot reserve that far into future"
+                        }, 400
+
+                    # check room exists
+                    room = self.query_api(
+                        "get_rooms_info", "get",
+                        headers=request.headers,
+                        request_params={"id": valid["room_id"]}
+                    )
+                    if not room.get("status"):
+                        return {
+                            "status": False,
+                            "msg": "Invalid room ID"
+                        }, 400
+
+                    if not check_start_end_time(valid, room["room"]):
+                        return {
+                            "status": False,
+                            "msg": "reservation not in room open hours"
+                        }, 400
+
+                    # check time conflict
+                    if check_time_conflict(valid, connection=conn, model=Reservation):
+                        # insert into invalid reservation list
+                        invalid_reservaitons.append(valid)
+                    else:
+                        valid_reservations.append(valid)
+
+                if len(invalid_reservaitons) > 0:
+                    return {
+                        "status": False,
+                        "msg": "Conflict in reservations",
+                        "reservations": [serialize(r) for r in invalid_reservaitons]
+                    }, 400
+
+            return {
+                "status": True,
+                "reservations": valid_reservations,
+            }, 200
+
+        except Exception as e:
+            print(e, flush=True)
+            return {
+                "status": False,
+                "msg": "Reservation failed"
+            }, 500
+
 
 @ns.route("/<int:id>")
 class ReservationByID(Resource, Service):
