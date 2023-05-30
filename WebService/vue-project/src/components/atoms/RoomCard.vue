@@ -132,14 +132,19 @@ function selectRoom() {
 		align-items: center;
 		width: 100%;
 		margin: 12px 0;
+		// margin: 8px;
+		padding: 12px;
 		border: 2px solid white;
 		.info-container {
 			flex-direction: column;
 			align-items: center;
 			.room-img {
-				width: 160px;
-				height: 160px;
+				width: 120px;
+				height: 80px;
 				margin-bottom: 24px;
+			}
+			> div {
+				padding: 0;
 			}
 		}
 	}
