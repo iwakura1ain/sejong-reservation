@@ -224,7 +224,6 @@ router.beforeEach(async (to, from, next) => {
 		if (!resAuthConfirm.status) {
 			console.error(resAuthConfirm);
 		}
-		console.log('3', to.name, res.data);
 
 		// 모든 시련을 이겨냈다면 이제 가려던 길을 갑시다
 		next();

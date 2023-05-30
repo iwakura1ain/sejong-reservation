@@ -16,7 +16,6 @@
 // };
 import axios from 'axios';
 import { BASE_URL } from '@/assets/constants.js';
-import TESTDATA from '@/assets/scripts/requests/TESTDATA.js';
 import convertReservationRes from '@/assets/scripts/requests/responseConverters/convertReservationRes.js';
 import convertRoomRes from '@/assets/scripts/requests/responseConverters/convertRoomRes.js';
 import convertUserRes from '@/assets/scripts/requests/responseConverters/convertUserRes.js';
@@ -123,8 +122,9 @@ const userService = {
 				return res.data;
 			}
 			// 데이터 컨버팅
-			const data = res.data;
-			const converted = convertUserRes(data);
+			const { User, access_token, refresh_token } = res.data;
+			const converted = convertUserRes(User, access_token, refresh_token);
+			console.log(converted);
 			return {
 				status: true,
 				data: converted,
@@ -152,17 +152,15 @@ const userService = {
 						throw new Error(err);
 					}
 				});
-			// 응답 정상여부 확인
-			// if (res.status !== 200 || !res.data) {
-			// 	throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
-			// }
+
+			// 에러났으면 응답 바디 반환
 			if (!res.data.status) {
 				console.error(res.data);
 				return res.data;
 			}
-			// 데이터 컨버팅
-			const data = res.data;
-			const converted = convertUserRes(data);
+
+			// 정상인 경우 데이터 컨버팅, 반환.
+			const converted = convertUserRes(res.data.User);
 			return {
 				status: true,
 				data: converted,
@@ -182,6 +180,7 @@ const userService = {
 					Authorization: `Bearer ${refreshToken}`,
 				},
 			});
+
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -190,11 +189,11 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
+
 			// 액세스토큰 반환
-			const data = res.data;
 			return {
 				status: true,
-				data: data.access_token,
+				data: res.data.access_token,
 			};
 		} catch (err) {
 			console.error(err);
@@ -210,6 +209,7 @@ const userService = {
 					Authorization: `Bearer ${accessToken}`,
 				},
 			});
+
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -245,9 +245,9 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
+
 			// 데이터 컨버팅
-			const data = res.data;
-			const converted = convertUserRes(data);
+			const converted = convertUserRes(res.data);
 			return {
 				status: true,
 				data: converted,
@@ -258,7 +258,45 @@ const userService = {
 		}
 	},
 	// --------------------------------------------------------------------------
-	registerFromExcel: async function () {},
+	registerFromExcel: async function (reqBody, accessToken) {
+		try {
+			console.log(reqBody);
+			// 통신
+			const res = await axios.post(
+				`${BASE_URL.USER_SERVICE}/auth/import-users`,
+				reqBody,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+						'Content-Type': 'multipart/form-data',
+					},
+				},
+			);
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			console.log(res);
+			// 반환
+			return {
+				status: true,
+				data: {
+					accessToken: res.data.access_token,
+					refreshToken: res.data.refresh_token,
+					User: res.data.User,
+				},
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
 	update: async function (id, reqBody, accessToken) {
 		try {
@@ -272,6 +310,7 @@ const userService = {
 					},
 				},
 			);
+
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -280,6 +319,8 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
+
+			// 반환
 			return res.data;
 		} catch (err) {
 			console.error(err);
@@ -294,6 +335,7 @@ const userService = {
 					Authorization: `Bearer ${accessToken}`,
 				},
 			});
+
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -302,9 +344,11 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
+
 			// 반환
 			return {
 				status: true,
+				msg: res.data.msg,
 			};
 		} catch (err) {
 			console.error(err);
@@ -329,12 +373,10 @@ const userService = {
 				return res.data;
 			}
 			// 컨버팅, 반환
-			const data = res.data;
-			const converted = data.map(user => convertUserRes(user));
+			const converted = res.data.Users.map(user => convertUserRes(user));
 			return {
 				status: true,
 				data: converted,
-				msg: 'retrieved',
 			};
 		} catch (err) {
 			console.error(err);
@@ -359,8 +401,7 @@ const userService = {
 				return res.data;
 			}
 			// 컨버팅, 반환
-			const data = res.data;
-			const converted = convertUserRes(data);
+			const converted = convertUserRes(res.data.User);
 			return {
 				status: true,
 				data: converted,
