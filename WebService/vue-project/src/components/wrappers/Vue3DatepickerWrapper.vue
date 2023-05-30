@@ -97,3 +97,16 @@ const datepickerLimit = computed(() => {
 </script>
 
 <style lang="scss" scoped></style>
+
+<style>
+.v3dp__popout,
+.v3dp__body,
+.v3dp__heading {
+	width: 240px !important;
+	margin-right: 0;
+}
+.v3dp__heading__center {
+	width: 160px !important;
+	/* flex: none; */
+}
+</style>

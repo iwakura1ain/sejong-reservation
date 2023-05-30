@@ -4,9 +4,11 @@
 			{{ name }}
 		</section-header>
 		<div class="nav">
-			<text-button @click="goManageReservation">예약 관리</text-button>
-			<text-button @click="goManageUser">사용자 관리</text-button>
-			<text-button @click="goManageRoom">회의실 관리</text-button>
+			<text-button class="btn" @click="goManageReservation"
+				>예약 관리</text-button
+			>
+			<text-button class="btn" @click="goManageUser">사용자 관리</text-button>
+			<text-button class="btn" @click="goManageRoom">회의실 관리</text-button>
 		</div>
 		<section-header style="margin-top: 0; padding-top: 8px"></section-header>
 	</div>
@@ -46,6 +48,12 @@ function goManageRoom() {
 	.nav {
 		display: flex;
 		justify-content: space-around;
+	}
+}
+@media (max-width: 350px) {
+	.nav {
+		align-items: center;
+		flex-direction: column;
 	}
 }
 </style>
