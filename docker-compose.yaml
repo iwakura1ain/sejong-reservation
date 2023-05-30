@@ -3,6 +3,7 @@
 version: "3.9"
 services:
   webservice:
+    image: webservice
     build:
       context: .
       dockerfile: ./WebService/Dockerfile
@@ -11,6 +12,7 @@ services:
       - "80:80"
 
   reservationservice:
+    image: reservationservice
     build:
       context: .
       dockerfile: ./ReservationService/Dockerfile
@@ -24,8 +26,12 @@ services:
       DB_PASSWORD: 1234
     ports:
       - "5000:5000"
+    deploy:
+      mode: replicated
+      replicas: 3
 
   userservice:
+    image: userservice
     build:
       context: .
       dockerfile: ./UserService/Dockerfile
@@ -39,8 +45,12 @@ services:
       DB_PASSWORD: 1234
     ports:
       - "5001:5000"
+    deploy:
+      mode: replicated
+      replicas: 3
 
   managementservice:
+    image: managementservice
     build:
       context: .
       dockerfile: ./ManagementService/Dockerfile
@@ -62,6 +72,7 @@ services:
       - "5002:5000"
 
   alertservice:
+    image: alertservice
     build:
       context: .
       dockerfile: ./AlertService/Dockerfile
@@ -83,9 +94,9 @@ services:
     image: portainer/portainer-ce:latest
     ports:
       - "9443:9443"
-      volumes:
-        - portainer-data:/data
-        - /var/run/docker.sock:/var/run/docker.sock
+    volumes:
+      - portainer-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
   dbservice:
