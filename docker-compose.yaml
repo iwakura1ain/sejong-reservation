@@ -3,6 +3,7 @@
 version: "3.9"
 services:
   webservice:
+    image: webservice
     build:
       context: .
       dockerfile: ./WebService/Dockerfile
@@ -11,6 +12,7 @@ services:
       - "80:80"
 
   reservationservice:
+    image: reservationservice
     build:
       context: .
       dockerfile: ./ReservationService/Dockerfile
@@ -26,6 +28,7 @@ services:
       - "5000:5000"
 
   userservice:
+    image: userservice
     build:
       context: .
       dockerfile: ./UserService/Dockerfile
@@ -41,6 +44,7 @@ services:
       - "5001:5000"
 
   managementservice:
+    image: managementservice
     build:
       context: .
       dockerfile: ./ManagementService/Dockerfile
@@ -62,6 +66,7 @@ services:
       - "5002:5000"
 
   alertservice:
+    image: alertservice
     build:
       context: .
       dockerfile: ./AlertService/Dockerfile
@@ -99,6 +104,10 @@ services:
       - ./DBService/maria-init.sql:/docker-entrypoint-initdb.d/maria-init.sql
     ports:
       - "3306:3306"
+    networks:
+      default:
+        aliases:
+          - dbservice
 
   gatewayservice:
     image: nginx:latest
