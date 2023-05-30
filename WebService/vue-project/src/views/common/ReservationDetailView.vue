@@ -426,7 +426,7 @@ async function init() {
 		// -- 로그인한 사용자가 예약자 본인이 아니고 관리자라면
 		else if (userInfoStore.get().type === USER_TYPE.ADMIN) {
 			const id = reservationCommonField.value.creatorId;
-			const res = await userService.getUserById(id, accessToken);
+			const res = await userService.getById(id, accessToken);
 			console.log(res);
 			if (!res.status) {
 				console.error(res);

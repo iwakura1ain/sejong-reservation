@@ -1,13 +1,10 @@
 // api(백엔드)로 요청하고 받아와서 프론트엔드에 맞게 변환하는 코드입니다.
-
 // 하는 일 (자세한 내용은 ./README.md 참고)
 // 1. 데이터를 요청하고 받습니다.
 // 2. 받은 데이터를 './responseConverters'폴더 안의 컨버터로 변환합니다.
 // 3. { data:'변환된 데이터', msg:'string' } 의 형식으로 callee에 리턴합니다.
-
 // 그 외 작업은 이 코드를 호출한 그곳에서 직접합니다.
 // (데이터 본질적 내용의 변경, 상태 변경 등은 여기서 하지 말 것)
-
 // -----------------------------------
 // 참고 : constants.js의 BASE_URL객체
 // export const BASE_URL = {
@@ -17,16 +14,12 @@
 // 	ALERT_SERVICE: 'http://127.0.0.1/alert',
 // 	// WEB_SERVICE : "http://127.0.0.1/webservice",
 // };
-
 import axios from 'axios';
 import { BASE_URL } from '@/assets/constants.js';
-
 import TESTDATA from '@/assets/scripts/requests/TESTDATA.js';
-
 import convertReservationRes from '@/assets/scripts/requests/responseConverters/convertReservationRes.js';
 import convertRoomRes from '@/assets/scripts/requests/responseConverters/convertRoomRes.js';
 import convertUserRes from '@/assets/scripts/requests/responseConverters/convertUserRes.js';
-
 ////////////////////////////////////////////
 // -------------------------------------- //
 // -------------------------------------- //
@@ -59,7 +52,6 @@ const adminService = {
 		try {
 			// 통신
 			const res = await axios.get(`${BASE_URL.ADMIN_SERVICE}/admin/rooms`);
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -68,18 +60,14 @@ const adminService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 받아온 회의실 데이터 프론트엔드 포맷으로 컨버팅
 			const data = res.data; // response body
-
 			const converted = data.allRooms.map(room => convertRoomRes(room));
-
 			// 회의실 각각의 이미지 다운로드받아서 converted에 주입
 			for (let room of converted) {
 				const _img = this.downloadRoomImage(room.id);
 				room.img = _img;
 			}
-
 			// 반환
 			return {
 				status: true,
@@ -91,7 +79,6 @@ const adminService = {
 		}
 	},
 };
-
 ////////////////////////////////////////////
 // -------------------------------------- //
 // -------------------------------------- //
@@ -127,7 +114,6 @@ const userService = {
 					}
 				}
 			*/
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -136,7 +122,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 데이터 컨버팅
 			const data = res.data;
 			const converted = convertUserRes(data);
@@ -167,7 +152,6 @@ const userService = {
 						throw new Error(err);
 					}
 				});
-
 			// 응답 정상여부 확인
 			// if (res.status !== 200 || !res.data) {
 			// 	throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -176,7 +160,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 데이터 컨버팅
 			const data = res.data;
 			const converted = convertUserRes(data);
@@ -199,7 +182,6 @@ const userService = {
 					Authorization: `Bearer ${refreshToken}`,
 				},
 			});
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -208,7 +190,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 액세스토큰 반환
 			const data = res.data;
 			return {
@@ -229,7 +210,6 @@ const userService = {
 					Authorization: `Bearer ${accessToken}`,
 				},
 			});
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -238,7 +218,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 반환
 			return {
 				status: true,
@@ -258,7 +237,6 @@ const userService = {
 				`${BASE_URL.USER_SERVICE}/auth/register`,
 				reqBody,
 			);
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -267,7 +245,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 데이터 컨버팅
 			const data = res.data;
 			const converted = convertUserRes(data);
@@ -295,7 +272,6 @@ const userService = {
 					},
 				},
 			);
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -304,7 +280,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			return res.data;
 		} catch (err) {
 			console.error(err);
@@ -319,7 +294,6 @@ const userService = {
 					Authorization: `Bearer ${accessToken}`,
 				},
 			});
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -328,7 +302,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 반환
 			return {
 				status: true,
@@ -347,7 +320,6 @@ const userService = {
 					Authorization: `Bearer ${accessToken}`,
 				},
 			});
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -356,7 +328,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 컨버팅, 반환
 			const data = res.data;
 			const converted = data.map(user => convertUserRes(user));
@@ -379,7 +350,6 @@ const userService = {
 					Authorization: `Bearer ${accessToken}`,
 				},
 			});
-
 			// 응답 정상여부 확인
 			if (res.status !== 200 || !res.data) {
 				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
@@ -388,7 +358,6 @@ const userService = {
 				console.error(res.data);
 				return res.data;
 			}
-
 			// 컨버팅, 반환
 			const data = res.data;
 			const converted = convertUserRes(data);
@@ -404,7 +373,6 @@ const userService = {
 	},
 	// --------------------------------------------------------------------------
 };
-
 ////////////////////////////////////////////
 // -------------------------------------- //
 // -------------------------------------- //
@@ -438,7 +406,6 @@ const reservationService = {
 		// 	creator : String
 		//	reservationType : String(12),
 		// }
-
 		try {
 			// options객체 분석 & 요청URL만들기
 			let reqUrl = `${BASE_URL.RESERVATION_SERVICE}/reservation`;
@@ -460,14 +427,12 @@ const reservationService = {
 			} else if (options.reservationType) {
 				queryStr += `&reservation_type=${options.reservationType}`;
 			}
-
 			// BASE URL과 쿼리스트링 결합
 			if (queryStr !== '') {
 				queryStr = queryStr.slice(1);
 				queryStr = '?' + queryStr;
 			}
 			reqUrl = reqUrl + queryStr;
-
 			// 통신
 			// res schema = {
 			// 	status : int, // axios의 http status code
@@ -503,24 +468,20 @@ const reservationService = {
 					// 	"msg": "Get reservation list failed"
 					// }
 				});
-
 			// status code 400인 경우 바디 반환.
 			const data = res.data;
 			if (!data.status) {
 				return data;
 			}
-
 			// 데이터 컨버팅. 반환.
 			const fieldNum =
 				data.reservations.length === 0
 					? 0
 					: Object.keys(data.reservations[0]).length;
 			const minmaxType = fieldNum <= 8 ? 'min' : 'max';
-
 			const converted = data.reservations.map(item =>
 				convertReservationRes(item, minmaxType),
 			);
-
 			return {
 				status: true,
 				data: converted,
@@ -563,12 +524,10 @@ const reservationService = {
 					// 	"msg": "Reservation not found"
 					// }
 				});
-
 			const data = res.data;
 			if (!data.status) {
 				return data;
 			}
-
 			// convert raw data to frontend-format data
 			const converted = convertReservationRes(data.reservation, 'max');
 			return {
@@ -591,7 +550,6 @@ const reservationService = {
 				console.error(resGet.data);
 				return resGet.data;
 			}
-
 			// 각 최소정보 예약객체의 id로 최대정보 예약객체 불러오기
 			const resData = [];
 			const getByIdPromises = resGet.data.map(item =>
@@ -606,7 +564,6 @@ const reservationService = {
 					resData.push(res.data);
 				}
 			});
-
 			// 내가 생성한 예약의 최대정보 예약객체 리스트 반환
 			return {
 				status: true,
@@ -621,7 +578,6 @@ const reservationService = {
 	// --------------------------------------------------------------------------
 	create: async function (reqBody, accessToken) {
 		try {
-			console.log(reqBody);
 			// 통신
 			const res = await axios
 				.post(`${BASE_URL.RESERVATION_SERVICE}/reservation/check`, reqBody, {
@@ -644,36 +600,82 @@ const reservationService = {
 					// 	reservations : [],
 					// 	msg: 'Conflict in reservations',
 					// }
-
 					// 'Invalid reservation' : 폼데이터 검증 통과못함
 					// {
 					// 	status: false,
 					// 	invalid: { },
 					// 	msg: 'Invalid reservation',
 					// }
-
 					// "reservation not in room open hours" : 방 사용가능시간 밖 예약.
 					// "Reservation failed" : 유효하지 않은 사용자id일 때
 					// "Invalid room ID" : 회의실 정보가 잘못된 경우
 					// "User cannot reserve that far into future" : 사용자 권한에 맞지 않은 예약
 					// "Unauthenticated" : invalid한 토큰
 				});
-
+			const data = res.data;
+			if (!data.status) {
+				return data;
+			}
+			// 응답데이터-->프론트엔드 데이터 컨버팅, 반환.
+			const converted = data.reservations.map(item =>
+				convertReservationRes(item, 'max'),
+			);
+			return {
+				status: true,
+				data: converted,
+				msg: '',
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
+	// --------------------------------------------------------------------------
+	checkIfReservationOk: async function (reqBody, accessToken) {
+		try {
+			// 통신
+			const res = await axios
+				.post(`${BASE_URL.RESERVATION_SERVICE}/reservation/check`, reqBody, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				})
+				.catch(function (err) {
+					console.error(err);
+					if (err.response.status !== 400) {
+						throw new Error(err);
+					} else {
+						return err.response;
+					}
+					// < err.response.data.msg 내용 >
+					//
+					// 'Conflict in reservations' : 예약 충돌
+					// {
+					// 	status: false,
+					// 	reservations : [],
+					// 	msg: 'Conflict in reservations',
+					// }
+					// 'Invalid reservation' : 폼데이터 검증 통과못함
+					// {
+					// 	status: false,
+					// 	invalid: { },
+					// 	msg: 'Invalid reservation',
+					// }
+					// "reservation not in room open hours" : 방 사용가능시간 밖 예약.
+					// "Reservation failed" : 유효하지 않은 사용자id일 때
+					// "Invalid room ID" : 회의실 정보가 잘못된 경우
+					// "User cannot reserve that far into future" : 사용자 권한에 맞지 않은 예약
+					// "Unauthenticated" : invalid한 토큰
+				});
 			const data = res.data;
 			console.log(res);
 			if (!data.status) {
 				return data;
 			}
 
-			// 응답데이터-->프론트엔드 데이터 컨버팅, 반환.
-			console.log(data);
-			const converted = data.reservations.map(item =>
-				convertReservationRes(item, 'max'),
-			);
-
 			return {
 				status: true,
-				data: converted,
+				data: [],
 				msg: '',
 			};
 		} catch (err) {
@@ -706,28 +708,23 @@ const reservationService = {
 					// 	reservations : [],
 					// 	msg: 'Conflict in reservations',
 					// }
-
 					// 'Invalid reservation' : 폼데이터 검증 통과못함
 					// {
 					// 	status: false,
 					// 	invalid: { },
 					// 	msg: 'Invalid reservation',
 					// }
-
 					// "Reservation edit failed" : 유효하지 않은 사용자id일 때
 					// "Invalid room ID" : 회의실 정보가 잘못된 경우
 					// "User cannot reserve that far into future" : 사용자 권한에 맞지 않은 예약
 					// "Unauthenticated" : invalid한 토큰
 				});
-
 			const data = res.data;
 			if (!data.status) {
 				return data;
 			}
-
 			// 응답데이터-->프론트엔드 데이터 컨버팅, 반환.
 			const converted = convertReservationRes(data.reservation, 'max');
-
 			return {
 				status: true,
 				data: converted,
@@ -761,14 +758,11 @@ const reservationService = {
 					// "Unauthorized" 어드민, 예약자가 아닌데 삭제시도
 					// "Server error" 서버 오류
 				});
-
 			const data = res.data;
 			if (!data.status) {
 				return data;
 			}
-
 			// 반환
-
 			return {
 				status: true,
 				data: null,
@@ -780,81 +774,8 @@ const reservationService = {
 		}
 	},
 	// ---------------------------
-	registerRoom: async function (id, accessToken) {
-		try {
-			// 통신
-			const res = await axios
-				.get(`${BASE_URL.RESERVATION_SERVICE}/check-in/${id}/register`, {
-					headers: {
-						Authorization: `Bearer ${accessToken}`,
-					},
-				})
-				.catch(function (err) {
-					console.error(err);
-					if (err.response.status !== 400) {
-						throw new Error(err);
-					} else {
-						return err.response;
-					}
-				});
-
-			const data = res.data;
-			
-			// 반환
-			return data.room_hash;
-		} catch (err) {
-			console.error(err);
-			throw new Error(err, { cause: err });
-		}
-	},
 	// ---------------------------
-	checkin: async function (id, reqBody){
-		try {
-			// 통신
-			// console.log("id:", id, "id type:",typeof(id));
-			// console.log("id.id:", id.id, "id.id type:",typeof(id.id));
-			// console.log("reqBody:", id.reqBody, "reqBody type:", typeof(id.reqBody));
-
-			const res = await axios
-				.post(`${BASE_URL.RESERVATION_SERVICE}/check-in/${id.id}`, id.reqBody)
-				.catch(function (err) {
-					console.error(err);
-					if (err.response.status !== 400) {
-						throw new Error(err);
-					} else {
-						return err.response;
-					}
-				});
-
-			const data = res.data;
-			// console.log(data);
-			// if(!data.status) {
-			// 	return data
-			// }
-
-			// 반환
-			return {
-				status: true,
-				// data: null,
-				msg: data.msg,
-			};
-		} catch (err) {
-			console.error(err);
-			throw new Error(err, { cause: err });
-		}
-	},
-	// test
-	TEST_GET_REGULAR_MAXIMIZED_RSV: function ({ reservationType }) {
-		const a = TESTDATA.reservations_max_2_regular;
-		const converted = a.map(item => convertReservationRes(item, 'max'));
-		return {
-			status: true,
-			data: converted,
-			msg: '',
-		};
-	},
 };
-
 ////////////////////////////////////////////
 // -------------------------------------- //
 // -------------------------------------- //
@@ -864,7 +785,6 @@ const reservationService = {
 const alertService = {
 	// empty
 };
-
 ////////////////////////////////////////////
 // -------------------------------------- //
 // -------------------------------------- //
