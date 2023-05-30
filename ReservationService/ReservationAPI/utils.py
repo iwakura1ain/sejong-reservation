@@ -174,7 +174,7 @@ def check_date_constraints(user_type, reservation_date):
 
 def create_confirmation_email(
     reservation, room, creator, sender,
-    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다.",
+    title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다. ",
     template_name="template.txt"
 ):
     """
@@ -188,6 +188,13 @@ def create_confirmation_email(
 
     # set default text for missing info
     DEFAULT = "(내용없음)"
+
+    # email title
+    if "reservation_type" in reservation.keys():
+        if reservation["reservation_type"] != None:
+            title += "(정기예약)"
+        else:
+            title += "(단건예약)"
 
     # email receiver
     receivers = [creator["email"]]
