@@ -406,7 +406,8 @@ class ConferenceRoomById(Resource, Service):
                 }, 200
 
         # error
-        except Exception as e:
+        except OSError as e:
+            print("update room failed",e, flush=True)
             return {
                 "status": False,
                 "msg": "Room Update Failed"
@@ -455,10 +456,17 @@ class ConferenceRoomImage(Resource, Service):
     def post(self, id):
         max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
         uploaded_image = request.files['image']
-    
         filename = secure_filename(uploaded_image.filename)
-        joined_path = os.path.join(filepath, filename)
+        filepath_for_room = os.path.join(filepath, str(id))
+
+        # make directory for image saving for room by id if not exists
+        if not os.path.exists(filepath_for_room):
+            os.mkdir(filepath_for_room)
         
+        joined_path = os.path.join(filepath_for_room, filename)
+        # print('filepath_for_room:', filepath_for_room, flush=True)
+        # print('joined_path:', joined_path, flush=True)
+
         # check user if has authorization.
         auth_info = self.query_api(
             "jwt_status", "get", headers=request.headers
@@ -511,6 +519,8 @@ class ConferenceRoomImage(Resource, Service):
 
                 # save image
                 uploaded_image.save(joined_path)
+                print('Saved file:', joined_path, flush=True)
+
 
                 # insert image
                 return {
@@ -520,7 +530,8 @@ class ConferenceRoomImage(Resource, Service):
                     # "uploadedPath": joined_path
                 }, 200
             
-        except Exception as e:
+        except OSError as e:
+            print('OSERR', e, flush=True)
             return {
                 "status": False,
                 "msg": "Uploading image failed"
