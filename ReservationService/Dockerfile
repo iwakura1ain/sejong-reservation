@@ -14,7 +14,7 @@ RUN apt install -y libmariadb3 libmariadb-dev cron
 
 COPY ./ReservationService/ReservationAPI/requirements.txt /ReservationAPI/requirements.txt
 
-RUN pip install --upgrade pip
+#RUN pip install --upgrade pip
 
 RUN pip install --upgrade --no-cache-dir -r requirements.txt
 
@@ -35,7 +35,9 @@ RUN chmod 0644 /etc/cron.d/cronfile
 #RUN cron &
 
 #CMD ["python3","app.py"]
-RUN chmod 777 start.sh 
+RUN chmod 777 start.sh
+
+HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
 
 CMD ./start.sh
 

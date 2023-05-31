@@ -435,12 +435,12 @@ class UserImport(Service, Resource):
 
     @jwt_required()
     @admin_only()
-    def post(self):
-        f = request.files['file']
-
+    def post(self):        
+        f = request.files.get('file')
+        
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
-        if f.filename == '':
+        if f is None or f.filename == '':
             return {
                 "status": False,
                 "msg": "no file selected"
@@ -455,25 +455,49 @@ class UserImport(Service, Resource):
                 "status": False,
                 "msg": "invalid filetype"
             }, 200
+
         try:
             with self.query_model("User") as (conn, User):
                 users_sheet = load_workbook(filename=BytesIO(f)).active
-                schema = User.columns
 
+                schema = []
                 insert_values = []
-                for row in users_sheet.iter_rows(min_row=2, min_col=1, max_col=8):
+                for i, row in enumerate(users_sheet.iter_rows(min_row=1, min_col=1, max_col=7)):
+                    # set excel file column keys
+                    if i == 0:
+                        schema = [v.value for v in row]
+                        continue
+                    
+                    # break if end of file
+                    if not any([r.value for r in row]):
+                        break
+
+                    # get values
+                    current = {}
+                    for k, v in zip(schema, row):
+                        # get python type of col
+                        which_type = User.columns.get("User."+k).type.python_type
+
+                        # format float to int for numbers in excel file
+                        v.value = int(v.value) if type(v.value) is float else v.value
+                        
+                        # convert to proper type
+                        current[k] = v.value if which_type is None else which_type(v.value)
+
                     # create new user dict
                     new_user, invalid = User.validate(
-                        {key: val.value for key, val in zip(schema, row)},
+                        current,
                         optional=False,
                     )
+
+                    print("validated: ", new_user, invalid, flush=True)
 
                     #check excel values
                     if len(invalid) != 0:
                         return {
                             "status": False,
                             "msg": "invalid value",
-                            "invalid": row
+                            "invalid": invalid
                         }, 200
 
                     # check if user in db 
@@ -483,8 +507,9 @@ class UserImport(Service, Resource):
                     if res is None:
                         new_user["password"] = generate_password_hash(new_user["password"])
                         insert_values.append(new_user)
-
-                # insert new user
+                        print("inserting: ", new_user, flush=True)
+                        
+                # create new user
                 conn.execute(
                     insert(User), insert_values
                 )
@@ -495,8 +520,8 @@ class UserImport(Service, Resource):
                 "imported_count": len(insert_values)
             }, 200
 
-        except Exception as e:
-            print(e, flush=True)
+        except Exception:
+        #    print(e, flush=True)
             return {
                 "status": False,
                 "msg": "error while importing users"
