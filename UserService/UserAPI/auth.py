@@ -510,9 +510,8 @@ class UserImport(Service, Resource):
                         print("inserting: ", new_user, flush=True)
                         
                 # create new user
-                conn.execute(
-                    insert(User), insert_values
-                )
+                if insert_values:
+                    conn.execute(insert(User), insert_values)
 
             return {
                 "status": True,
