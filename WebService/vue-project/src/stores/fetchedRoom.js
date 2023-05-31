@@ -3,10 +3,11 @@ import { reactive } from 'vue';
 export const fetchedRoomStore = reactive({
 	data: [],
 	init: function () {
-		this.data = [];
+		this.data.splice(0);
 	},
 	setAll: function (rooms) {
-		this.data = rooms;
+		this.data.splice(0);
+		rooms.forEach(room => this.data.push(room));
 	},
 	getAll: function () {
 		return this.data;
