@@ -72,7 +72,6 @@ async function fetchReservationsInThreeDays() {
 		}
 
 		reservationList.value = res.data;
-		console.log(reservationList.value);
 	} catch (err) {
 		alert('예약내역을 불러오는 중 문제가 생겼습니다.');
 		console.error(err);

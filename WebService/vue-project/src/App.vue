@@ -66,6 +66,7 @@ async function init() {
 		}
 
 		const accessToken = userTokenStore.getAccessToken();
+
 		await userInfoStore.setFromBackend(accessToken);
 	} catch (err) {
 		const msg = err.msg;

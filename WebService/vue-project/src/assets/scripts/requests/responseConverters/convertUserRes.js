@@ -7,11 +7,15 @@
 // --------------------------------------------
 // 1. 백엔드 응답 데이터 --> 프론트엔드 데이터 Mapping.
 // --------------------------------------------
-export default function convertUserRes(res) {
-	const { id, name, dept, phone, email, type, no_show } = res.User;
+export default function convertUserRes(
+	user,
+	access_token = null,
+	refresh_token = null,
+) {
+	const { id, name, dept, phone, email, type, no_show, created_at } = user;
 	const obj = {
-		accessToken: res.access_token,
-		refreshToken: res.refresh_token,
+		accessToken: access_token,
+		refreshToken: refresh_token,
 		noShow: no_show,
 		id,
 		name: name ? name : '이름 없는 사용자',
@@ -20,7 +24,6 @@ export default function convertUserRes(res) {
 		type,
 		dept,
 	};
-
 	return obj;
 }
 

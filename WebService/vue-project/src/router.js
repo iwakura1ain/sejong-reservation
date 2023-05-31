@@ -31,6 +31,7 @@ import ManageReservationView from '@/views/manager/ManageReservationView.vue';
 import ManageUserView from '@/views/manager/ManageUserView.vue';
 import ManageRoomView from '@/views/manager/ManageRoomView.vue';
 import MakeRoomView from '@/views/manager/MakeRoomView.vue';
+import UpdateRoomView from '@/views/manager/UpdateRoomView.vue';
 
 // 시스템 뷰 (일반사용자도 관리자도 아닌, 특별한 사용자 "system"만 접속가능)
 import CheckNoShowView from '@/views/system/CheckNoShowView.vue';
@@ -142,6 +143,12 @@ const routes = [
 		name: 'MakeRoom',
 		component: MakeRoomView,
 	},
+	{
+		path: '/manage/room/update',
+		name: 'UpdateRoom',
+		component: UpdateRoomView,
+	},
+
 	// system사용자용 뷰
 	// ** system사용자 = 일반사용자도 관리자도 아닌, 특별한 사용자
 	{
@@ -230,7 +237,6 @@ router.beforeEach(async (to, from, next) => {
 		if (!resAuthConfirm.status) {
 			console.error(resAuthConfirm);
 		}
-		console.log('3', to.name, res.data);
 
 		// 모든 시련을 이겨냈다면 이제 가려던 길을 갑시다
 		next();
