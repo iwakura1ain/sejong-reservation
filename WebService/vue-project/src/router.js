@@ -35,6 +35,8 @@ import UpdateRoomView from '@/views/manager/UpdateRoomView.vue';
 
 // 시스템 뷰 (일반사용자도 관리자도 아닌, 특별한 사용자 "system"만 접속가능)
 import CheckNoShowView from '@/views/system/CheckNoShowView.vue';
+// 로그인 필요없음.
+import CheckAttendenceView from '@/views/system/CheckAttendenceView.vue';
 
 // 라우터 설정 ------------------------------------
 const routes = [
@@ -154,6 +156,11 @@ const routes = [
 		name: 'CheckNoShow',
 		component: CheckNoShowView,
 	},
+	{
+		path: '/system/check/attendence/:id',
+		name: 'CheckAttendence',
+		component: CheckAttendenceView
+	},
 ];
 
 // 라우터 객체 생성
@@ -166,7 +173,7 @@ const router = createRouter({
 });
 
 // 네이게이션 가드 설정
-const notRequireLogin = ['Login', 'Register'];
+const notRequireLogin = ['CheckAttendence', 'Login', 'Register'];
 const RequireAdmin = [
 	'ManageMain',
 	'ManageReservation',

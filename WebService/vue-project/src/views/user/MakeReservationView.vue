@@ -256,6 +256,15 @@ function handleGoNextStep() {
 		const isValid = validateDateTime(startDate, defaultTime);
 		if (!isValid) return;
 	} else if (makeRsvFormStore.formState.step === 4) {
+		const topic = makeRsvFormStore.common.topic;
+		if (topic.length > 100) {
+			makeToast(
+				`회의 주제는 최대 100자 입니다.`,
+				'error',
+			);
+			return;
+		}
+
 		const isValid = makeRsvFormStore.checkMeetingInfoFormValid();
 		if (!isValid) {
 			makeToast(

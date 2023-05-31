@@ -73,5 +73,5 @@ CREATE USER 'development'@'%' IDENTIFIED BY '1234';
 GRANT ALL PRIVILEGES ON *.* TO 'development'@'%' IDENTIFIED BY '1234';
 
 INSERT INTO `Room` (`id`, `room_name`, `room_address1`, `room_address2`) VALUES 
-(1, '센834', '대양AI센터', '8층 834호'),
-(2, '센835', '대양AI센터', '8층 835호');
+(1, '센835', '대양AI센터', '8층 835호'),
+(2, '센836', '대양AI센터', '8층 836호');
