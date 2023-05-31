@@ -30,14 +30,14 @@
 			class="btns"
 			style="display: flex; margin-top: 12px"
 		>
-			<!-- <filled-button
+			<filled-button
 				class="select-room-btn"
 				color="white"
 				style="flex: 1; text-align: center"
-				@click="toggleConfirmDelete"
+				@click="registerRoom"
 			>
 				기기등록
-			</filled-button> -->
+			</filled-button>
 			<filled-button
 				class="select-room-btn"
 				color="white"
@@ -94,6 +94,7 @@ import { ref } from 'vue';
 import { userTokenStore } from '@/stores/userToken.js';
 import { loadingStore } from '@/stores/loading.js';
 import { adminService } from '@/assets/scripts/requests/request.js';
+import { attendenceChecker } from '@/assets/scripts/requests/checkinRequest.js';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
 
 const props = defineProps({
@@ -136,6 +137,46 @@ function updateRoom() {
 			roomData: JSON.parse(JSON.stringify(props.contents)),
 		},
 	});
+}
+
+// room_hash 세팅. 방마다 고유한 room_hash를 설정
+async function setRoomHash(id) {
+	try {
+		// room_hash를 가져온다
+		const accessToken = userTokenStore.getAccessToken();
+		const roomHash = await attendenceChecker.registerRoom(id, accessToken);
+
+		console.log('roomhash : ', roomHash);
+		localStorage.setItem('room_hash', roomHash);
+
+		return roomHash;
+	} catch (err) {
+		console.log(err, err.message);
+		makeToast('예상치 못한 오류가 발생했습니다', 'error');
+	}
+}
+async function registerRoom() {
+	try {
+		loadingStore.start();
+		// const accessToken = userTokenStore.getAccessToken();
+		const roomId = props.contents.id;
+		// const res = await attendenceChecker.registerRoom(roomId, accessToken);
+
+		// if (!res.status) {
+		// 	console.error(res);
+		// 	throw new Error(res);
+		// }
+		// console.log(res);
+		makeToast(
+			`이 기기가 ${roomId}번 방(${props.contents.name})의 이용인증용 기기로 등록되었습니다`,
+			'info',
+		);
+	} catch (err) {
+		console.error(err);
+		makeToast('오류가 발생했습니다', 'error');
+	} finally {
+		loadingStore.stop();
+	}
 }
 </script>
 
