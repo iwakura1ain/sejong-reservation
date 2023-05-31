@@ -35,13 +35,141 @@ import convertUserRes from '@/assets/scripts/requests/responseConverters/convert
 const adminService = {
 	getRoom: async function (id) {},
 	// --------------------------------------------------------------------------
-	createRoom: async function (reqBody) {},
+	createRoom: async function (reqBody, accessToken) {
+		try {
+			// 통신
+			const res = await axios.post(
+				`${BASE_URL.ADMIN_SERVICE}/admin/rooms`,
+				reqBody,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				},
+			);
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			const data = res.data; // response body
+			const converted = convertRoomRes(data.created_room);
+			// 반환
+			return {
+				status: true,
+				data: converted,
+				msg: res.data.msg, // 'Room Created'
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
-	updateRoom: async function (id, reqBody) {},
+	updateRoom: async function (id, reqBody, accessToken) {
+		try {
+			// 통신
+			const res = await axios.patch(
+				`${BASE_URL.ADMIN_SERVICE}/admin/rooms/${id}`,
+				reqBody,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				},
+			);
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 반환
+			return {
+				status: true,
+				data: res.data.msg, // 'Room Updated'
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
-	deleteRoom: async function (id) {},
+	deleteRoom: async function (id, accessToken) {
+		try {
+			// 통신
+			const res = await axios.delete(
+				`${BASE_URL.ADMIN_SERVICE}/admin/rooms/${id}`,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				},
+			);
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 반환
+			return {
+				status: true,
+				msg: res.data.msg, // "Room Deleted"
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
-	uploadRoomImage: async function () {},
+	uploadRoomImage: async function (id, reqBody, accessToken) {
+		try {
+			// 통신
+			const res = await axios.post(
+				`${BASE_URL.ADMIN_SERVICE}/admin/rooms/${id}/image`,
+				reqBody,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+						'Content-Type': 'multipart/form-data',
+						'Access-Control-Allow-Origin': '*',
+					},
+				},
+			);
+
+			// 응답 정상여부 확인
+			if (res.status !== 200 || !res.data) {
+				throw new Error(`INVALID_RESPONSE:${res.status}:${res}`);
+			}
+			if (!res.data.status) {
+				console.error(res.data);
+				return res.data;
+			}
+
+			// 반환
+			return {
+				status: true,
+				data: res.data.msg, // 'Image uploaded'
+			};
+		} catch (err) {
+			console.error(err);
+			throw new Error(err, { cause: err });
+		}
+	},
 	// --------------------------------------------------------------------------
 	downloadRoomImage: function (id) {
 		return `${BASE_URL.ADMIN_SERVICE}/admin/rooms/${id}/image`;
@@ -269,6 +397,7 @@ const userService = {
 					headers: {
 						Authorization: `Bearer ${accessToken}`,
 						'Content-Type': 'multipart/form-data',
+						'Access-Control-Allow-Origin': '*',
 					},
 				},
 			);

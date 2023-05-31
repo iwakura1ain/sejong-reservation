@@ -1,6 +1,6 @@
 <template>
 	<div id="make-room-view">
-		<section-header>회의실 생성</section-header>
+		<section-header>회의실 수정</section-header>
 		<div class="form-container">
 			<div class="field-set">
 				<span class="field-label">건물 이름</span>
@@ -65,6 +65,12 @@
 			<div class="field-set">
 				<span class="field-label">회의실 사진</span>
 				<input type="file" @change="uploadFile" class="field-value" />
+				<img
+					v-if="formdata.previousImage && !formdata.image"
+					:src="formdata.previousImage"
+					alt="기존 사진"
+					class="previous-img"
+				/>
 			</div>
 		</div>
 
@@ -73,8 +79,8 @@
 		<div>
 			<filled-button
 				style="padding: 24px 120px; font-size: 1.2rem"
-				@click="createRoom"
-				>생성하기</filled-button
+				@click="handleUpdate"
+				>수정하기</filled-button
 			>
 		</div>
 	</div>
@@ -97,6 +103,7 @@ import makeToast from '@/assets/scripts/utils/makeToast.js';
 const router = useRouter();
 
 const formdata = ref({
+	id: 0,
 	roomName: '',
 	address1: '',
 	address2: '',
@@ -105,7 +112,28 @@ const formdata = ref({
 	maxUsers: 1,
 	isUsable: 1,
 	image: null,
+	previousImage: null,
 });
+
+if (history.state.roomData) {
+	const roomdata = history.state.roomData;
+	console.log(roomdata);
+	formdata.value.id = roomdata.id;
+	formdata.value.roomName = roomdata.name;
+	formdata.value.address1 = roomdata.address1;
+	formdata.value.address2 = roomdata.address2;
+	formdata.value.isUsable = roomdata.isUsable;
+	formdata.value.maxUsers = roomdata.maxUsers;
+
+	const openTimeSplit = roomdata.time.open.split(':');
+	const closeTimeSplit = roomdata.time.close.split(':');
+	formdata.value.openTime.HH = openTimeSplit[0];
+	formdata.value.openTime.mm = openTimeSplit[1];
+	formdata.value.closeTime.HH = closeTimeSplit[0];
+	formdata.value.closeTime.mm = closeTimeSplit[1];
+
+	formdata.value.previousImage = roomdata.img;
+}
 
 function uploadFile(event) {
 	formdata.value.image = event.target.files[0];
@@ -152,7 +180,7 @@ function validate() {
 	return true;
 }
 
-async function createRoom() {
+async function handleUpdate() {
 	try {
 		loadingStore.start();
 		if (!validate()) {
@@ -170,16 +198,14 @@ async function createRoom() {
 		};
 
 		const accessToken = userTokenStore.getAccessToken();
+		const id = formdata.value.id;
 
-		// 방 생성
-		const res = await adminService.createRoom(req, accessToken);
+		// 사진 제외정보 업데이트
+		const res = await adminService.updateRoom(id, req, accessToken);
 		if (!res.status) {
 			console.error(res);
 			throw new Error(res);
 		}
-
-		console.log(res);
-		const id = res.data.id;
 
 		// 이미지 업로드
 		if (formdata.value.image) {
@@ -241,5 +267,13 @@ async function createRoom() {
 			}
 		}
 	}
+}
+
+.previous-img {
+	width: 128px;
+	height: 128px;
+	border-radius: $box-radius;
+	object-fit: cover;
+	margin-top: 12px;
 }
 </style>

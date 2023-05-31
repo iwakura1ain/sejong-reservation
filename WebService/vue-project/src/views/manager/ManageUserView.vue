@@ -539,12 +539,11 @@ async function registerFromExcel() {
 			makeToast('엑셀파일이 없습니다', 'warning');
 			return;
 		}
+		const _formdata = new FormData();
+		_formdata.append('file', file.value);
 
 		const accessToken = userTokenStore.getAccessToken();
-		const res = await userService.registerFromExcel(
-			{ file: file.value },
-			accessToken,
-		);
+		const res = await userService.registerFromExcel(_formdata, accessToken);
 		if (!res.status) {
 			console.error(res);
 			throw new Error(res);

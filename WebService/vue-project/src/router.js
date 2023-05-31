@@ -31,6 +31,7 @@ import ManageReservationView from '@/views/manager/ManageReservationView.vue';
 import ManageUserView from '@/views/manager/ManageUserView.vue';
 import ManageRoomView from '@/views/manager/ManageRoomView.vue';
 import MakeRoomView from '@/views/manager/MakeRoomView.vue';
+import UpdateRoomView from '@/views/manager/UpdateRoomView.vue';
 
 // 시스템 뷰 (일반사용자도 관리자도 아닌, 특별한 사용자 "system"만 접속가능)
 import CheckNoShowView from '@/views/system/CheckNoShowView.vue';
@@ -139,6 +140,11 @@ const routes = [
 		path: '/manage/room/make',
 		name: 'MakeRoom',
 		component: MakeRoomView,
+	},
+	{
+		path: '/manage/room/update',
+		name: 'UpdateRoom',
+		component: UpdateRoomView,
 	},
 
 	// system사용자용 뷰
