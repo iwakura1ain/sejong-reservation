@@ -355,15 +355,16 @@ class ConferenceRoomById(Resource, Service):
                     }, 200
 
                 # if updated room data already exists in the table
-                if ('room_name' in valid_data
-                    and 'room_address1' in valid_data
-                    and 'room_address2' in valid_data):
-                    # for room in valid_data:
-                    if check_if_room_identical(conn, Room, valid_data):
-                        return{
-                            "statsus": False,
-                            "msg": f"Room {valid_data['room_name']} already exists." 
-                        }, 200
+                # 실제 사용환경에 맞춰 기능 폐기
+                # if ('room_name' in valid_data
+                #     and 'room_address1' in valid_data
+                #     and 'room_address2' in valid_data):
+                #     # for room in valid_data:
+                #     if check_if_room_identical(conn, Room, valid_data):
+                #         return{
+                #             "statsus": False,
+                #             "msg": f"Room {valid_data['room_name']} already exists." 
+                #         }, 200
 
                 # if room is not usable, cancel reservations of the room                   
                 if (roomById['is_usable'] != 0
