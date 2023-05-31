@@ -436,11 +436,12 @@ class UserImport(Service, Resource):
     @jwt_required()
     @admin_only()
     def post(self):
-        f = request.files['file']
-
+        
+        f = request.files.get('file')
+        
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
-        if f.filename == '':
+        if f is None or f.filename == '':
             return {
                 "status": False,
                 "msg": "no file selected"
@@ -455,6 +456,7 @@ class UserImport(Service, Resource):
                 "status": False,
                 "msg": "invalid filetype"
             }, 200
+
         try:
             with self.query_model("User") as (conn, User):
                 users_sheet = load_workbook(filename=BytesIO(f)).active
@@ -462,6 +464,11 @@ class UserImport(Service, Resource):
 
                 insert_values = []
                 for row in users_sheet.iter_rows(min_row=2, min_col=1, max_col=8):
+
+                    # TODO: this logic is wrong 
+                    #new_dict = {key: val.value for key, val in zip(schema, row)}
+                    #print(f"new user dict: {new_dict}", flush=True)
+                    
                     # create new user dict
                     new_user, invalid = User.validate(
                         {key: val.value for key, val in zip(schema, row)},
@@ -473,7 +480,7 @@ class UserImport(Service, Resource):
                         return {
                             "status": False,
                             "msg": "invalid value",
-                            "invalid": row
+                            "invalid": json.loads(row)
                         }, 200
 
                     # check if user in db 
@@ -495,8 +502,8 @@ class UserImport(Service, Resource):
                 "imported_count": len(insert_values)
             }, 200
 
-        except Exception as e:
-            print(e, flush=True)
+        except OSError:
+        #    print(e, flush=True)
             return {
                 "status": False,
                 "msg": "error while importing users"

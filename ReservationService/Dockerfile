@@ -14,7 +14,7 @@ RUN apt install -y libmariadb3 libmariadb-dev cron
 
 COPY ./ReservationService/ReservationAPI/requirements.txt /ReservationAPI/requirements.txt
 
-RUN pip install --upgrade pip
+#RUN pip install --upgrade pip
 
 RUN pip install --upgrade --no-cache-dir -r requirements.txt
 
