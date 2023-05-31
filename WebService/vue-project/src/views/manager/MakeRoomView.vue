@@ -51,7 +51,7 @@
 					style="width: 64px"
 				/>
 			</div>
-			<div class="field-set">
+			<!-- <div class="field-set">
 				<span class="field-label">사용가능 여부</span>
 				<radio-group
 					v-model="formdata.isUsable"
@@ -61,7 +61,7 @@
 						{ text: '사용가능', value: 1 },
 					]"
 				/>
-			</div>
+			</div> -->
 			<div class="field-set">
 				<span class="field-label">회의실 사진</span>
 				<input type="file" @change="uploadFile" class="field-value" />

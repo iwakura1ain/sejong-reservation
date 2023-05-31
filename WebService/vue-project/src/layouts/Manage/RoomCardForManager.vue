@@ -19,6 +19,10 @@
 						─ {{ contents.time.close }}
 					</span>
 				</div>
+				<!-- <div>
+					<p v-if="contents.isUsable === 1">✅사용가능</p>
+					<p v-else>❌사용불가</p>
+				</div> -->
 			</div>
 		</div>
 		<div
@@ -26,14 +30,14 @@
 			class="btns"
 			style="display: flex; margin-top: 12px"
 		>
-			<filled-button
+			<!-- <filled-button
 				class="select-room-btn"
 				color="white"
 				style="flex: 1; text-align: center"
 				@click="toggleConfirmDelete"
 			>
 				기기등록
-			</filled-button>
+			</filled-button> -->
 			<filled-button
 				class="select-room-btn"
 				color="white"

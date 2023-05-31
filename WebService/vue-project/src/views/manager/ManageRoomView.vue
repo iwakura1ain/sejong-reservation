@@ -39,6 +39,9 @@ import { useRouter } from 'vue-router';
 if (history.state.roomCreated) {
 	makeToast('회의실이 생성되었습니다', 'info');
 }
+if (history.state.roomUpdated) {
+	makeToast('회의실이 수정되었습니다', 'info');
+}
 
 //
 
