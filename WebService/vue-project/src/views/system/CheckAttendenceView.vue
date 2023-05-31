@@ -12,14 +12,42 @@
 					<text-input v-model="code"></text-input>
 				</div>
 				<div class="btn">
-					<filled-button class="btn attend" @click="handleCode" color="red" type="submit">인증</filled-button>
+					<filled-button
+						class="btn attend"
+						@click="handleCode"
+						color="red"
+						type="submit"
+						>인증</filled-button
+					>
 				</div>
 			</div>
 		</form>
 	</div>
 </template>
-	
+
 <script setup>
+import { ref } from 'vue';
+import LogoImgRed from '@/assets/images/logo_red.png';
+import TextInput from '@/components/atoms/TextInput.vue';
+import FilledButton from '@/components/atoms/FilledButton.vue';
+import makeToast from '@/assets/scripts/utils/makeToast.js';
+const code = ref('');
+
+async function handleCode() {
+	if (!code.value) {
+		makeToast('코드를 입력해 주세요.', 'warning');
+		return;
+	}
+	if (code.value.length < 8) {
+		makeToast('코드는 8자 입니다.', 'warning');
+		return;
+	}
+
+	makeToast('출석을 인증하였습니다.', 'success');
+}
+</script>
+
+<!-- <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import LogoImgRed from '@/assets/images/logo_red.png';
@@ -28,7 +56,7 @@ import FilledButton from '@/components/atoms/FilledButton.vue';
 import { userTokenStore } from '@/stores/userToken.js';
 import { userInfoStore } from '@/stores/userInfo.js';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
-import { attendenceChecker } from '@/assets/scripts/requests/checkinRequest.js' 
+import { attendenceChecker } from '@/assets/scripts/requests/checkinRequest.js';
 
 userInfoStore.clear();
 userTokenStore.clear();
@@ -39,39 +67,42 @@ let router;
 // let accessToken;
 
 // init
-function init(){
-	try{
+function init() {
+	try {
 		code = ref('');
 		router = useRouter();
 		id = parseInt(router.currentRoute.value.params.id);
 		// accessToken = userTokenStore.getAccessToken();
-		if (!localStorage.getItem('room_hash')){
+		if (!localStorage.getItem('room_hash')) {
 			setRoomHash(id);
 		}
+		console.log(id);
 	} catch (err) {
 		console.log(err, err.message);
 		makeToast('예상치 못한 오류가 발생했습니다', 'error');
 	}
 }
 
-// room_hash 세팅. 방마다 고유한 room_hash를 설정
-async function setRoomHash(id){
-	try{
-		// room_hash를 가져온다
-		const roomHash = await attendenceChecker.registerRoom(id, accessToken)
+// // room_hash 세팅. 방마다 고유한 room_hash를 설정
+// async function setRoomHash(id) {
+// 	try {
+// 		// room_hash를 가져온다
+// 		const accessToken = userTokenStore.getAccessToken();
+// 		const roomHash = await attendenceChecker.registerRoom(id, accessToken);
 
-		localStorage.setItem('room_hash', roomHash);
+// 		console.log('roomhash : ', roomHash);
+// 		localStorage.setItem('room_hash', roomHash);
 
-		return roomHash
-	} catch(err) {
-		console.log(err, err.message);
-		makeToast('예상치 못한 오류가 발생했습니다', 'error');
-	}
-}
+// 		return roomHash;
+// 	} catch (err) {
+// 		console.log(err, err.message);
+// 		makeToast('예상치 못한 오류가 발생했습니다', 'error');
+// 	}
+// }
 
 // 입력받은 code를 reservationCode와 대조
-async function handleCode(){
-	try{
+async function handleCode() {
+	try {
 		// console.log("id: ",id, "id type: ", typeof(id));
 		// validate inserted code
 		if (!code.value) {
@@ -83,7 +114,7 @@ async function handleCode(){
 		const req = {
 			reservation_code: code.value,
 			room_hash: localStorage.getItem('room_hash'),
-		}
+		};
 		// const room_id = id;
 		// console.log("room_id:", room_id, "id type:",typeof(room_id));
 
@@ -96,14 +127,14 @@ async function handleCode(){
 
 		// console.log("validatecode:", validateCode.status);
 		if (!validateCode.status) {
-			if(validateCode.msg == 'no reservation for current time') {
+			if (validateCode.msg == 'no reservation for current time') {
 				makeToast('현재 시간대와 맞지 않는 예약입니다.', 'error');
 			}
-			if(validateCode.msg == 'reservation code wrong') {
+			if (validateCode.msg == 'reservation code wrong') {
 				makeToast('코드가 일치하지 않습니다.', 'error');
 			}
 		}
-		if(validateCode.status) {
+		if (validateCode.status) {
 			// console.log("successssssssssssssssssss");
 			makeToast('출석을 인증하였습니다.', 'success');
 		}
@@ -114,8 +145,8 @@ async function handleCode(){
 }
 
 init();
-</script>
-	
+</script> -->
+
 <style lang="scss" scoped>
 #check-attendence-view {
 	background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 1)),
@@ -151,7 +182,7 @@ init();
 		border: 1px solid lightgrey;
 		border-radius: $box-radius;
 
-		.form-content{
+		.form-content {
 			width: 100%;
 		}
 
@@ -193,11 +224,11 @@ init();
 					margin-bottom: 4px;
 				}
 			}
-			.form-content{
+			.form-content {
 				width: 100%;
 			}
 			.btn {
-				.attend{
+				.attend {
 					margin-top: 4px;
 					transform: translateX(-4px);
 				}
