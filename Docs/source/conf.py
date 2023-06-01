@@ -9,8 +9,8 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../..'))
-
+# sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.relpath('../..'))
 
 # -- Options for autodoc extension ---------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#module-sphinx.ext.autodoc
