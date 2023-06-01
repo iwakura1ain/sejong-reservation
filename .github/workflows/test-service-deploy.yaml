@@ -3,11 +3,11 @@ run-name: Test Deployment
 
 on:
   workflow_run:
-    workflows: ["Test Build"]
+    workflows: ["Alert Service Build", "Management Service Build", "Reservation Service Build", "User Service Build"]
     types:
       - completed
     branches:
-      - release-actions
+      - main
 
 jobs:
   deployment:
@@ -32,7 +32,7 @@ jobs:
 
       - name: connect to server
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "ls && cd ${{secrets.WORK_DIR}} && git pull && git checkout ${{secrets.BRANCH}} && git pull && ls && cat Actions-Test/test.txt && exit"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "ls && cd ${{secrets.WORK_DIR}} && git checkout ${{secrets.BRANCH}} && git pull && $(echo 'build ran' >> build.log) && exit"
 
       - name: cleanup
         run: |
