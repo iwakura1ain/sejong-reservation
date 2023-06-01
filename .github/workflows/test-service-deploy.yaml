@@ -1,0 +1,25 @@
+name: Deployment
+
+concurrency: production
+
+on:
+  workflow_run:
+    workflows: ["Test Build"]
+    types: [requested]
+    branches:
+      - 'releases-actions'
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: install sshpass
+        run: |
+          echo "=========== Mock Deploy Step ==========="
+          apt-get install sshpass
+
+      - name: connect to server
+        run: |
+          echo "=========== Mock Connect To Server ==========="
+          sshpass -p ${{secrets.SSH_PASS}} ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} "cd ${{secrets.WORK_DIR}} && git checkout ${{secrets.BRANCH}} && git pull && ls && exit"
