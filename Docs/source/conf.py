@@ -30,8 +30,8 @@ autodoc_mock_imports = [
 ]
 
 project = 'sejong-reservation'
-copyright = '2023, chowchow0048'
-author = 'chowchow0048'
+copyright = '2023, chowchow--48'
+author = 'chowchow--48'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
