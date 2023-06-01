@@ -10,33 +10,13 @@ Welcome to sejong-reservation's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   .. automodule:: AlertService
-      :members:
-      :undoc-members:
-
-   .. automodule:: Common
-      :members:
-      :undoc-members:
-
-   .. automodule:: DBService
-      :members:
-      :undoc-members:
-
-   .. automodule:: ManagementService
-      :members:
-      :undoc-members:
-
-   .. automodule:: ReservationService
-      :members:
-      :undoc-members:
-
-   .. automodule:: UserService
-      :members:
-      :undoc-members:
-
-   .. automodule:: WebService
-      :members:
-      :undoc-members:
+   modules/AlertService
+   modules/Common
+   modules/DBService
+   modules/ManagementService
+   modules/ReservationService
+   modules/UserService
+   modules/WebService
 
 Indices and tables
 ==================
