@@ -1,6 +1,5 @@
 name: Test Deployment
-
-concurrency: production
+run-name: Test Deployment
 
 on:
   workflow_run:
