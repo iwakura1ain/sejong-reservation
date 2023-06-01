@@ -1,12 +1,12 @@
 name: Test Build
 run-name: Test Build
 
-on:
-  push:
-    branches:
-      - release-actions
-    paths:
-      - ./Actions-Test
+on: [push]
+  # push:
+  #   branches:
+  #     - release-actions
+  #   paths:
+  #     - ./Actions-Test
 jobs:
   build:
     runs-on: ubuntu-latest
