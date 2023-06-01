@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - ./UserService/**
+      - 'UserService/**'
 
 jobs:
   build:
