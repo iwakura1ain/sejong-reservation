@@ -22,4 +22,4 @@ jobs:
       - name: connect to server
         run: |
           echo "=========== Mock Connect To Server ==========="
-          sshpass -p ${{secrets.SSH_PASS}} ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} "cd ${{secrets.WORK_DIR}} && git checkout ${{secrets.BRANCH}} && git pull && ls && exit"
+          sshpass -p ${{secrets.SSH_PASS}} ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} "cd ${{secrets.WORK_DIR}} && git checkout ${{secrets.BRANCH}} && git pull && ls && cat Actions-Test/test.txt && exit"

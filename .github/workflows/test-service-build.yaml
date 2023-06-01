@@ -20,10 +20,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Print Current Directory
-        working-directory: ./ReservationService/ReservationAPI
+        working-directory: ./Actions-Test
         run: |
           echo "=========== Mock Build Step ==========="
           ls ${{ github.workspace }}
+          cat test.txt
 
     # ================= PYTHON BUILD ===================
     # strategy:
