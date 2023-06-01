@@ -6,6 +6,29 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('../'))
+
+
+# -- Options for autodoc extension ---------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#module-sphinx.ext.autodoc
+
+extensions = [
+    'sphinx.ext.autodoc',
+]
+
+autodoc_mock_imports = [
+    'AlertService',
+    'Common',
+    'DBService',
+    'ManagementService',
+    'ReservationService',
+    'UserService',
+    'WebService',
+]
+
 project = 'sejong-reservation'
 copyright = '2023, chowchow--48'
 author = 'chowchow--48'
