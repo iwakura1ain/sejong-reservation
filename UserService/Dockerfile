@@ -1,3 +1,5 @@
+# USERAPI DOCKERFILE
+
 FROM python:3.11.2-buster
 
 ENV PYTHONBUFFERED 1
@@ -29,7 +31,6 @@ RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install -r requirements.txt
 
 EXPOSE 5000
-
 
 CMD ["python", "app.py"]
 
