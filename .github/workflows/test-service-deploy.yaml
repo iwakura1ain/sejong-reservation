@@ -2,12 +2,13 @@ name: Test Deployment
 
 concurrency: production
 
-on: [push]
-  # workflow_run:
-  #   workflows: ["Test Build"]
-  #   types: [requested]
-  #   branches:
-  #     - release-actions
+on:
+  workflow_run:
+    workflows: ["Test Build"]
+    types:
+      - completed
+    branches:
+      - release-actions
 
 jobs:
   deployment:
