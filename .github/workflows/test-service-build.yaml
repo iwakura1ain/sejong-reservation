@@ -5,8 +5,7 @@ on:
   push:
     branches:
       - release-actions
-    paths:
-      - ./Actions-Test/**
+
 jobs:
   build:
     runs-on: ubuntu-latest
