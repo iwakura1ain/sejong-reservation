@@ -32,7 +32,7 @@ jobs:
 
       - name: connect to server
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "ls && cd ${{secrets.WORK_DIR}} && git checkout ${{secrets.BRANCH}} && git pull && $(echo 'build ran' >> build.log) && exit"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "ls && cd ${{secrets.WORK_DIR}} && git checkout ${{secrets.BRANCH}} && git pull && echo "building" && exit"
 
       - name: cleanup
         run: |
