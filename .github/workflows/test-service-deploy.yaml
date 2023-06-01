@@ -7,7 +7,7 @@ on:
     workflows: ["Test Build"]
     types: [requested]
     branches:
-      - 'releases-actions'
+      - release-actions
 
 jobs:
   deployment:
