@@ -98,6 +98,8 @@ services:
       - /home/dks/sejong-reservation/portainer-data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+    ports:
+      - "9443:9443"
 
   dbservice:
     image: mariadb:11.0-rc-jammy
