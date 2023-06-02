@@ -40,12 +40,5 @@ sphinx:
 
 # Optionally declare the Python requirements required to build your docs
 
-python:
 
-   install:
-
-   - requirements: 
-     - UserService/UserAPI/requirements.txt
-     - AlertService/AlertAPI/requirements.txt
-     - ManagementService/ManagementAPI/requirements.txt
-     - ReservationService/ReservationAPI/requirements.txt
+  
