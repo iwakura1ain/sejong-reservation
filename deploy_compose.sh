@@ -2,14 +2,12 @@
 
 sudo whoami
 
-echo "========= DEPLOYING =========" | tee Actions-Test/testing.txt 
+echo "========= DEPLOYING =========" | tee -a Actions-Test/testing.txt 
 
-git pull | tee Actions-Test/testing.txt 
+sudo docker-compose build --no-cache | tee -a Actions-Test/testing.txt 
 
-sudo docker-compose build --no-cache | tee Actions-Test/testing.txt 
+sudo docker-compose up --force-recreate --detach | tee -a Actions-Test/testing.txt 
 
-sudo docker-compose up --force-recreate --detach | tee Actions-Test/testing.txt 
-
-echo "========= DEPLOYMENT DONE =========" | tee Actions-Test/testing.txt 
+echo "========= DEPLOYMENT DONE =========" | tee -a Actions-Test/testing.txt 
 
 
