@@ -368,6 +368,7 @@ class ConferenceRoomById(Resource, Service):
 
                 # if room is not usable, cancel reservations of the room                   
                 if (roomById['is_usable'] != 0
+                    and 'is_usable' in valid_data.keys()
                     and valid_data['is_usable'] == 0):
                     with self.query_model("Reservation") as (conn, Reservation):
                         rsrvs = conn.execute(select(Reservation).where(Reservation.room_id == id)).mappings().fetchall()

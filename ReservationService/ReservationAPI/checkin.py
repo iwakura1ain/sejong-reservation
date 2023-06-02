@@ -69,11 +69,12 @@ class RegisterCheckIn(Resource, Service):
 
             res = self.query_api(
                 "patch_rooms_info", "patch",
-                headers=request.headers,
+                headers={"Content-Type":"application/json"},
                 request_params={"id": room_id},
                 body=json.dumps({"location_hash": room_location_hash})
             )
-            if res.get["status"]:
+
+            if res.get("status"):
                 return {
                     "status": True,
                     "msg": "room registered",
@@ -142,7 +143,7 @@ class CheckIn(Resource, Service):
 
     @staticmethod
     def get_location_hash(reservation_code, room_hash):
-        room_location_hash = hashlib.sha256(
+        return hashlib.sha256(
             str(request.remote_addr + room_hash).encode("utf-8")
         ).hexdigest()
             
@@ -220,6 +221,7 @@ class CheckIn(Resource, Service):
                     valid["reservation_code"], valid["room_hash"]
                 )
 
+                room = room["room"]
                 if (reservation["reservation_code"] == reservation_code
                     and room["location_hash"] == room_location_hash):
                     conn.execute(
