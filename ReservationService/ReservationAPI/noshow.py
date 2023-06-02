@@ -24,6 +24,8 @@ api_config_cron = {
 }
 
 
+# The NoShowCheck class is a subclass of Service that checks for no-show reservations and updates the
+# no-show count for each creator.
 class NoShowCheck(Service):
     def __init__(self, *args, **kwargs):
         """
@@ -35,11 +37,25 @@ class NoShowCheck(Service):
         )
 
     def check_noshow(self):
+        """
+        This function checks the number of no-shows for each creator and increments their count
+        accordingly.
+        """
         noshow_counts = self.get_noshow()
         for creator, count in noshow_counts.items():
             res = self.increment_noshow(creator, count)
     
     def increment_noshow(self, creator, count):
+        """
+        This function increments the noshow count for a given user and returns the status of the
+        operation.
+        
+        :param creator: The creator parameter is the user ID of the creator whose noshow count needs to
+        be incremented
+        :param count: The count parameter is an integer value representing the number of no-shows to be
+        incremented for a particular user
+        :return: either the value of `res.get("status")` or `False`.
+        """
         import json
 
         try:
@@ -58,6 +74,12 @@ class NoShowCheck(Service):
             return False
 
     def get_noshow(self):
+        """
+        This function retrieves unused reservations for the current day and updates the room_used field
+        to -1, while also keeping track of the number of no-shows for each reservation creator.
+        :return: a dictionary containing the number of no-shows for each reservation creator. If an
+        exception occurs, an empty dictionary is returned.
+        """
         try:
             with self.query_model("Reservation") as (conn, Reservation):
                 now_date = datetime.now().date()

@@ -133,6 +133,17 @@ class ReservationList(Resource, Service):
 
     @staticmethod
     def validate_with_members(model, data):
+        """
+        This function validates a model and its members data, excluding the "members" field from the
+        initial validation.
+        
+        :param model: The model is an object that contains the rules and constraints for validating the
+        data. It is used to validate the data passed in the "data" parameter
+        :param data: The data parameter is a dictionary containing the data to be validated
+        :return: a tuple of two dictionaries: `valid` and `invalid`. The `valid` dictionary contains the
+        validated data with the `members` field converted to a JSON string, while the `invalid`
+        dictionary contains any invalid data.
+        """
         # validate model
         valid, invalid = model.validate(data, exclude=["members"])
 
@@ -147,6 +158,18 @@ class ReservationList(Resource, Service):
 
     
     def send_email(self, reservations, room):
+        """
+        This function sends a confirmation email for a reservation to the specified email address.
+        
+        :param reservations: The reservations parameter is a list of reservation objects. Each
+        reservation object contains information about a specific reservation, such as the guest's name,
+        check-in and check-out dates, and the number of guests
+        :param room: The `room` parameter is a dictionary that contains information about the room being
+        reserved. It likely includes details such as the room number, type of room, and availability
+        :return: the response from the API call made to send the confirmation email. If the API call is
+        successful, it will return the email response object. If the API call fails, it will return
+        None.
+        """
         # create and send email object
         email_object = create_confirmation_email(
             reservations[0], room["room"], self.auth_info, sender=SENDER
@@ -296,6 +319,18 @@ class ReservationCheck(Resource, Service):
 
     @staticmethod
     def validate_with_members(model, data):
+        """
+        This is a static method in Python that validates a model and its members data.
+        
+        :param model: a model object that has a validate method to validate the data
+        :param data: The data parameter is a dictionary containing the data to be validated. It is
+        passed to the validate_with_members method along with the model parameter. The data dictionary
+        may contain various fields and values that need to be validated against the model's schema
+        :return: The `validate_with_members` method returns two dictionaries: `valid` and `invalid`.
+        These dictionaries contain the validated data. The `valid` dictionary contains the validated
+        data that passed the validation rules, while the `invalid` dictionary contains the data that
+        failed the validation rules.
+        """
         # validate model
         valid, invalid = model.validate(data, exclude=["members"])
 

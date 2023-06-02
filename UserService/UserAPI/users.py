@@ -263,8 +263,16 @@ class UserDetail(Service, Resource):
 
 
 
+
 @USERS.route("/<string:id>/no-show")
 class UserNoShowIncrement(Service, Resource):
+    """
+    This code defines a Flask-RestX resource for incrementing the "no-show" count of a specific user
+    identified by their `id`. The resource includes a single method `post` which takes in the `id`
+    parameter and the number of no-shows to increment by, and updates the user's no-show count in the
+    database. The `@USERS.route("/<string:id>/no-show")` decorator specifies the URL endpoint for this
+    resource, which is `/users/<id>/no-show`.
+    """
     def __init__(self, *args, **kwargs):
         """
         This is the initialization function for a class that inherits from both Service and Resource
@@ -274,6 +282,17 @@ class UserNoShowIncrement(Service, Resource):
         Resource.__init__(self, *args, **kwargs)
 
     def post(self, id):
+        """
+        This function updates the no-show count of a user in a database based on the provided ID and the
+        number of no-shows to add.
+        
+        :param id: The id parameter is the unique identifier of the user whose no-show count needs to be
+        incremented
+        :return: a JSON response with a status and message indicating whether the noshow_count was
+        successfully incremented for a user with the given id. If the noshow_count is not provided in
+        the request JSON or if the user with the given id is not found, the response will indicate an
+        error.
+        """
         noshow_count = request.json.get("noshow_count")
         if noshow_count is None:
             return {

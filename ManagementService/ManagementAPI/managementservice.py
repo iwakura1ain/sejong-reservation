@@ -415,12 +415,29 @@ class ConferenceRoomById(Resource, Service):
 
 @management.route('/rooms/<int:id>/image')
 class ConferenceRoomImage(Resource, Service):
+    """
+    The ConferenceRoomImage class is a resource and service that allows for the uploading and
+    downloading of preview images for conference rooms.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes in Python.
+        """
         Service.__init__(self, model_config=model_config, api_config=api_config)
         Resource.__init__(self, *args, **kwargs)
 
     @staticmethod
     def allowed_file(filename):
+        """
+        This function checks if a given filename has an allowed extension (png, jpg, or jpeg).
+        
+        :param filename: The name of the file that needs to be checked for its extension
+        :return: The function `allowed_file` is returning a boolean value. It checks if the input
+        `filename` has a period (.) in it and if the extension of the file (the part of the filename
+        after the last period) is in the set of allowed extensions, which is {'png', 'jpg', 'jpeg'}. If
+        both conditions are true, the function returns `True`, indicating that the
+        """
         allowed_extensions = {'png', 'jpg', 'jpeg'}
         
         return '.' in filename and \
@@ -428,11 +445,35 @@ class ConferenceRoomImage(Resource, Service):
 
     @staticmethod
     def check_if_file_unique(joined_path):
+        """
+        The function checks if a file exists in a given path and returns True if it does not exist, and
+        False if it does.
+        
+        :param joined_path: The parameter `joined_path` is a string representing the path of a file or
+        directory. The function `check_if_file_unique` checks if a file or directory with the given path
+        already exists in the file system. If it exists, the function returns `False`, indicating that
+        the file or directory is
+        :return: The function `check_if_file_unique` returns a boolean value. It returns `False` if the
+        file already exists at the given `joined_path`, and `True` if the file does not exist at the
+        given `joined_path`.
+        """
         if os.path.exists(joined_path):
             return False
         return True
 
     def get(self, id):
+        """
+        This function retrieves a room's preview image by its ID and returns an error message if the
+        image cannot be downloaded.
+        
+        :param id: The parameter "id" is an identifier for a specific room. It is used to retrieve
+        information about the room and to download its preview image
+        :return: If the room with the given id is not found, a JSON response with status False and
+        message "Room not found" is returned with HTTP status code 200. If there is an exception during
+        the execution of the function, a JSON response with status False and message "Download image
+        failed" is returned with HTTP status code 500. If the room is found, the preview image of the
+        room is uploaded with given image from user.
+        """
         try:
             with self.query_model("Room") as (conn, Room):
                 room = conn.execute(select(Room).where(Room.id == id)).mappings().fetchone()
@@ -454,6 +495,17 @@ class ConferenceRoomImage(Resource, Service):
     
     # insert preview_image into a room found by id
     def post(self, id):
+        """
+        This function handles the uploading of an image file for a specific room, including error
+        checking and authorization.
+        
+        :param id: The id parameter is an identifier for a specific room. It is used to create a
+        directory for the room's images and to update the room's preview image name in the database
+        :return: a dictionary with keys "status" and "msg" indicating the status of the image upload
+        operation. The value of "status" is a boolean indicating whether the operation was successful or
+        not, and the value of "msg" is a string providing additional information about the status of the
+        operation. The HTTP status code 200 is also returned.
+        """
         max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
         uploaded_image = request.files['image']
         filename = secure_filename(uploaded_image.filename)

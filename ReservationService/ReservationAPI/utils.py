@@ -160,10 +160,13 @@ def check_date_constraints(user_type, reservation_date):
     """
     This function checks if a user is authorized to make a reservation based on their user type and the
     reservation date constraints.
-
-
-    :return: False if the date constraints are not met based on the user type, otherwise it
-    returns True.
+    
+    :param user_type: The type of user making the reservation. It could be a regular user, a premium
+    user, or an admin user
+    :param reservation_date: The date for which the reservation is being made. It should be in the
+    format of 'YYYY-MM-DD'
+    :return: a boolean value. It returns True if the reservation date is within the date constraints for
+    the user type, and False otherwise.
     """
 
     from config import reservation_limit
@@ -177,6 +180,25 @@ def create_confirmation_email(
     title="[회의실 예약 시스템] 회의실 예약이 완료되었습니다. ",
     template_name="template.txt"
 ):
+    """
+    This function generates an email confirmation for a new reservation in a meeting room booking
+    system.
+    
+    :param reservation: a dictionary containing information about the reservation, such as the
+    reservation date, start and end times, members attending, and reservation code
+    :param room: The room parameter is a dictionary containing information about the reserved room,
+    including its name, address, and other details
+    :param creator: A dictionary containing the name and email of the person who created the reservation
+    :param sender: The email address that sends out the alert emails
+    :param title: The title of the email that will be sent out as a confirmation for the reservation,
+    defaults to [회의실 예약 시스템] 회의실 예약이 완료되었습니다.  (optional)
+    :param template_name: The name of the file containing the email body template, defaults to
+    template.txt (optional)
+    :return: a dictionary with keys "title", "text", "sender", and "receivers". The values for these
+    keys are generated based on the input parameters and the contents of a template file. The "title"
+    key contains the email title, "text" contains the email body, "sender" contains the email address
+    that sends out the alert emails, and "receivers" contains
+    """
     """
     Generates an alert email for when new reservation is created.
     sender: email address that sends out alert emails
@@ -235,8 +257,19 @@ def create_confirmation_email(
         "receivers": receivers
     }
 
-
 def validate_members(members):
+    """
+    The function validates a list of members by checking if each member has valid keys and a valid email
+    address.
+    
+    :param members: The parameter "members" is expected to be a list of dictionaries, where each
+    dictionary represents a member and contains two keys: "name" and "email". The function validates
+    that each member dictionary has exactly these two keys and that the email value is a valid email
+    address format. If any of these
+    :return: a boolean value. It returns True if the input `members` is a list of dictionaries where
+    each dictionary has keys "name" and "email", and the value of "email" is a valid email address. It
+    returns False otherwise.
+    """
     p = re.compile('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
     if type(members) != list:
         return False
@@ -248,9 +281,16 @@ def validate_members(members):
             return False
     return True
 
+# decorator which protects endpoints that require authorization
 def protected():
     """
-    decorator which protects endpoints that require authorization
+    This is a Python decorator function that protects endpoints requiring authorization by checking for
+    a valid token.
+    :return: A decorator function named "protected" is being returned. This decorator function takes in
+    another function as an argument and returns a new function that wraps the original function with
+    additional functionality to protect endpoints that require authorization. The new function checks if
+    the user has a valid token and sets the "auth_info" attribute of the object before calling the
+    original function. If the user is not authenticated, it returns a JSON
     """
     def wrapper(fn):
         @wraps(fn)

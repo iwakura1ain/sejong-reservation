@@ -1,18 +1,19 @@
-# import base64
-
 from datetime import datetime, date, time
 
 def serialize(data, include=[], exclude=[]):
-    serialized_data = {}
+    """
+    The function serializes data by converting datetime, date, and time objects to strings.
     
-    # if include:
-    #     serialized_data = data.copy()
-    #     for key in include:
-    #         serialized_data[key] = None
-    
-    # if exclude:
-    #     serialized_data = dict((k, v) for k, v in data.items() if k not in exclude)
-
+    :param data: The data parameter is a dictionary containing the data that needs to be serialized
+    :param include: The include parameter is a list of keys that should be included in the serialized
+    data. If this parameter is not empty, only the keys in the list will be included in the output
+    :param exclude: The `exclude` parameter is a list of keys that should be excluded from the
+    serialized data. If a key in the `exclude` list is found in the `data` dictionary, it will not be
+    included in the `serialized_data` dictionary that is returned
+    :return: The function `serialize` takes in a dictionary `data` and two optional lists `include` and
+    `exclude`. It serializes the data by converting any `datetime`, `date`, or `time` objects to strings
+    and returns the serialized data as a dictionary.
+    """
     row = dict(data)
     ret = {}
     for k, v in row.items():
@@ -22,14 +23,17 @@ def serialize(data, include=[], exclude=[]):
         else:
             ret[k] = v
     return ret
-
-    # for key, value in serialized_data.items():
-    #     if isinstance(value, bytes):
-    #         serialized_data[key] = base64.b64encode(value).decode('utf-8')
-
-    #return serialized_data
     
 def check_jwt_exists(auth_info):
+    """
+    The function checks if a JWT (JSON Web Token) exists in the given authentication information.
+    
+    :param auth_info: The auth_info parameter is a dictionary that contains information about the
+    authentication status of a user. The function checks if the "status" key exists in the dictionary
+    and returns its value. If the "status" key does not exist, the function returns False
+    :return: a boolean value. If the "status" key is not present in the dictionary passed as an
+    argument, it returns False. Otherwise, it returns the value associated with the "status" key.
+    """
     if "status" not in auth_info.keys():
         return False
     return auth_info["status"]
@@ -37,6 +41,19 @@ def check_jwt_exists(auth_info):
 from sqlalchemy import select
 
 def check_if_room_identical(conn, Room, valid_data):
+    """
+    This function checks if a room in a database is identical to valid data based on its name and
+    address.
+    
+    :param conn: The database connection object used to execute SQL queries
+    :param Room: The Room parameter is likely a SQLAlchemy model class representing a table in a
+    database. It is used to construct SQL queries to check if a room with certain attributes already
+    exists in the database
+    :param valid_data: It is a dictionary containing valid data for a room, including the room name,
+    address line 1, and address line 2
+    :return: a boolean value (True or False) depending on whether a room with the same name, address1,
+    and address2 already exists in the database.
+    """
     if (conn.execute(select(Room).where(Room.room_name == valid_data['room_name'])).mappings().fetchone()
         and conn.execute(select(Room).where(Room.room_address1 == valid_data['room_address1'])).mappings().fetchone()
         and conn.execute(select(Room).where(Room.room_address2 == valid_data['room_address2'])).mappings().fetchone()):
@@ -93,7 +110,3 @@ def create_confirmation_email(
         "sender": sender,
         "receivers": receivers
     }
-
-
-
-

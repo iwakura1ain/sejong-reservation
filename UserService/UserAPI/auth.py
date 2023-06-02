@@ -422,20 +422,40 @@ class JWTRefresh(Service, Resource):
         }, 200
         
             
+
 @AUTH.route("/import-users")
 class UserImport(Service, Resource):
+    """
+    The above code is a Python Flask API endpoint that allows authorized admin users to import user data
+    from an Excel file. The endpoint accepts a POST request with an Excel file attached, validates the
+    file type, reads the file, iterates over the rows, validates the data, and inserts the valid user
+    data into the database. The endpoint returns a JSON response indicating the success or failure of
+    the import operation, along with the number of users imported.
+    """
     allowed_filetypes = [
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "application/x-ole-storage"
     ]
 
     def __init__(self, *args, **kwargs):
+        """
+        This is the initialization function for a class that inherits from both Service and Resource
+        classes, passing ORM as a model configuration parameter to the Service class.
+        """
         Service.__init__(self, model_config=ORM)
         Resource.__init__(self, *args, **kwargs)
 
     @jwt_required()
     @admin_only()
     def post(self):        
+        """
+        This is a Python function that imports user data from an Excel file, validates the data, and
+        inserts it into a database.
+        :return: a dictionary with keys "status", "msg", and "imported_count". The values of these keys
+        depend on the outcome of the function's execution. If the file is not selected or has an invalid
+        filetype, the "status" key will be False and the "msg" key will contain an error message. If the
+        file is successfully imported, the "status" key will
+        """
         f = request.files.get('file')
         
         # If the user does not select a file, the browser submits an

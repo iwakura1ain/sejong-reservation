@@ -44,6 +44,15 @@ class RegisterCheckIn(Resource, Service):
 
     @protected()
     def get(self, room_id):
+        """
+        This is a protected function that registers a room and returns a room hash if the user is
+        authorized.
+        
+        :param room_id: The ID of the room that needs to be registered
+        :return: a dictionary with a "status" key and a "msg" key, along with an HTTP status code. The
+        specific content of the "status" and "msg" keys depends on the outcome of the function's
+        execution.
+        """
         try:
             if not is_admin(self.auth_info):
                 return {
@@ -106,6 +115,21 @@ class CheckIn(Resource, Service):
 
     @staticmethod
     def get_current_reservation(conn, model, room_id):
+        """
+        This function retrieves the current reservation for a given room based on the current date and
+        time.
+        
+        :param conn: The database connection object used to execute the SQL query
+        :param model: The model parameter is likely a SQLAlchemy model class that represents a table in
+        a database. It is used to construct a SQL query to retrieve a current reservation for a specific
+        room
+        :param room_id: The ID of the room for which we want to get the current reservation
+        :return: The `get_current_reservation` method returns the current reservation for a given room
+        at the current date and time. It queries the database using the provided `conn` connection
+        object and the `model` SQLAlchemy model class. It filters the results to only include
+        reservations that are active at the current time. The method returns the result as a mapping
+        object or `None` if no reservation is found.
+        """
         current = datetime.now()
         cur_date = current.date()
         cur_time = current.time().replace(microsecond=0)
@@ -124,6 +148,16 @@ class CheckIn(Resource, Service):
 
     @staticmethod
     def validate(data):
+        """
+        The function validates reservation code and room hash data and returns valid and invalid data in
+        separate dictionaries.
+        
+        :param data: a dictionary containing the reservation code and room hash as keys and their
+        respective values as values
+        :return: The `validate` method is returning two dictionaries - `valid` and `invalid`. The
+        `valid` dictionary contains the valid reservation code and room hash values, while the `invalid`
+        dictionary contains the invalid reservation code and room hash values.
+        """
         code = data.get("reservation_code")
         room_hash = data.get("room_hash")
 
@@ -142,6 +176,17 @@ class CheckIn(Resource, Service):
 
     @staticmethod
     def get_location_hash(reservation_code, room_hash):
+        """
+        This is a static method in Python that generates a SHA256 hash based on a reservation code and a
+        room hash concatenated with the IP address of the requester.
+        
+        :param reservation_code: The reservation code is a unique identifier for a specific reservation
+        made by a customer. It is likely a string of characters or numbers that is generated when the
+        reservation is created
+        :param room_hash: The `room_hash` parameter is a unique identifier for a specific room. It is
+        used to generate a hash that is unique to the combination of the user's IP address and the room
+        identifier, which is then used as a location hash for the reservation
+        """
         room_location_hash = hashlib.sha256(
             str(request.remote_addr + room_hash).encode("utf-8")
         ).hexdigest()
@@ -149,6 +194,16 @@ class CheckIn(Resource, Service):
 
     # get reservation at current time
     def get(self, room_id):
+        """
+        This function retrieves the current reservation for a given room ID and returns it as a
+        serialized object.
+        
+        :param room_id: The ID of the room for which the reservation is being retrieved
+        :return: a dictionary with a "status" key indicating whether the operation was successful or
+        not, a "msg" key with a message describing the result of the operation, and a "reservation" key
+        with the details of the reservation if one was found. The HTTP status code is also included in
+        the return statement.
+        """
         with self.query_model("Reservation") as (conn, Reservation):
             try:
                 room = self.query_api(
@@ -185,6 +240,15 @@ class CheckIn(Resource, Service):
             
     # verify reservation_code(no_show code)
     def post(self, room_id):
+        """
+        This function verifies a reservation code and checks in the corresponding reservation for a
+        given room.
+        
+        :param room_id: The ID of the room being reserved
+        :return: This code returns a response in JSON format with a status and message indicating
+        whether the reservation was successfully checked in or not. If there are any errors or invalid
+        input, appropriate error messages are returned.
+        """
         with self.query_model("Reservation") as (conn, Reservation):
             try:
                 valid, invalid = self.validate(request.json)
