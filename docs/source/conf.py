@@ -36,8 +36,14 @@ release = '1.0'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc']
-
-# autodoc_mock_imports = ['flask', 'flask_cors', 'nanoid', 'openpyxl', 'service']
+autodoc_mock_imports = [
+  "mariadb",
+  "mysqlclient",
+  "mysql",
+  "SQLAlchemy",
+  "pymysql"
+ ]
+  
 
 templates_path = ['_templates']
 exclude_patterns = []
