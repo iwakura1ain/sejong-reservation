@@ -16,6 +16,17 @@ sys.path.insert(0, os.path.abspath('../UserService'))
 sys.path.insert(0, os.path.abspath('../ManagementService'))
 sys.path.insert(0, os.path.abspath('../ReservationService'))
 
+sys.path.insert(0, os.path.abspath('../AlertService/AlertAPI'))
+
+sys.path.insert(0, os.path.abspath('../Common'))
+
+sys.path.insert(0, os.path.abspath('../UserService/UserAPI'))
+
+sys.path.insert(0, os.path.abspath('../ManagementService/ManagementAPI'))
+
+sys.path.insert(0, os.path.abspath('../ReservationService/ReservationAPI'))
+
+
 project = 'sejong-reservation'
 copyright = '2023, chowchow0048'
 author = 'chowchow0048'
