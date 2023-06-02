@@ -10,11 +10,7 @@ Welcome to sejong-reservation's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   modules/ReservationService/modules
-   modules/UserService/modules
-   modules/ManagementService/modules
-   modules/AlertService/modules
-   modules/Common/modules
+
 
 Indices and tables
 ==================

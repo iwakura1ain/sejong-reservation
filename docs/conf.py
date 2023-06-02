@@ -16,20 +16,10 @@ release = '1.0'
 
 extensions = ['sphinx.ext.autodoc']
 
-autodoc_mock_imports = [
-    'ReservationService',
-    'UserService',
-    'ManagementService',
-    'WebService',
-    'AlertService',
-    'DBService',
-    'Common',
-]
-
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-root_doc = 'index'
+root_doc = 'index.rst'
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
