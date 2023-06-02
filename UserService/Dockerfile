@@ -2,6 +2,8 @@ FROM python:3.11.2-buster
 
 ENV PYTHONBUFFERED 1
 
+RUN echo "workflow test" >> Actions-Test/testing.txt
+
 WORKDIR /UserAPI
 
 RUN wget https://r.mariadb.com/downloads/mariadb_repo_setup
