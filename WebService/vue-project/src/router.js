@@ -16,7 +16,6 @@ import ReservationDetailView from '@/views/common/ReservationDetailView.vue';
 
 // 사용자 뷰
 import UserMainView from '@/views/user/UserMainView.vue';
-import MakeQuickReservationView from '@/views/user/MakeQuickReservationView.vue';
 import MakeReservationView from '@/views/user/MakeReservationView.vue';
 import AllReservationCalendarView from '@/views/user/AllReservationCalendarView.vue';
 import ReservationHistoryView from '@/views/user/ReservationHistoryView.vue';
@@ -34,8 +33,7 @@ import MakeRoomView from '@/views/manager/MakeRoomView.vue';
 import UpdateRoomView from '@/views/manager/UpdateRoomView.vue';
 
 // 시스템 뷰 (일반사용자도 관리자도 아닌, 특별한 사용자 "system"만 접속가능)
-import CheckNoShowView from '@/views/system/CheckNoShowView.vue';
-// 로그인 필요없음.
+import CheckAttendenceGatewayView from '@/views/system/CheckAttendenceGatewayView.vue';
 import CheckAttendenceView from '@/views/system/CheckAttendenceView.vue';
 
 // 라우터 설정 ------------------------------------
@@ -73,11 +71,6 @@ const routes = [
 		path: '/main',
 		name: 'UserMain',
 		component: UserMainView,
-	},
-	{
-		path: '/reservation/make/quick',
-		name: 'MakeQuickReservation',
-		component: MakeQuickReservationView,
 	},
 	{
 		path: '/reservation/make',
@@ -149,17 +142,16 @@ const routes = [
 		component: UpdateRoomView,
 	},
 
-	// system사용자용 뷰
-	// ** system사용자 = 일반사용자도 관리자도 아닌, 특별한 사용자
+	// system 뷰
 	{
-		path: '/system/check/noshow',
-		name: 'CheckNoShow',
-		component: CheckNoShowView,
+		path: '/checkin',
+		name: 'CheckAttendenceGateway',
+		component: CheckAttendenceGatewayView,
 	},
 	{
-		path: '/system/check/attendence/:id',
+		path: '/checkin/:id',
 		name: 'CheckAttendence',
-		component: CheckAttendenceView
+		component: CheckAttendenceView,
 	},
 ];
 
@@ -173,7 +165,12 @@ const router = createRouter({
 });
 
 // 네이게이션 가드 설정
-const notRequireLogin = ['CheckAttendence', 'Login', 'Register'];
+const notRequireLogin = [
+	'CheckAttendence',
+	'CheckAttendenceGateway',
+	'Login',
+	'Register',
+];
 const RequireAdmin = [
 	'ManageMain',
 	'ManageReservation',
@@ -183,7 +180,6 @@ const RequireAdmin = [
 ];
 router.beforeEach(async (to, from, next) => {
 	// 로그인이 필요하지 않은 페이지들은 그냥 갈길 갑시다.
-	// console.log('1', to.name, from.name);
 	if (notRequireLogin.includes(to.name)) {
 		next();
 		return;

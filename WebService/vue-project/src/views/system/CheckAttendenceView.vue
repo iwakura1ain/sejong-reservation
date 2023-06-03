@@ -7,8 +7,11 @@
 				<h2 class="logotext-en">Meeting Room Reservation System</h2>
 			</article>
 			<div class="form-content">
+				<p style="margin: 24px; font-size: 1.2rem; text-align: center">
+					{{ meetingRoomStr }}
+				</p>
 				<div class="field-set">
-					<span class="label">출석 코드 입력</span>
+					<span class="label">사용 인증코드 입력</span>
 					<text-input v-model="code"></text-input>
 				</div>
 				<div class="btn">
@@ -26,24 +29,83 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import LogoImgRed from '@/assets/images/logo_red.png';
 import TextInput from '@/components/atoms/TextInput.vue';
 import FilledButton from '@/components/atoms/FilledButton.vue';
 import makeToast from '@/assets/scripts/utils/makeToast.js';
+import { fetchedRoomStore } from '@/stores/fetchedRoom.js';
+import { loadingStore } from '@/stores/loading.js';
+import { attendenceChecker } from '@/assets/scripts/requests/checkinRequest.js';
+
+const route = useRoute();
+const roomId = route.params.id;
+
 const code = ref('');
 
-async function handleCode() {
-	if (!code.value) {
-		makeToast('코드를 입력해 주세요.', 'warning');
-		return;
+const meetingRoomStr = computed(() => {
+	console.log(roomId);
+	if (fetchedRoomStore.getAll().length > 0 && parseInt(roomId)) {
+		const { address1, address2, name } = fetchedRoomStore.getById(
+			parseInt(roomId),
+		);
+		return `${address1} ${address2} ${name}`;
+	} else {
+		return '';
 	}
-	if (code.value.length < 8) {
-		makeToast('코드는 8자 입니다.', 'warning');
-		return;
-	}
+});
 
-	makeToast('출석을 인증하였습니다.', 'success');
+async function handleCode() {
+	try {
+		loadingStore.start();
+		if (!code.value) {
+			makeToast('코드를 입력해 주세요.', 'warning');
+			return;
+		}
+		if (code.value.length !== 8) {
+			makeToast('코드는 8자 입니다.', 'warning');
+			return;
+		}
+
+		const roomHash = localStorage.getItem('SEJONG_RESERVATION_ROOMHASH');
+		if (!roomHash) {
+			makeToast(
+				'이 기기가 인증용 기기로 등록되지 않았습니다. 관리자에게 문의하세요.',
+				'warning',
+			);
+		}
+
+		const reqBody = {
+			reservation_code: code.value,
+			room_hash: roomHash,
+		};
+
+		const res = await attendenceChecker.checkin(roomId, reqBody);
+		if (!res.status) {
+			console.error(res);
+			throw new Error(res.msg);
+		}
+
+		makeToast('회의실 사용 인증이 완료되었습니다.', 'success');
+	} catch (err) {
+		const msg = err.message;
+		console.error(err, msg);
+
+		if (msg === 'invalid key:val pairs') {
+			makeToast('입력한 내용의 형식이 올바르지 않습니다', 'error');
+		} else if (msg === 'Invalid room ID') {
+			makeToast('잘못된 회의실이 선택되었습니다', 'error');
+		} else if (msg === 'no reservation for current time') {
+			makeToast('현재 사용인증 가능한 예약이 없습니다', 'error');
+		} else if (msg === 'reservation code wrong') {
+			makeToast('예약 인증코드가 잘못되었습니다', 'error');
+		} else {
+			makeToast('알 수 없는 오류입니다', 'error');
+		}
+	} finally {
+		loadingStore.stop();
+	}
 }
 </script>
 

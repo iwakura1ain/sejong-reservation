@@ -252,7 +252,7 @@ const userService = {
 			// 데이터 컨버팅
 			const { User, access_token, refresh_token } = res.data;
 			const converted = convertUserRes(User, access_token, refresh_token);
-			console.log(converted);
+
 			return {
 				status: true,
 				data: converted,
@@ -388,7 +388,7 @@ const userService = {
 	// --------------------------------------------------------------------------
 	registerFromExcel: async function (reqBody, accessToken) {
 		try {
-			console.log(reqBody);
+
 			// 통신
 			const res = await axios.post(
 				`${BASE_URL.USER_SERVICE}/auth/import-users`,
@@ -411,7 +411,6 @@ const userService = {
 				return res.data;
 			}
 
-			console.log(res);
 			// 반환
 			return {
 				status: true,
@@ -838,7 +837,7 @@ const reservationService = {
 					// "Unauthenticated" : invalid한 토큰
 				});
 			const data = res.data;
-			console.log(res);
+
 			if (!data.status) {
 				return data;
 			}
