@@ -3,110 +3,114 @@
 		<section-header>마이페이지</section-header>
 
 		<!-- 내 정보 -->
-		<div class="profile-container">
-			<section-header size="small">내 정보</section-header>
-			<p class="name">{{ userInfo.name }}</p>
-			<p class="user-id">{{ userInfo.id }}</p>
-			<p class="user-email">{{ userInfo.email }}</p>
-			<p class="user-phone">{{ userInfo.phone }}</p>
-			<div class="user-category">
-				<p class="user-dept">{{ userDeptStr }}</p>
-				<p class="user-type">{{ userTypeStr }}</p>
-			</div>
-
-			<div style="text-align: center">
-				<router-link to="/mypage/profile/edit">
-					<filled-button class="edit-profile-btn">정보수정</filled-button>
-				</router-link>
-			</div>
-		</div>
-
-		<!-- 내 예약내역 요약 -->
-		<div class="reservation-history-container">
-			<section-header size="small">내 예약</section-header>
-			<div style="text-align: center">
-				<div style="margin-bottom: 24px">
-					<p>
-						<span>{{ '총 예약 : ' }}</span>
-						{{ rsvStat.total }}건
-					</p>
-					<p>
-						<span>{{ '사용 완료 : ' }}</span>
-						{{ rsvStat.used }}건
-					</p>
-					<p>
-						<span>{{ '미사용(노쇼) : ' }}</span>
-						{{ rsvStat.noshow }}건
-					</p>
-					<p>
-						<span>{{ '사용 예정 : ' }}</span>
-						{{ rsvStat.notyet }}건
-					</p>
+		<div class="containers">
+			<div class="box profile-container">
+				<section-header size="small">내 정보</section-header>
+				<div class="profile-content">
+					<p class="name">{{ userInfo.name }}</p>
+					<p class="user-id">{{ userInfo.id }}</p>
+					<p class="user-email">{{ userInfo.email }}</p>
+					<p class="user-phone">{{ userInfo.phone }}</p>
+					<div class="user-category">
+						<p class="user-dept">{{ userDeptStr }}</p>
+						<p class="user-type">{{ userTypeStr }}</p>
+					</div>
 				</div>
 
-				<router-link to="/reservation/history">
-					<filled-button class="go-history-btn">
-						상세내역 바로가기
-					</filled-button>
-				</router-link>
-			</div>
-		</div>
-
-		<!-- 탈퇴하기 -->
-		<div class="user-delete-container">
-			<section-header size="small">회원 탈퇴하기</section-header>
-			<div style="text-align: center">
-				<p>아래 버튼을 누르시면 회의실 예약 서비스에서 계정을 제거합니다.</p>
-				<p style="color: red; font-weight: bold">
-					⚠탈퇴한 뒤에 계정을 복구할 수 없습니다
-				</p>
-
-				<div v-if="!userDeleteEnabled">
-					<filled-button @click="toggleUserDeleteEnabled">
-						탈퇴하기
-					</filled-button>
+				<div style="text-align: center">
+					<router-link to="/mypage/profile/edit">
+						<filled-button class="edit-profile-btn">정보수정</filled-button>
+					</router-link>
 				</div>
-				<div v-else>
-					<filled-button color="white" @click="toggleUserDeleteEnabled">
-						취소하기
-					</filled-button>
-					<p
-						style="
-							margin-top: 24px;
-							color: red;
-							font-weight: bold;
-							font-size: 2rem;
-						"
-					>
+			</div>
+
+			<!-- 내 예약내역 요약 -->
+			<div class="box reservation-history-container">
+				<section-header size="small">내 예약</section-header>
+				<div style="text-align: center">
+					<div style="margin-bottom: 24px" class="reservation-content">
+						<p style="margin-bottom: 8px;">
+							<span>{{ '총 예약 : ' }}</span>
+							{{ rsvStat.total }}건
+						</p>
+						<p style="margin-bottom: 8px;">
+							<span>{{ '사용 완료 : ' }}</span>
+							{{ rsvStat.used }}건
+						</p>
+						<p style="margin-bottom: 8px;">
+							<span>{{ '미사용(노쇼) : ' }}</span>
+							{{ rsvStat.noshow }}건
+						</p>
+						<p style="margin-bottom: 8px;">
+							<span>{{ '사용 예정 : ' }}</span>
+							{{ rsvStat.notyet }}건
+						</p>
+					</div>
+
+					<router-link to="/reservation/history">
+						<filled-button class="go-history-btn">
+							상세내역 바로가기
+						</filled-button>
+					</router-link>
+				</div>
+			</div>
+
+			<!-- 탈퇴하기 -->
+			<div class="box user-delete-container">
+				<section-header size="small">회원 탈퇴하기</section-header>
+				<div style="text-align: center">
+					<p>아래 버튼을 누르시면 회의실 예약 서비스에서 계정을 제거합니다.</p>
+					<p style="color: red; font-weight: bold">
 						⚠탈퇴한 뒤에 계정을 복구할 수 없습니다
 					</p>
-					<p style="margin-top: 24px">
-						탈퇴를 원하시면 아래 내용을 입력해주세요
-					</p>
 
-					<!-- 탈퇴를 위해 입력해야하는 내용 -->
-					<div class="field-set">
-						<p class="label">현재 비밀번호</p>
-						<text-input
-							class="content"
-							type="password"
-							v-model="deleteFormdata.pw"
-						></text-input>
+					<div v-if="!userDeleteEnabled">
+						<filled-button @click="toggleUserDeleteEnabled">
+							탈퇴하기
+						</filled-button>
 					</div>
-					<div class="field-set">
-						<p class="label">확인 문장</p>
-						<p>아래 문장을 동일하게 입력해주세요</p>
-						<p style="font-weight: bold; margin: 12px 0">
-							{{ deleteConfirmString }}
+					<div v-else>
+						<filled-button color="white" @click="toggleUserDeleteEnabled">
+							취소하기
+						</filled-button>
+						<p
+							style="
+								margin-top: 24px;
+								color: red;
+								font-weight: bold;
+								font-size: 2rem;
+							"
+						>
+							⚠탈퇴한 뒤에 계정을 복구할 수 없습니다
 						</p>
-						<text-input
-							class="content"
-							v-model="deleteFormdata.confirmStr"
-							:placeholder="deleteConfirmString"
-						></text-input>
-					</div>
+						<p style="margin-top: 24px">
+							탈퇴를 원하시면 아래 내용을 입력해주세요
+						</p>
 
-					<filled-button @click="handleDeleteUser">탈퇴하기</filled-button>
+						<!-- 탈퇴를 위해 입력해야하는 내용 -->
+						<div class="field-set">
+							<p class="label">현재 비밀번호</p>
+							<text-input
+								class="content"
+								type="password"
+								v-model="deleteFormdata.pw"
+							></text-input>
+						</div>
+						<div class="field-set">
+							<p class="label">확인 문장</p>
+							<p>아래 문장을 동일하게 입력해주세요</p>
+							<p style="font-weight: bold; margin: 12px 0">
+								{{ deleteConfirmString }}
+							</p>
+							<text-input
+								class="content"
+								v-model="deleteFormdata.confirmStr"
+								:placeholder="deleteConfirmString"
+							></text-input>
+						</div>
+
+						<filled-button @click="handleDeleteUser">탈퇴하기</filled-button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -276,9 +280,22 @@ async function handleDeleteUser() {
 <style lang="scss" scoped>
 #user-my-page-view {
 	.profile-container {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
 		margin-bottom: 24px;
+
+		.profile-content {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+			margin-bottom: 8px;
+		}
+
 		p {
-			margin: 8px 0;
+			margin-bottom: 8px;
 		}
 		.name {
 			font-size: 1.5rem;
@@ -299,8 +316,19 @@ async function handleDeleteUser() {
 	}
 
 	.reservatin-history-container {
+		margin-bottom: 24px;
+
+		.reservation-content {
+			p {
+				margin-bottom: 8px;
+			}
+		}
 	}
 	.user-delete-container {
+
+		p {
+			margin-bottom: 8px;
+		}
 		.field-set {
 			display: flex;
 			flex-direction: column;
@@ -316,6 +344,19 @@ async function handleDeleteUser() {
 			.content {
 				width: 100%;
 			}
+		}
+	}
+
+	.box {
+		border: 1px solid #ccc;
+		border-radius: 8px;
+		padding: 16px;
+		width: 100%;
+		box-sizing: border-box;
+		margin-bottom: 24px;
+		
+		@media (min-width: 480px) {
+		max-width: 280px;
 		}
 	}
 }
