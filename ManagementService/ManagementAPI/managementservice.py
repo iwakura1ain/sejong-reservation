@@ -495,11 +495,11 @@ class ConferenceRoomImage(Resource, Service):
             }, 200
 
         # error checking: is file unique
-        if not self.check_if_file_unique(joined_path):
-            return {
-                "status": False,
-                "msg": "File already exists"
-            }, 200
+        # if not self.check_if_file_unique(joined_path):
+        #     return {
+        #         "status": False,
+        #         "msg": "File already exists"
+        #     }, 200
 
         # check file size
         if ('Content-Length' in request.headers 
