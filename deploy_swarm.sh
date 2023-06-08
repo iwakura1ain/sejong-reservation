@@ -5,7 +5,9 @@ sudo whoami | tee -a deploy.log
 
 date | tee -a deploy.log 
 
-sudo docker-compose build --no-cache | tee -a deploy.log 
+sudo docker-compose build | tee -a deploy.log
+
+sudo docker-compose push | tee -a deploy.log 
 
 #sudo docker-compose up --force-recreate --detach | tee -a deploy.log
 
