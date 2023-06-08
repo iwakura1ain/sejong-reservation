@@ -3,7 +3,7 @@ run-name: Deployment
 
 on:
   workflow_run:
-    workflows: ["Alert Service Build", "Management Service Build", "Reservation Service Build", "User Service Build"]
+    workflows: ["Alert Service Build", "Management Service Build", "Reservation Service Build", "User Service Build", "Web Service Build"]
     types:
       - completed
     branches:
@@ -31,7 +31,7 @@ jobs:
 
       - name: connect to server and run deploy script
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "cd ${{secrets.WORK_DIR}} && ls && git checkout ${{secrets.BRANCH}} && git pull && sudo -S ./deploy_compose.sh && exit"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "cd ${{secrets.WORK_DIR}} && ls && git checkout ${{secrets.SWARM_BRANCH}} && git pull && sudo -S ./deploy_swarm.sh && exit"
 
       - name: cleanup
         run: |
