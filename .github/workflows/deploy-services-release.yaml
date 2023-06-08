@@ -32,7 +32,7 @@ jobs:
 
       - name: connect to server and run deploy script
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "cd ${{secrets.WORK_DIR}} && ls && git checkout ${{secrets.BRANCH}} && git pull && sudo -S ./deploy_compose.sh && exit"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "cd ${{secrets.WORK_DIR}} && ls && git checkout ${{secrets.COMPOSE_BRANCH}} && git pull && sudo -S ./deploy_compose.sh && exit"
 
       - name: cleanup
         run: |
