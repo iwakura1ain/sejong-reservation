@@ -74,7 +74,9 @@ class RegisterCheckIn(Resource, Service):
                 body=json.dumps({"location_hash": room_location_hash})
             )
 
-            if res.get("status"):
+            print("ROOM REGISTER: ", res, flush=True)
+            
+            if res.get("status") is not None:
                 return {
                     "status": True,
                     "msg": "room registered",
