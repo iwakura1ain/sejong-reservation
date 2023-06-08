@@ -3,7 +3,7 @@ run-name: Deployment
 
 on:
   workflow_run:
-    workflows: ["Alert Service Build", "Management Service Build", "Reservation Service Build", "User Service Build"]
+    workflows: ["Alert Service Build", "Management Service Build", "Reservation Service Build", "User Service Build", "Web Service Build"]
     types:
       - completed
     branches:

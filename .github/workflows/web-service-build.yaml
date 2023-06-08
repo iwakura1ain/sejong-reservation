@@ -1,5 +1,5 @@
-name: WebService Build
-run-name: WebService Build
+name: Web Service Build
+run-name: Web Service Build
 
 on:
   push:
