@@ -11,7 +11,7 @@ sudo docker-compose push | tee -a deploy.log
 
 #sudo docker-compose up --force-recreate --detach | tee -a deploy.log
 
-sudo docker stack deploy --compose-file docker-compose.yml sejong-reservation | tee -a deploy.log 
+sudo docker stack deploy --compose-file docker-compose.yaml sejong-reservation | tee -a deploy.log 
 
 echo "========= DEPLOYMENT DONE =========" | tee -a deploy.log
 
