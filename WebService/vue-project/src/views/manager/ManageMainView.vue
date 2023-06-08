@@ -5,14 +5,16 @@
 		<section-header>통계 보고서</section-header>
 		<div class="stat-range">
 			<p style="font-weight: bold">통계 산출 기간</p>
-			<p>{{ `${statDateRange.start} ~ ${statDateRange.end}` }}</p>
+			<p>
+				{{ `${statDateRange.start} ~ ${getDateStringInThreeDays().today}` }}
+			</p>
 		</div>
 		<div class="stat-report-container">
 			<!-- 이용완료, 이용예정, 이용안함(노쇼)의 비율 파이차트 -->
 
 			<div class="use-status-container">
 				<section-header size="small">이용상태</section-header>
-				<template v-if="useStatusChartData.length > 0">
+				<template v-if="!cantMakeStat || useStatusChartData.length > 0">
 					<Responsive class="w-full">
 						<template #main="{ width }">
 							<Chart
@@ -66,7 +68,7 @@
 			<!-- 회의실 전체 이용시간 대비 예약률 bar차트 -->
 			<div class="utilization-container">
 				<section-header size="small">회의실 이용률</section-header>
-				<tempalte v-if="roomUtilizationChartData.length > 0">
+				<tempalte v-if="!cantMakeStat || roomUtilizationChartData.length > 0">
 					<Responsive class="w-full">
 						<template #main="{ width }">
 							<Chart
@@ -144,6 +146,9 @@ const statDateRange = ref({
 	start: '',
 	end: '',
 });
+
+// 통계를 만들 수 없는 경우 true. (e.g., 검색된 회의가 없음)
+const cantMakeStat = ref(false);
 
 // 이용상태 산출 / 차트 렌더링 로직 -------------------------------------
 const useStatusData = ref([
@@ -292,8 +297,12 @@ async function init() {
 			console.error(rsvRes);
 			throw new Error(rsvRes);
 		}
-		console.log(rsvRes);
-		console.log(fetchedRoomStore.getAll());
+
+		// 오늘 날짜, 그리고 오늘날짜 이전에 예약이 존재하지 않으면 통계를 산출하지 않음
+		if (rsvRes.data.length === 0) {
+			cantMakeStat.value = true;
+			return;
+		}
 
 		// 통게 산출기간 설정
 		statDateRange.value.start = rsvRes.data[0].meetingDatetime.date;
