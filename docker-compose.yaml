@@ -24,11 +24,11 @@ services:
       DB_PORT: 3306
       DB_USERNAME: development
       DB_PASSWORD: 1234
-    ports:
-      - "5000:5000"
-#    deploy:
- #     mode: replicated
-  #    replicas: 3
+    # ports:
+    #   - "5000:5000"
+    deploy:
+      mode: replicated
+      replicas: 3
 
   userservice:
     image: userservice
@@ -43,11 +43,11 @@ services:
       DB_PORT: 3306
       DB_USERNAME: development
       DB_PASSWORD: 1234
-    ports:
-      - "5001:5000"
-   # deploy:
-    #  mode: replicated
-     # replicas: 3
+    # ports:
+    #   - "5001:5000"
+    deploy:
+      mode: replicated
+      replicas: 3
 
   managementservice:
     image: managementservice
@@ -68,8 +68,8 @@ services:
           - adminservice
     volumes:
       - ./ManagementService/thumbnails:/ManagementAPI/static:rw
-    ports:
-      - "5002:5000"
+    # ports:
+    #   - "5002:5000"
 
   alertservice:
     image: alertservice
@@ -79,8 +79,8 @@ services:
     restart: always
     environment:
       TZ: Asia/Seoul
-    ports:
-      - "5003:5000"
+    # ports:
+    #   - "5003:5000"
 
   dbmanager:
     image: adminer:latest
