@@ -4,7 +4,7 @@ run-name: Test Build
 on:
   push:
     branches:
-      - release-actions
+      - 'release-*'
     paths:
       - 'WebService/**'
 
