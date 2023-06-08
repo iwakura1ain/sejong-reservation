@@ -69,18 +69,27 @@ class RegisterCheckIn(Resource, Service):
 
             res = self.query_api(
                 "patch_rooms_info", "patch",
-                headers={"Content-Type":"application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": request.headers.get("Authorization")
+                },
                 request_params={"id": room_id},
                 body=json.dumps({"location_hash": room_location_hash})
             )
 
             print("ROOM REGISTER: ", res, flush=True)
             
-            if res.get("status") is not None:
+            if res.get("status"):
                 return {
                     "status": True,
                     "msg": "room registered",
                     "room_hash": room_hash
+                }, 200
+
+            else:
+                return {
+                    "status": False,
+                    "msg": "room register failed"
                 }, 200
 
         except Exception:
