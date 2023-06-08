@@ -1,6 +1,12 @@
+# USERAPI DOCKERFILE
+
 FROM python:3.11.2-buster
 
 ENV PYTHONBUFFERED 1
+
+COPY ./UserService/UserAPI /UserAPI/
+
+COPY ./Common/service.py /UserAPI/service.py
 
 WORKDIR /UserAPI
 
@@ -14,13 +20,9 @@ RUN ./mariadb_repo_setup --mariadb-server-version="mariadb-10.6"
 
 RUN apt install libmariadb3 libmariadb-dev --yes
 
-COPY ./UserService/UserAPI/requirements.txt /UserAPI/requirements.txt
+#COPY ./UserService/UserAPI/requirements.txt /UserAPI/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /UserAPI/requirements.txt
-
-COPY ./UserService/UserAPI /UserAPI/
-
-COPY ./Common/service.py/ /UserAPI/service.py
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 #HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
 

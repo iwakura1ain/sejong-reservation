@@ -42,7 +42,6 @@ async function fetchRooms() {
 		}
 
 		fetchedRoomStore.setAll(res.data);
-		console.log('rooms are fetched', fetchedRoomStore.data);
 	} catch (err) {
 		const msg = err.message;
 		console.error(err, msg);

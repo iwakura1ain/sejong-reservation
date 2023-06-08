@@ -7,37 +7,45 @@
 			</div>
 		</router-link>
 
-		<div v-if="userIsLogin" class="l-container">
+		<div class="l-container">
 			<!-- <router-link :to="{ name: 'MakeQuickReservation' }">
 				<text-button color="white">빠른예약</text-button>
 			</router-link> -->
-
-			<router-link :to="{ name: 'MakeReservation' }">
-				<text-button color="white">예약하기</text-button>
-			</router-link>
-			<router-link :to="{ name: 'ReservationHistory' }">
-				<text-button color="white">내 예약</text-button>
-			</router-link>
-			<router-link :to="{ name: 'AllReservationCalendar' }">
-				<text-button color="white">모든예약</text-button>
-			</router-link>
+			<template v-if="userIsLogin">
+				<router-link :to="{ name: 'MakeReservation' }">
+					<text-button color="white">예약하기</text-button>
+				</router-link>
+				<router-link :to="{ name: 'ReservationHistory' }">
+					<text-button color="white">내 예약</text-button>
+				</router-link>
+				<router-link :to="{ name: 'AllReservationCalendar' }">
+					<text-button color="white">모든예약</text-button>
+				</router-link>
+			</template>
 		</div>
 
-		<div v-if="userIsLogin" class="r-container">
-			<router-link :to="{ name: 'UserMyPage' }" class="username-text">
-				<text-button color="white">{{ userinfoString }}</text-button>
-			</router-link>
-			<div class="r-container-btns">
-				<router-link
-					v-if="userInfoStore.get().type === 1"
-					:to="{ name: 'ManageMain' }"
-				>
-					<filled-button color="white">관리</filled-button>
+		<div class="r-container">
+			<template v-if="userIsLogin">
+				<router-link :to="{ name: 'UserMyPage' }" class="username-text">
+					<text-button color="white">{{ userinfoString }}</text-button>
 				</router-link>
-				<filled-button color="red" @click="handleLogout"
-					>로그아웃</filled-button
-				>
-			</div>
+				<div class="r-container-btns">
+					<router-link
+						v-if="userInfoStore.get().type === 1"
+						:to="{ name: 'ManageMain' }"
+					>
+						<filled-button color="white">관리</filled-button>
+					</router-link>
+					<filled-button color="red" @click="handleLogout"
+						>로그아웃</filled-button
+					>
+				</div>
+			</template>
+			<template v-else>
+				<router-link :to="{ name: 'CheckAttendenceGateway' }">
+					<text-button color="white">사용 인증하기</text-button>
+				</router-link>
+			</template>
 		</div>
 	</div>
 </template>
