@@ -26,9 +26,9 @@ services:
       DB_PASSWORD: 1234
     # ports:
     #   - "5000:5000"
-    deploy:
-      mode: replicated
-      replicas: 3
+    # deploy:
+    #   mode: replicated
+    #   replicas: 3
 
   userservice:
     image: 127.0.0.1:5000/userservice
@@ -45,9 +45,9 @@ services:
       DB_PASSWORD: 1234
     # ports:
     #   - "5001:5000"
-    deploy:
-      mode: replicated
-      replicas: 3
+    # deploy:
+    #   mode: replicated
+    #   replicas: 3
 
   managementservice:
     image: 127.0.0.1:5000/managementservice
