@@ -427,11 +427,11 @@ class ConferenceRoomImage(Resource, Service):
         return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
-    @staticmethod
-    def check_if_file_unique(joined_path):
-        if os.path.exists(joined_path):
-            return False
-        return True
+    # @staticmethod
+    # def check_if_file_unique(joined_path):
+    #     if os.path.exists(joined_path):
+    #         return False
+    #     return True
 
     def get(self, id):
         try:
@@ -457,8 +457,10 @@ class ConferenceRoomImage(Resource, Service):
     def post(self, id):
         max_file_size = 16 * 1000 * 1000 # file size set maximum 16MB
         uploaded_image = request.files['image']
-        filename = secure_filename(uploaded_image.filename)
-        filepath_for_room = os.path.join(filepath, str(id))
+        #filename = secure_filename(uploaded_image.filename)
+        filename = "room-image-" + str(id) + "." + secure_filename(uploaded_image.filename).split('.')[-1]
+        #filepath_for_room = os.path.join(filepath, str(id))
+        filepath_for_room = filepath
 
         # make directory for image saving for room by id if not exists
         if not os.path.exists(filepath_for_room):
@@ -495,14 +497,14 @@ class ConferenceRoomImage(Resource, Service):
             }, 200
 
         # error checking: is file unique
-        if not self.check_if_file_unique(joined_path):
-            return {
-                "status": False,
-                "msg": "File already exists"
-            }, 200
+        # if not self.check_if_file_unique(joined_path):
+        #     return {
+        #         "status": False,
+        #         "msg": "File already exists"
+        #     }, 200
 
         # check file size
-        if ('Content-Length' in request.headers 
+        if ('Content-Length' in request.headers
             and int(request.headers['Content-Length']) > max_file_size):
             return {
                 "status": False,
