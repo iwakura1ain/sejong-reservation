@@ -7,11 +7,7 @@ on:
     types:
       - completed
     branches:
-<<<<<<<< HEAD:.github/workflows/deploy-services-release-swarm.yaml
-      - release-swarm
-========
       - release-actions
->>>>>>>> main:.github/workflows/deploy-services.yaml
 
 jobs:
   deployment:
@@ -35,11 +31,7 @@ jobs:
 
       - name: connect to server and run deploy script
         run: |
-<<<<<<<< HEAD:.github/workflows/deploy-services-release-swarm.yaml
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "cd ${{secrets.WORK_DIR}} && ls && git checkout ${{secrets.BRANCH}} && git pull && sudo -S ./deploy_swarm.sh && exit"
-========
           ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "cd ${{secrets.WORK_DIR}} && ls && git checkout ${{secrets.BRANCH}} && git pull && sudo -S ./deploy_compose.sh && exit"
->>>>>>>> main:.github/workflows/deploy-services.yaml
 
       - name: cleanup
         run: |
