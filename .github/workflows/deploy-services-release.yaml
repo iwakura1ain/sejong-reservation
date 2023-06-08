@@ -24,6 +24,7 @@ jobs:
 
       - name: install ssh keys
         run: |
+          echo "=========== Mock Connect To Server ==========="
           install -m 600 -D /dev/null ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
@@ -31,7 +32,7 @@ jobs:
 
       - name: connect to server and run deploy script
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "cd ${{secrets.WORK_DIR}} && ls && git checkout ${{secrets.BRANCH}} && git pull && sudo -S ./deploy_compose.sh && exit"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST }} -p ${{secrets.SSH_PORT}} "cd ${{secrets.WORK_DIR}} && ls && git checkout ${{secrets.COMPOSE_BRANCH}} && git pull && sudo -S ./deploy_compose.sh && exit"
 
       - name: cleanup
         run: |

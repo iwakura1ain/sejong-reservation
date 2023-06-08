@@ -4,7 +4,7 @@ run-name: Alert Service Build
 on:
   push:
     branches:
-      - 'release-*'
+      - release-actions
     paths:
       - ./AlertService/**
 

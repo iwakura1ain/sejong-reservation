@@ -4,7 +4,7 @@ run-name: Reservation Service Build
 on:
   push:
     branches:
-      - 'release-*'
+      - release-actions
     paths:
       - ./ReservationService/**
 
