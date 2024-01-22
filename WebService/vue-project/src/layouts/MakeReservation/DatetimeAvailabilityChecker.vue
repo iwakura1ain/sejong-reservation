@@ -47,8 +47,6 @@ const targetDates = computed(computeTargetDates);
 watch(
 	targetDates,
 	() => {
-		console.log('watched', targetDates.value);
-		// emits('updateDatetimeAvailability', targetDates.value);
 		datetimeAvailability.value = targetDates.value;
 	},
 	{ immediate: true },
@@ -71,7 +69,7 @@ function computeTargetDates() {
 	} else if (repeatEndType === REPEAT_END_TYPE.DATE) {
 		const parsedEndDate = dayjs(endDate);
 		const diff = parsedEndDate.diff(parsedStartDate, 'week');
-		console.log(diff);
+
 		for (let i = 1; i <= diff; i++) {
 			candidateDates.push(parsedStartDate.add(i, 'week'));
 		}

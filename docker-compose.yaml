@@ -94,6 +94,7 @@ services:
     restart: unless-stopped
 
   dbservice:
+    container_name: sejong-reservation-dbservice
     image: mariadb:11.0-rc-jammy
     restart: always
     env_file:
@@ -110,6 +111,7 @@ services:
           - dbservice
 
   gatewayservice:
+    container_name: sejong-reservation-gatewayservice
     image: nginx:latest
     restart: always
     volumes:

@@ -339,7 +339,7 @@ async function validateRsvConflict(targetIdxArr) {
 
 		// 모든 예약이 생성 가능한지 확인
 		const res = await reservationService.checkIfReservationOk(req, accessToken);
-		console.log(res);
+
 		if (res.status) {
 			// 예약가능하다고 표시
 			targetIdxArr.forEach(idx => {

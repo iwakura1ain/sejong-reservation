@@ -368,6 +368,7 @@ class ConferenceRoomById(Resource, Service):
 
                 # if room is not usable, cancel reservations of the room                   
                 if (roomById['is_usable'] != 0
+                    and 'is_usable' in valid_data.keys()
                     and valid_data['is_usable'] == 0):
                     with self.query_model("Reservation") as (conn, Reservation):
                         rsrvs = conn.execute(select(Reservation).where(Reservation.room_id == id)).mappings().fetchall()
@@ -494,11 +495,11 @@ class ConferenceRoomImage(Resource, Service):
             }, 200
 
         # error checking: is file unique
-        if not self.check_if_file_unique(joined_path):
-            return {
-                "status": False,
-                "msg": "File already exists"
-            }, 200
+        # if not self.check_if_file_unique(joined_path):
+        #     return {
+        #         "status": False,
+        #         "msg": "File already exists"
+        #     }, 200
 
         # check file size
         if ('Content-Length' in request.headers 

@@ -26,7 +26,6 @@ export default function validateDateTime(dateObj, timepickerObj) {
 		dateObj <= now &&
 		(startTimeToSec < nowToSec || endTimeToSec < nowToSec)
 	) {
-		console.log(dateObj < now);
 		result = false;
 		makeToast('현재보다 과거에 예약을 생성할 수 없습니다', 'warning');
 	}
