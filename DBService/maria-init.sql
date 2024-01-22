@@ -1,3 +1,4 @@
+
 -- drop tables
 DROP TABLE IF EXISTS Reservation;
 DROP TABLE IF EXISTS User;

@@ -85,7 +85,7 @@ services:
       - "9999:8080"
 
   dbservice:
-    #container_name: dbservice
+    container_name: dbservice
     image: mariadb:11.0-rc-jammy
     restart: on-failure # always
     env_file:
@@ -99,6 +99,7 @@ services:
       - "3306:3306"
 
   gatewayservice:
+    container_name: gatewayservice
     image: nginx:latest
     #container_name: production_nginx
     volumes:
@@ -111,4 +112,3 @@ services:
       TZ: Asia/Seoul
     ports:
       - 8080:8080
-

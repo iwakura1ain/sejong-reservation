@@ -1,3 +1,4 @@
+Werkzeug==2.3.0
 aniso8601==9.0.1
 attrs==22.2.0
 bcrypt==4.0.1
@@ -24,7 +25,6 @@ requests==2.28.2
 SQLAlchemy==2.0.9
 typing_extensions==4.5.0
 urllib3==1.26.15
-Werkzeug==2.2.3
 pymysql==1.0.3
 python-magic==0.4.27
 openpyxl==3.1.2
