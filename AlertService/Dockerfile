@@ -14,5 +14,7 @@ COPY ./AlertService/AlertAPI /AlertAPI/
 
 HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
 
+EXPOSE 5003
+
 # CMD ["python3", "app.py"]
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi:APP"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5003", "wsgi:APP"]
