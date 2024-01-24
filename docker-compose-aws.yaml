@@ -4,7 +4,6 @@ version: "3.9"
 services:
   webservice:
     image: iwakura1ain/sejong-reservation-webservice:latest
-
     ports:
       - "80:80"
 
@@ -121,8 +120,8 @@ services:
 
     environment:
       TZ: Asia/Seoul
-    # ports:
-    #   - "8080:8080"
+    ports:
+      - "8080:8080"
     depends_on:
       - reservationservice
       - userservice

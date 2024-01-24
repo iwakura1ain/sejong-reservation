@@ -30,7 +30,7 @@ ORM = {
 # }
 
 api_config = {
-    "send_email": "http://alertservice:5000/alert",
+    "send_email": "http://alertservice:5003/alert",
 }
 
 # email address from which alert emails will be sent

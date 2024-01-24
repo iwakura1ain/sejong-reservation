@@ -22,6 +22,8 @@ COPY ./ManagementService/ManagementAPI /ManagementAPI/
 
 COPY ./Common/service.py /ManagementAPI/service.py
 
+COPY ./ManagementService/thumbnails /ManagementAPI/static
+
 HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
 
 EXPOSE 5002 

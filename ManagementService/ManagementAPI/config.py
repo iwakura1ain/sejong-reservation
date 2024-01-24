@@ -17,8 +17,8 @@ model_config = {
 }
 
 api_config = {
-    "jwt_status": "http://userservice:5000/auth/jwt-status",
-    "send_email": "http://alertservice:5000/alert",
+    "jwt_status": "http://userservice:5001/auth/jwt-status",
+    "send_email": "http://alertservice:5003/alert",
 }
 
 filepath = "/ManagementAPI/static"
