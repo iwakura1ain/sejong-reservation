@@ -5,23 +5,21 @@ from datetime import date, time, datetime
 
 from config import model_config, api_config
 
+# model_config_cron = {
+#     "username": "development",
+#     "password": "1234",
+#     "host": "dbservice",
+#     "port": 3306,
+#     "database": "sejong"
+# }
 
-
-model_config_cron = {
-    "username": "development",
-    "password": "1234",
-    "host": "dbservice",
-    "port": 3306,
-    "database": "sejong"
-}
-
-api_config_cron = {
-    # docker config
-    "get_auth_info": "http://userservice:5000/auth/jwt-status",
-    "increment_noshow": "http://userservice:5000/users/{user_id}/no-show",
-    "get_rooms_info": "http://managementservice:5000/admin/rooms/{id}",
-    "send_email": "http://alertservice:5000/alert",
-}
+# api_config_cron = {
+#     # docker config
+#     "get_auth_info": "http://userservice:5000/auth/jwt-status",
+#     "increment_noshow": "http://userservice:5000/users/{user_id}/no-show",
+#     "get_rooms_info": "http://managementservice:5000/admin/rooms/{id}",
+#     "send_email": "http://alertservice:5000/alert",
+# }
 
 
 class NoShowCheck(Service):
@@ -31,7 +29,7 @@ class NoShowCheck(Service):
         class, passing arguments to their respective initialization functions.
         """
         Service.__init__(
-            self, model_config=model_config_cron, api_config=api_config_cron
+            self, model_config=model_config, api_config=api_config
         )
 
     def check_noshow(self):
@@ -101,4 +99,6 @@ no_show_check = NoShowCheck()
 if __name__ == "__main__":
     print("=================running cronjob=====================", flush=True)
     no_show_check.check_noshow()
+
+
 
