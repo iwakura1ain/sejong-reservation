@@ -4,7 +4,7 @@ from service import validator
 
 
 @validator("Reservation.reservation_date", "Reservation.start_time")
-def validate_time(reservation_date, start_time):
+def validate_time_start(reservation_date, start_time):
     """
     checks validity of reservation's start_time and end_time 
     - start_time should be earlier than end_time.
@@ -25,7 +25,7 @@ def validate_time(reservation_date, start_time):
 
 
 @validator("Reservation.reservation_date", "Reservation.end_time")
-def validate_time(reservation_date, end_time):
+def validate_time_end(reservation_date, end_time):
     try:
         end_dt = datetime.combine(
             date.fromisoformat(reservation_date),
