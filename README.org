@@ -1,7 +1,7 @@
 * Sejong-Reservation
 
 
-![readme_img](https://github.com/iwakura1ain/sejong-reservation/assets/25413566/e9fa5cbc-2bce-4202-bc21-4c03f1565ec7)
+[[./readme_img.png]]
 
 
 ** Services
